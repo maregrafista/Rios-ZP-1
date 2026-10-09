@@ -98,7 +98,7 @@ addEventListener('resize', () => { ajustaZoom(); });
 $$('#seg-lay button').forEach((b) => b.addEventListener('click', () => { LS.set('layout', b.dataset.l); layout(); redraw(); }));
 matchMedia('(max-width:800px)').addEventListener('change', () => { if (LS.get('layout', 'auto') === 'auto') { layout(); redraw(); } });
 const dark = () => (root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme:dark)').matches));
-function tema() { const d = dark(); $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = st.pal === 'amazonia' ? (d ? '#0a2a21' : '#0c3b2c') : '#0b1f4d'; }
+function tema() { const d = dark(); $('#aj-tema').textContent = d ? 'Escuro' : 'Claro'; $('#aj-pal').textContent = st.pal === 'amazonia' ? 'Amazônia' : 'Marinho'; $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = st.pal === 'amazonia' ? (d ? '#0a2a21' : '#0c3b2c') : '#0b1f4d'; }
 function paleta() { if (st.pal === 'amazonia') root.dataset.paleta = 'amazonia'; else delete root.dataset.paleta; tema(); }
 $('#b-pal').addEventListener('click', () => { st.pal = st.pal === 'amazonia' ? 'marinho' : 'amazonia'; LS.set('paleta', st.pal); paleta(); redraw(); toast('Cores: ' + (st.pal === 'amazonia' ? 'Amazônia' : 'Marinho') + '.'); });
 $('#b-tema').addEventListener('click', () => { const n = dark() ? 'light' : 'dark'; root.dataset.theme = n; LS.set('tema', n); tema(); redraw(); });
@@ -109,6 +109,9 @@ $$('#seg-ref button').forEach((b) => b.addEventListener('click', () => { st.ref 
 $$('#seg-jan button').forEach((b) => b.addEventListener('click', () => { st.jan = b.dataset.j; LS.set('jan', st.jan); redraw(); }));
 $('#b-resumo').addEventListener('click', () => abrirStory());
 $('#b-busca').addEventListener('click', () => abrirBusca());
+$('#b-aj').addEventListener('click', () => $('#dlg-aj').showModal()); $('#aj-x').addEventListener('click', () => $('#dlg-aj').close()); $('#dlg-aj').addEventListener('click', (e) => { if (e.target.id === 'dlg-aj') e.target.close(); });
+$('#aj-inst').addEventListener('click', () => { $('#dlg-aj').close(); abrirInstalar(); });
+if (window.ResizeObserver) new ResizeObserver(() => root.style.setProperty('--toph', $('.top').offsetHeight + 'px')).observe($('.top'));
 
 // ---------- avisos ----------
 let toastT;
