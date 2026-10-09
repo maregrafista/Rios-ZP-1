@@ -5,7 +5,7 @@ const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [..
 const root = document.documentElement;
 const LS = { get(k, d) { try { const v = localStorage.getItem('zp1-' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('zp1-' + k, JSON.stringify(v)); } catch (e) {} } };
 const NFc = {}, nf = (d) => NFc[d] || (NFc[d] = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }));
-const num = (v, d = 2) => (v == null || !isFinite(v) ? '—' : nf(d).format(v).replace('-', '−'));
+const num = (v, d = 2) => { if (v == null || !isFinite(v)) return '—'; if (Math.abs(v) < 0.5 * 10 ** -d) v = 0; return nf(d).format(v).replace('-', '−'); };
 const sg = (v, d = 2) => { if (v == null || !isFinite(v)) return '—'; const r = Math.round(Math.abs(v) * 10 ** d); return (r === 0 ? '' : v < 0 ? '−' : '+') + nf(d).format(r / 10 ** d); };
 const dnum = (s) => Date.parse(s + 'T00:00:00Z') / DAY, ISO = (d) => new Date(d * DAY).toISOString().slice(0, 10);
 const dm = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) : '—'), dmy = (s) => (s ? dm(s) + '/' + s.slice(0, 4) : '—');
@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.0';
+const APP_VER = '1.1';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
