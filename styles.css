@@ -224,3 +224,8 @@ html[data-layout=mobile] .chips,.chips{margin-inline:0;padding-inline:0}
 .mini svg{display:block;width:100%;height:auto}.mini{background:var(--panel);border-radius:14px;box-shadow:var(--shadow);padding:8px 6px 4px}
 .chip i{flex:0 0 8px}
 html[data-layout=mobile] #t-sint td,html[data-layout=mobile] #t-sint th{padding:9px 4px;font-size:12.5px}@media(max-width:560px){#t-sint td,#t-sint th{padding:9px 4px;font-size:12.5px}}
+
+.rodape{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;margin:18px auto 0;padding:14px 12px;border-top:1px solid var(--line);color:var(--mut);font-size:12px}
+.rodape svg{color:var(--acc)}.rodape b{color:var(--ink);font-size:13px;letter-spacing:.01em}
+html[data-layout=mobile] .rodape{margin-bottom:8px}
+@media print{.rodape{border:0}}
