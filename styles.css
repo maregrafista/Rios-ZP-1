@@ -230,3 +230,15 @@ html[data-layout=mobile] #t-sint td,html[data-layout=mobile] #t-sint th{padding:
 html[data-layout=mobile] .rodape{margin-bottom:8px}
 @media print{.rodape{border:0}}
 .rodape{width:100%;text-align:center;align-items:center;justify-content:center}.rodape>*{margin-inline:auto}
+/* cartão de destaque sóbrio */
+.hero{background:var(--panel);color:var(--ink);border:0;border-radius:14px;padding:12px 14px;gap:8px 20px;box-shadow:var(--shadow)}
+.hero .nome,.hero .kv2 span,.hero .cap{color:var(--mut)}.hero .big,.hero .kv2 b{color:var(--ink)}.hero .big small{color:var(--mut)}
+.hero .big{font-size:clamp(30px,8vw,36px);font-weight:600;margin:0 0 4px}.hero .big small{font-size:14px}
+.hero .nome{font-size:12px}
+.hero .kv2{gap:8px 12px}.hero .kv2 span{font-size:11px}.hero .kv2 b{font-size:14px}
+.hero .qa{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+.hero .qa .btn,.hero .btn{min-height:34px;padding:4px 6px;font-size:12px;font-weight:600;border-radius:10px;background:var(--bg);color:var(--ink);border:0;white-space:nowrap}
+.hero .btn:hover{background:var(--line)}
+html[data-layout=desktop] .hero .qa{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:380px){.hero .qa .btn{font-size:11.5px}}
+.hero .qa .btn{padding:4px 2px;font-size:11.5px;letter-spacing:-.01em}@media(min-width:900px){html[data-layout=desktop] .hero .qa .btn{font-size:12.5px}}
