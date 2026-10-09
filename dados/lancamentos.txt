@@ -1,0 +1,2 @@
+# Uma leitura por linha: estação, régua e data em qualquer ordem. Ex.: Manaus, 25 m, 10/12/2025
+# O robô de atualização lê estas linhas, lança no app e as move para dados/base/lancamentos_log.txt.

@@ -6,6 +6,7 @@ Uso (na raiz do repositório):
     python3 tools/atualizar.py planilha.xlsx  # planilha indicada
     opções: --revisar  aceita valores diferentes em dias já fechados
             --forcar   regera mesmo que a planilha não tenha mudado
+            --regenerar  só recalcula a partir de dados/base (após lançamentos manuais), sem ler planilha
 
 Fluxo: lê o cabeçalho (pares "Data" | "<Estação>"), reduz a um valor por dia (a última leitura),
 cadastra só o que é novo em dados/base/leituras.json, refaz o controle de qualidade, recalcula
@@ -132,18 +133,21 @@ def main():
     if xlsx is None:
         c = sorted((RAIZ / "dados").glob("*.xlsx"), key=_quando)
         xlsx = c[-1] if c else None
+    regen = "--regenerar" in sys.argv
     h = sha(xlsx) if xlsx else None
-    if xlsx and h == antigo.get("planilha", {}).get("sha256") and not forcar and not args:
+    if regen:
+        h = antigo.get("planilha", {}).get("sha256"); xlsx = Path(antigo.get("planilha", {}).get("nome") or "") if antigo else None
+    if xlsx and not regen and h == antigo.get("planilha", {}).get("sha256") and not forcar and not args:
         print("Planilha sem mudança desde a última atualização. Nada a fazer.")
         return 0
-    if xlsx:
+    if xlsx and not regen:
         dia, lidas, ign = ler_planilha(xlsx, estacoes)
         log(f"Planilha: {xlsx.name} ({lidas} leituras)")
         if ign:
             log("Colunas ignoradas (estação não cadastrada): " + ", ".join(ign))
         mestre = mesclar(mestre, dia, estacoes, revisar)
         json.dump(mestre, open(mestre_p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    elif not mestre:
+    elif not mestre and not regen:
         sys.exit("Coloque a planilha .xlsx em dados/ ou informe o caminho.")
     sipam = json.load(open(BASE / "sipam.json", encoding="utf-8"))
     prog = json.load(open(BASE / "sipam_prog.json", encoding="utf-8"))
@@ -165,7 +169,7 @@ def main():
                       "ini": dt.date.fromordinal(ini).isoformat(), "v": vals, "prev": prev})
     out = {"schema": 1, "gerado": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
            "hoje": max(s["prev"]["origem"] for s in saida),
-           "planilha": {"nome": xlsx.name if xlsx else None, "sha256": h},
+           "planilha": {"nome": xlsx.name if xlsx and xlsx.name else None, "sha256": h},
            "estacoes": saida, "qc": descartes,
            "sipam": {"boletim": sipam[0]["boletim"], "var15": sipam, "prog": prog}}
     json.dump(out, open(data_p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
@@ -175,7 +179,8 @@ def main():
         t = sw.read_text(encoding="utf-8")
         import re
         sw.write_text(re.sub(r"const VERSAO='[^']*'", f"const VERSAO='{out['hoje']}-{out['gerado'][11:19].replace(':','')}'", t), encoding="utf-8")
-    (BASE / "relatorio.txt").write_text("\n".join(RELATORIO) + "\n", encoding="utf-8")
+    if not regen:
+        (BASE / "relatorio.txt").write_text("\n".join(RELATORIO) + "\n", encoding="utf-8")
     print(f"\ndata.json gravado ({data_p.stat().st_size // 1024} KB), dados até {out['hoje']}.")
     return 0
 

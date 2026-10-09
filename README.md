@@ -39,3 +39,14 @@ https://maregrafista.github.io/Rios-ZP-1/
 ```
 
 O mesmo texto está no app (Ciência › Compartilhar o app). `tools/gerar_artefato.py` gera `artefato/index.html`, a versão de arquivo único hospedada como artefato do Claude.
+
+## Lançar uma leitura avulsa
+
+Estação, régua (m) e data, em qualquer ordem e com ou sem vírgulas:
+
+```
+python3 tools/lancar.py "Manaus, 25 m, 10/12/2025"
+python3 tools/lancar.py "10/12/2025 25,3 Santarém"
+```
+
+Também vale escrever uma linha por leitura em `dados/lancamentos.txt` (pode ser editado no GitHub pelo celular). A rotina agendada lê o arquivo, lança no app, move as linhas para `dados/base/lancamentos_log.txt` e publica. Use `--simular` para só conferir como a linha foi entendida.

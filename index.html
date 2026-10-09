@@ -23,7 +23,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
-<script>try{var t=localStorage.getItem('zp1-tema');if(t)document.documentElement.dataset.theme=JSON.parse(t)}catch(e){}</script>
+<script>try{var t=localStorage.getItem('zp1-tema');if(t)document.documentElement.dataset.theme=JSON.parse(t);var p=localStorage.getItem('zp1-paleta');if(p)document.documentElement.dataset.paleta=JSON.parse(p)}catch(e){}</script>
 <link rel="stylesheet" href="styles.css">
 <script defer src="app.js"></script>
 </head>
@@ -44,6 +44,7 @@
 <div class="tools">
   <div class="tr">
     <div class="seg" id="seg-lay" role="group" aria-label="Versão da tela"><button data-l="mobile" type="button">Celular</button><button data-l="desktop" type="button">Computador</button></div>
+    <button class="icon" id="b-pal" type="button" aria-label="Esquema de cores" title="Esquema de cores: Marinho / Amazônia"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 19C5 10 10 5 20 4c0 10-5 15-13 15zM5 19c3-5 6-8 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button class="icon" id="b-tema" type="button" aria-label="Alternar modo escuro" title="Modo claro/escuro"></button>
   </div>
 </div>

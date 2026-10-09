@@ -135,7 +135,7 @@ html[data-layout=mobile] #q2 td:first-child{white-space:normal;line-height:1.2}
 .top{background:var(--bar);color:#fff;border-bottom:0}.brand,.brand b{color:#fff}.brand small{color:rgba(255,255,255,.78)}
 .top .btn,.top .icon{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.38)}.top .btn:hover,.top .icon:hover{background:rgba(255,255,255,.22)}
 .card,.hero,.ban{border-radius:14px;box-shadow:var(--shadow)}
-.hero{background:linear-gradient(135deg,#0b1f4d,#1e4fa3);color:#fff;border:0}
+.hero{background:linear-gradient(135deg,var(--h1,#0b1f4d),var(--h2,#1e4fa3));color:#fff;border:0}
 .hero .nome,.hero .kv2 span,.hero .cap{color:rgba(255,255,255,.8)}.hero .big,.hero .kv2 b{color:#fff}.hero .big small{color:rgba(255,255,255,.8)}
 .hero .btn{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)}.hero .btn:hover{background:rgba(255,255,255,.24)}
 .pill{border-color:var(--c,currentColor)}.pill.bad{background:var(--al-bg);color:var(--al-fg);border-color:var(--al-bd)}.pill.warn{background:var(--at-bg);color:var(--at-fg);border-color:var(--at-bd)}.pill.ok{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}
@@ -150,6 +150,12 @@ html[data-layout=mobile] .bnav button[aria-current=page]{color:var(--acc)}
 .share{white-space:pre-wrap;font:12.5px/1.5 var(--font);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;margin:6px 0}a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
 details.ctrl[open]>summary{background:var(--sel);color:#fff;border-color:var(--sel)}details.ctrl>summary{border-radius:8px}
 .brand svg{flex:0 0 26px}
+
+/* esquema Amazônia: floresta, rio e urucum */
+html[data-paleta=amazonia]{--bg:#f0f5ef;--line:#d6e1d7;--grid:#e2eae3;--acc:#17703f;--bar:#0c3b2c;--sel:#0c3b2c;--h1:#0c3b2c;--h2:#1f7a4d;--fc:#c8641a;--band:#c8641a;--band2:#a85014;--trend:#6b3a8c;--sip:#0e7c86}
+@media(prefers-color-scheme:dark){html[data-paleta=amazonia]:not([data-theme=light]){--bg:#0b1511;--panel:#121e19;--line:#243830;--grid:#1d2c26;--acc:#6fcf9c;--bar:#0a2a21;--sel:#2f9e6a;--h1:#0a2a21;--h2:#17583a;--fc:#f0a04b;--band:#f0a04b;--band2:#f5b878;--trend:#c49be0;--sip:#4cc7cf}}
+html[data-paleta=amazonia][data-theme=dark]{--bg:#0b1511;--panel:#121e19;--line:#243830;--grid:#1d2c26;--acc:#6fcf9c;--bar:#0a2a21;--sel:#2f9e6a;--h1:#0a2a21;--h2:#17583a;--fc:#f0a04b;--band:#f0a04b;--band2:#f5b878;--trend:#c49be0;--sip:#4cc7cf}
+html[data-paleta=amazonia]:not([data-theme=dark]) .leg i.f{opacity:.4}
 </style>
 
 <a class="skip" href="#main">Ir ao conteúdo</a>
@@ -168,6 +174,7 @@ details.ctrl[open]>summary{background:var(--sel);color:#fff;border-color:var(--s
 <div class="tools">
   <div class="tr">
     <div class="seg" id="seg-lay" role="group" aria-label="Versão da tela"><button data-l="mobile" type="button">Celular</button><button data-l="desktop" type="button">Computador</button></div>
+    <button class="icon" id="b-pal" type="button" aria-label="Esquema de cores" title="Esquema de cores: Marinho / Amazônia"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 19C5 10 10 5 20 4c0 10-5 15-13 15zM5 19c3-5 6-8 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button class="icon" id="b-tema" type="button" aria-label="Alternar modo escuro" title="Modo claro/escuro"></button>
   </div>
 </div>
@@ -365,7 +372,7 @@ Previsões empíricas, de caráter informativo.
 ${APP_URL}`;
 const PAL = { soft: ['#332288', '#88CCEE', '#117733', '#DDCC77', '#AA4499', '#888888', '#44AA99', '#CC6677'], dk: ['#9C93E8', '#88CCEE', '#4DB88A', '#DDCC77', '#D68AC4', '#AEAEAE', '#44AA99', '#CC6677'], hc: ['#33BBEE', '#009988', '#EE7733', '#CC3311', '#EE3377', '#0077BB', '#BBBBBB', '#555555'] };
 const CORES = { bad: 'var(--bad)', warn: 'var(--warn)', ok: 'var(--ok)' };
-const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '60', '90', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
+const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '60', '90', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), pal: LS.get('paleta', 'marinho'), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
 let D = null, X = null;
 
 // ---------- dados ----------
@@ -431,7 +438,9 @@ addEventListener('resize', () => { ajustaZoom(); });
 $$('#seg-lay button').forEach((b) => b.addEventListener('click', () => { LS.set('layout', b.dataset.l); layout(); redraw(); }));
 matchMedia('(max-width:800px)').addEventListener('change', () => { if (LS.get('layout', 'auto') === 'auto') { layout(); redraw(); } });
 const dark = () => (root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme:dark)').matches));
-function tema() { const d = dark(); $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = '#0b1f4d'; }
+function tema() { const d = dark(); $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = st.pal === 'amazonia' ? (d ? '#0a2a21' : '#0c3b2c') : '#0b1f4d'; }
+function paleta() { if (st.pal === 'amazonia') root.dataset.paleta = 'amazonia'; else delete root.dataset.paleta; tema(); }
+$('#b-pal').addEventListener('click', () => { st.pal = st.pal === 'amazonia' ? 'marinho' : 'amazonia'; LS.set('paleta', st.pal); paleta(); redraw(); toast('Cores: ' + (st.pal === 'amazonia' ? 'Amazônia' : 'Marinho') + '.'); });
 $('#b-tema').addEventListener('click', () => { const n = dark() ? 'light' : 'dark'; root.dataset.theme = n; LS.set('tema', n); tema(); redraw(); });
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { tema(); redraw(); });
 function show(v) { st.tab = v; LS.set('tab', v); $$('#tabs button,#bnav button').forEach((b) => { if (b.dataset.v === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); $$('.view').forEach((s) => { s.hidden = s.id !== 'v-' + v; }); scrollTo(0, 0); redraw(); }
@@ -571,7 +580,7 @@ function miniFig(e, W = 380, Ht = 170) {
 }
 function prever() {
   const e = E(), r = e.r, c = (v) => num(vv(e, v)), atr = r.atraso;
-  $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + ' · ' + (ref() ? 'm acima do NR' : 'm na régua');
+  const atras = Math.floor(Date.now() / DAY - dnum(D.hoje)); $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + (atras >= 3 ? ' (há ' + atras + ' d)' : '') + ' · ' + (ref() ? 'm acima do NR' : 'm na régua');
   $('#hero').innerHTML = `<div><div class="nome">${esc(e.nome)} · ${esc(e.rio)} · ${dm(r.data)}${atr ? ' (' + atr + ' d sem leitura)' : ''}</div>
     <div class="big">${ref() ? sg(vv(e, r.L0)) : num(r.L0)}<small> ${uni()}</small></div>
     <div><span class="pill ${r.s.c}">${esc(r.s.t)}</span> <span class="cap">${ref() ? 'régua ' + num(r.L0) + ' m' : 'NR em ' + num(e.nr) + ' m na régua'}</span></div></div>
@@ -781,7 +790,7 @@ const safe2 = (f) => { try { f(); } catch (e) { console.error(e); } };
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D && Date.now() - lastCheck > 30 * 60 * 1000) { lastCheck = Date.now(); carregar(true).then((m) => m && redraw()).catch(() => {}); } });
 let lastCheck = Date.now();
 async function iniciar() {
-  layout(); tema(); banner();
+  layout(); paleta(); banner();
   if ('serviceWorker' in navigator && !window.__ZP1__) { navigator.serviceWorker.register('sw.js').then((r) => { r.addEventListener('updatefound', () => { const w = r.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) toast('Nova versão do app disponível.', 'Atualizar', () => location.reload()); }); }); }).catch(() => {}); }
   try { await carregar(false); } catch (e) { $('#carga').innerHTML = '<div class="fail">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</div>'; return; }
   $('#carga').hidden = true; show(st.tab);

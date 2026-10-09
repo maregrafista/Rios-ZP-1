@@ -32,7 +32,7 @@ Previsões empíricas, de caráter informativo.
 ${APP_URL}`;
 const PAL = { soft: ['#332288', '#88CCEE', '#117733', '#DDCC77', '#AA4499', '#888888', '#44AA99', '#CC6677'], dk: ['#9C93E8', '#88CCEE', '#4DB88A', '#DDCC77', '#D68AC4', '#AEAEAE', '#44AA99', '#CC6677'], hc: ['#33BBEE', '#009988', '#EE7733', '#CC3311', '#EE3377', '#0077BB', '#BBBBBB', '#555555'] };
 const CORES = { bad: 'var(--bad)', warn: 'var(--warn)', ok: 'var(--ok)' };
-const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '60', '90', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
+const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '60', '90', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), pal: LS.get('paleta', 'marinho'), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
 let D = null, X = null;
 
 // ---------- dados ----------
@@ -98,7 +98,9 @@ addEventListener('resize', () => { ajustaZoom(); });
 $$('#seg-lay button').forEach((b) => b.addEventListener('click', () => { LS.set('layout', b.dataset.l); layout(); redraw(); }));
 matchMedia('(max-width:800px)').addEventListener('change', () => { if (LS.get('layout', 'auto') === 'auto') { layout(); redraw(); } });
 const dark = () => (root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme:dark)').matches));
-function tema() { const d = dark(); $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = '#0b1f4d'; }
+function tema() { const d = dark(); $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = st.pal === 'amazonia' ? (d ? '#0a2a21' : '#0c3b2c') : '#0b1f4d'; }
+function paleta() { if (st.pal === 'amazonia') root.dataset.paleta = 'amazonia'; else delete root.dataset.paleta; tema(); }
+$('#b-pal').addEventListener('click', () => { st.pal = st.pal === 'amazonia' ? 'marinho' : 'amazonia'; LS.set('paleta', st.pal); paleta(); redraw(); toast('Cores: ' + (st.pal === 'amazonia' ? 'Amazônia' : 'Marinho') + '.'); });
 $('#b-tema').addEventListener('click', () => { const n = dark() ? 'light' : 'dark'; root.dataset.theme = n; LS.set('tema', n); tema(); redraw(); });
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { tema(); redraw(); });
 function show(v) { st.tab = v; LS.set('tab', v); $$('#tabs button,#bnav button').forEach((b) => { if (b.dataset.v === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); $$('.view').forEach((s) => { s.hidden = s.id !== 'v-' + v; }); scrollTo(0, 0); redraw(); }
@@ -238,7 +240,7 @@ function miniFig(e, W = 380, Ht = 170) {
 }
 function prever() {
   const e = E(), r = e.r, c = (v) => num(vv(e, v)), atr = r.atraso;
-  $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + ' · ' + (ref() ? 'm acima do NR' : 'm na régua');
+  const atras = Math.floor(Date.now() / DAY - dnum(D.hoje)); $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + (atras >= 3 ? ' (há ' + atras + ' d)' : '') + ' · ' + (ref() ? 'm acima do NR' : 'm na régua');
   $('#hero').innerHTML = `<div><div class="nome">${esc(e.nome)} · ${esc(e.rio)} · ${dm(r.data)}${atr ? ' (' + atr + ' d sem leitura)' : ''}</div>
     <div class="big">${ref() ? sg(vv(e, r.L0)) : num(r.L0)}<small> ${uni()}</small></div>
     <div><span class="pill ${r.s.c}">${esc(r.s.t)}</span> <span class="cap">${ref() ? 'régua ' + num(r.L0) + ' m' : 'NR em ' + num(e.nr) + ' m na régua'}</span></div></div>
@@ -448,7 +450,7 @@ const safe2 = (f) => { try { f(); } catch (e) { console.error(e); } };
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D && Date.now() - lastCheck > 30 * 60 * 1000) { lastCheck = Date.now(); carregar(true).then((m) => m && redraw()).catch(() => {}); } });
 let lastCheck = Date.now();
 async function iniciar() {
-  layout(); tema(); banner();
+  layout(); paleta(); banner();
   if ('serviceWorker' in navigator && !window.__ZP1__) { navigator.serviceWorker.register('sw.js').then((r) => { r.addEventListener('updatefound', () => { const w = r.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) toast('Nova versão do app disponível.', 'Atualizar', () => location.reload()); }); }); }).catch(() => {}); }
   try { await carregar(false); } catch (e) { $('#carga').innerHTML = '<div class="fail">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</div>'; return; }
   $('#carga').hidden = true; show(st.tab);

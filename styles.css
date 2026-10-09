@@ -133,7 +133,7 @@ html[data-layout=mobile] #q2 td:first-child{white-space:normal;line-height:1.2}
 .top{background:var(--bar);color:#fff;border-bottom:0}.brand,.brand b{color:#fff}.brand small{color:rgba(255,255,255,.78)}
 .top .btn,.top .icon{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.38)}.top .btn:hover,.top .icon:hover{background:rgba(255,255,255,.22)}
 .card,.hero,.ban{border-radius:14px;box-shadow:var(--shadow)}
-.hero{background:linear-gradient(135deg,#0b1f4d,#1e4fa3);color:#fff;border:0}
+.hero{background:linear-gradient(135deg,var(--h1,#0b1f4d),var(--h2,#1e4fa3));color:#fff;border:0}
 .hero .nome,.hero .kv2 span,.hero .cap{color:rgba(255,255,255,.8)}.hero .big,.hero .kv2 b{color:#fff}.hero .big small{color:rgba(255,255,255,.8)}
 .hero .btn{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)}.hero .btn:hover{background:rgba(255,255,255,.24)}
 .pill{border-color:var(--c,currentColor)}.pill.bad{background:var(--al-bg);color:var(--al-fg);border-color:var(--al-bd)}.pill.warn{background:var(--at-bg);color:var(--at-fg);border-color:var(--at-bd)}.pill.ok{background:var(--ok-bg);color:var(--ok-fg);border-color:var(--ok-bd)}
@@ -148,3 +148,9 @@ html[data-layout=mobile] .bnav button[aria-current=page]{color:var(--acc)}
 .share{white-space:pre-wrap;font:12.5px/1.5 var(--font);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;margin:6px 0}a.btn{display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
 details.ctrl[open]>summary{background:var(--sel);color:#fff;border-color:var(--sel)}details.ctrl>summary{border-radius:8px}
 .brand svg{flex:0 0 26px}
+
+/* esquema Amazônia: floresta, rio e urucum */
+html[data-paleta=amazonia]{--bg:#f0f5ef;--line:#d6e1d7;--grid:#e2eae3;--acc:#17703f;--bar:#0c3b2c;--sel:#0c3b2c;--h1:#0c3b2c;--h2:#1f7a4d;--fc:#c8641a;--band:#c8641a;--band2:#a85014;--trend:#6b3a8c;--sip:#0e7c86}
+@media(prefers-color-scheme:dark){html[data-paleta=amazonia]:not([data-theme=light]){--bg:#0b1511;--panel:#121e19;--line:#243830;--grid:#1d2c26;--acc:#6fcf9c;--bar:#0a2a21;--sel:#2f9e6a;--h1:#0a2a21;--h2:#17583a;--fc:#f0a04b;--band:#f0a04b;--band2:#f5b878;--trend:#c49be0;--sip:#4cc7cf}}
+html[data-paleta=amazonia][data-theme=dark]{--bg:#0b1511;--panel:#121e19;--line:#243830;--grid:#1d2c26;--acc:#6fcf9c;--bar:#0a2a21;--sel:#2f9e6a;--h1:#0a2a21;--h2:#17583a;--fc:#f0a04b;--band:#f0a04b;--band2:#f5b878;--trend:#c49be0;--sip:#4cc7cf}
+html[data-paleta=amazonia]:not([data-theme=dark]) .leg i.f{opacity:.4}
