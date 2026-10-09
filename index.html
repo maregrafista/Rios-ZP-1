@@ -139,6 +139,10 @@
     <h2>Dados</h2>
     <p class="cap" id="cie-d"></p>
     <div class="tw"><table id="t-dados"><thead><tr><th>Estação</th><th>Início</th><th>Fim</th><th class="n">Dias</th><th class="n">Cobertura</th><th class="n">Descartadas (QC)</th><th class="n">Anos na climatologia</th></tr></thead><tbody></tbody></table></div>
+    <details id="dl-det"><summary>Leituras diárias de régua (todas as estações)</summary>
+      <div class="row" style="margin-top:6px"><select id="dl-est" aria-label="Estação"></select><button class="lk" id="dl-copy" type="button">Copiar (CSV)</button><span class="cap" id="dl-n" style="margin:0"></span></div>
+      <div class="tw" style="max-height:360px"><table id="dl-tab"><thead><tr><th>Data</th><th class="n">Régua (m)</th><th class="n">Acima do NR (m)</th></tr></thead><tbody></tbody></table></div>
+    </details>
     <div class="row" style="margin-top:6px"><button class="lk" id="b-csv-s" type="button">Exportar série integrada (CSV)</button></div>
     <h2>Situação (alertas)</h2>
     <ul class="lim"><li><b>Abaixo do NR:</b> nível atual menor que o NR.</li><li><b>NR em N d:</b> a previsão cruza o NR em até 15 dias (≤ 7: vermelho).</li><li><b>&lt; 1 m do NR:</b> coluna menor que 1 m.</li></ul>

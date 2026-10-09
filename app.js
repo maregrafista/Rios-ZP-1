@@ -80,8 +80,11 @@ function layout() {
   const phone = matchMedia('(pointer:coarse)').matches && screen.width <= 800, vp = $('meta[name=viewport]');
   if (root.dataset.prevLayout !== mode) { $$('details.ctrl').forEach((d) => { d.open = mode === 'desktop'; }); root.dataset.prevLayout = mode; }
   const nvp = document.createElement('meta'); nvp.name = 'viewport'; nvp.content = mode === 'desktop' && phone ? 'width=1024,initial-scale=1,viewport-fit=cover' : 'width=device-width,initial-scale=1,viewport-fit=cover'; vp.replaceWith(nvp);
+  ajustaZoom();
   if (X) { setTimeout(redraw, 60); setTimeout(redraw, 400); }
 }
+function ajustaZoom() { const phone = matchMedia('(pointer:coarse)').matches && screen.width <= 800, w = innerWidth; root.style.zoom = root.dataset.layout === 'mobile' && phone && w > 500 ? String(Math.min(3, w / 460)) : ''; }
+addEventListener('resize', () => { ajustaZoom(); });
 $$('#seg-lay button').forEach((b) => b.addEventListener('click', () => { LS.set('layout', b.dataset.l); layout(); redraw(); }));
 matchMedia('(max-width:800px)').addEventListener('change', () => { if (LS.get('layout', 'auto') === 'auto') { layout(); redraw(); } });
 const dark = () => (root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme:dark)').matches));
@@ -341,6 +344,9 @@ function cie() {
   $('#t-val tbody').innerHTML = X.list.map((e) => { const c = (h) => { const s = e.prev.skill.find((x) => x.h === h); return `<td class="n">${s && s.metodo != null ? num(s.metodo) + ' (' + num(s.persistencia) + ')' : '—'}</td>`; }; return `<tr><td>${esc(e.nome)}</td><td class="n">${e.prev.n_origens}</td>${c(7)}${c(15)}${c(30)}${c(60)}${c(90)}</tr>`; }).join('');
   $('#qc-sum').textContent = 'Leituras descartadas pelo controle de qualidade (' + D.qc.length + ')';
   $('#t-qc tbody').innerHTML = [...D.qc].sort((a, b) => a.estacao.localeCompare(b.estacao) || a.data.localeCompare(b.data)).map((r) => `<tr><td>${esc(r.estacao)}</td><td>${r.data}</td><td class="n">${num(r.regua)}</td><td class="n">${num(r.mediana_local)}</td><td class="n">${sg(r.desvio_m)}</td></tr>`).join('');
+  const ds = $('#dl-est'); if (!ds.options.length) { ds.innerHTML = X.list.map((e) => `<option value="${e.id}">${esc(e.nome)}</option>`).join(''); ds.value = st.est; ds.onchange = leit; $('#dl-det').ontoggle = leit; $('#dl-copy').onclick = () => { const e = X.list.find((z) => z.id === ds.value), ks = [...e.m.keys()].sort((x, y) => x - y); copiar(['data;regua_m;acima_nr_m', ...ks.map((f) => ISO(f) + ';' + e.m.get(f).toFixed(2) + ';' + (e.m.get(f) - e.nr).toFixed(2))].join('\n'), 'Leituras de ' + e.nome + ' copiadas (CSV).'); }; }
+  function leit() { if (!$('#dl-det').open) return; const e = X.list.find((z) => z.id === ds.value), ks = [...e.m.keys()].sort((x, y) => y - x); $('#dl-n').textContent = ks.length + ' dias · ' + dmy(ISO(ks[ks.length - 1])) + ' a ' + dmy(ISO(ks[0])); $('#dl-tab tbody').innerHTML = ks.map((f) => `<tr><td>${dmy(ISO(f))}</td><td class="n">${num(e.m.get(f))}</td><td class="n">${num(e.m.get(f) - e.nr)}</td></tr>`).join(''); }
+  leit();
   const g = new Date(D.gerado); $('#cie-u').textContent = 'Dados gerados em ' + g.toLocaleString('pt-BR') + '. O app confere se há versão nova ao abrir e ao voltar para ele.';
 }
 $('#b-recarregar').addEventListener('click', async () => { try { const m = await carregar(false); redraw(); toast(m ? 'Dados novos carregados (' + dmy(D.hoje) + ').' : 'Você já está com a versão mais recente (' + dmy(D.hoje) + ').'); if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then((r) => r && r.update()); } catch (e) { toast('Sem conexão: usando os dados guardados.'); } });
