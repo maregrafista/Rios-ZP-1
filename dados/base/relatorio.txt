@@ -1,0 +1,17 @@
+Planilha: Santarem.xlsx (18433 leituras)
+Manaus           novos     0  atualizados   0  iguais  2432  conflitos   0  último dia 2026-10-08
+Itacoatiara      novos     0  atualizados   0  iguais  2448  conflitos   0  último dia 2026-10-08
+Parintins        novos     0  atualizados   0  iguais  2329  conflitos   0  último dia 2026-10-06
+Juruti           novos     0  atualizados   0  iguais  2241  conflitos   0  último dia 2026-10-08
+Óbidos           novos     0  atualizados   0  iguais  1456  conflitos   0  último dia 2026-10-08
+Santarém         novos     0  atualizados   0  iguais  2449  conflitos   0  último dia 2026-10-08
+Oriximiná        novos     0  atualizados   0  iguais  2457  conflitos   0  último dia 2026-10-08
+Porto Trombetas  novos     0  atualizados   0  iguais  2448  conflitos   0  último dia 2026-10-06
+Manaus           série 2020-01-01 a 2026-10-08 (2425 dias; QC descartou 7); +30 d: 16.586
+Itacoatiara      série 2020-01-01 a 2026-10-08 (2444 dias; QC descartou 4); +30 d: 3.324
+Parintins        série 2020-01-01 a 2026-10-06 (2282 dias; QC descartou 47); +30 d: -0.993
+Juruti           série 2020-01-10 a 2026-10-08 (2231 dias; QC descartou 10); +30 d: 3.024
+Óbidos           série 2022-09-24 a 2026-10-08 (1456 dias; QC descartou 0); +30 d: 0.449
+Santarém         série 2020-01-01 a 2026-10-08 (2446 dias; QC descartou 3); +30 d: 1.075
+Oriximiná        série 2020-01-01 a 2026-10-08 (2456 dias; QC descartou 1); +30 d: 0.423
+Porto Trombetas  série 2020-01-01 a 2026-10-06 (2443 dias; QC descartou 5); +30 d: 1.359

@@ -20,16 +20,16 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const PAL = { soft: ['#88CCEE', '#DDCC77', '#44AA99', '#AA4499', '#CC6677', '#999933', '#882255', '#117733'], hc: ['#33BBEE', '#009988', '#EE7733', '#CC3311', '#EE3377', '#0077BB', '#BBBBBB', '#555555'] };
+const PAL = { soft: ['#332288', '#88CCEE', '#117733', '#DDCC77', '#AA4499', '#888888', '#44AA99', '#CC6677'], dk: ['#9C93E8', '#88CCEE', '#4DB88A', '#DDCC77', '#D68AC4', '#AEAEAE', '#44AA99', '#CC6677'], hc: ['#33BBEE', '#009988', '#EE7733', '#CC3311', '#EE3377', '#0077BB', '#BBBBBB', '#555555'] };
 const CORES = { bad: 'var(--bad)', warn: 'var(--warn)', ok: 'var(--ok)' };
-const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: LS.get('jan', '365'), hc: LS.get('hc', false), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
+const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '60', '90', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
 let D = null, X = null;
 
 // ---------- dados ----------
 async function carregar(auto) {
-  const r = await fetch('data.json', { cache: 'no-cache' });
-  if (!r.ok) throw new Error('data.json ' + r.status);
-  const novo = await r.json();
+  let novo = null; const E0 = window.__ZP1__;
+  if (E0) { try { const r = await fetch(E0.url, { cache: 'no-cache' }); if (r.ok) { const j = await r.json(); if (j.gerado >= E0.dados.gerado) novo = j; } } catch (e) {} novo = novo || E0.dados; }
+  else { const r = await fetch('data.json', { cache: 'no-cache' }); if (!r.ok) throw new Error('data.json ' + r.status); novo = await r.json(); }
   const mudou = D && novo.gerado !== D.gerado;
   D = novo; derivar();
   LS.set('cache-gerado', D.gerado);
@@ -128,8 +128,8 @@ function compartilhar(id) {
 }
 
 // ---------- gráfico ----------
-const colAno = (y) => (y === X.cur ? 'var(--ink)' : (st.hc ? PAL.hc : PAL.soft)[(y - X.anos[0]) % 8]);
-const CAM = [['prev', 'Previsão', 'd', 'var(--ink)'], ['tend', 'Tendência +7 d', 'd', 'var(--trend)'], ['nom', 'Faixa nominal 95%', 'd', 'var(--band2)'], ['emp', 'Incerteza empírica', 'f', 'var(--band)'], ['med', 'Mediana', 'd', 'var(--mut)'], ['ref', 'NR', '', 'var(--bad)'], ['sip', 'Prev. SipamHidro', '', 'var(--mut)']];
+const colAno = (y) => (y === X.cur ? 'var(--ink)' : (st.hc ? PAL.hc : dark() ? PAL.dk : PAL.soft)[(y - X.anos[0]) % 8]);
+const CAM = [['prev', 'Previsão', 'd', 'var(--fc)'], ['tend', 'Tendência +7 d', 'd', 'var(--trend)'], ['nom', 'Faixa nominal 95%', 'd', 'var(--band2)'], ['emp', 'Incerteza empírica', 'f', 'var(--band)'], ['med', 'Mediana', 'd', 'var(--mut)'], ['ref', 'NR', '', 'var(--bad)'], ['sip', 'Prev. SipamHidro', '', 'var(--sip)']];
 function controles() {
   const r = $('#row-cam'); $$('.tg', r).forEach((x) => x.remove());
   for (const [k, t0, cl, c] of CAM) { const t = k === 'med' ? 'Mediana ' + X.anos[0] + '-' + String(X.cur).slice(2) : t0; const b = document.createElement('button'); b.type = 'button'; b.className = 'tg'; b.style.setProperty('--c', c); b.setAttribute('aria-pressed', String(st.cam[k])); b.innerHTML = `<i class="${cl}"></i>${t}`; b.onclick = () => { st.cam[k] = !st.cam[k]; LS.set('cam', st.cam); redraw(); }; r.append(b); }
@@ -146,7 +146,7 @@ function grafico() {
   const W = Math.max(300, box.clientWidth), Ht = Math.round(Math.min(520, Math.max(340, W * 0.55))), mg = { t: 14, r: W < 520 ? 42 : 54, b: 32, l: W < 520 ? 42 : 52 };
   const val = (y, f) => { const d = new Date(f * DAY), mo = d.getUTCMonth(), dd = d.getUTCDate(); if (mo === 1 && dd === 29) return null; const ty = d.getUTCFullYear() - (cur - y), v = m.get(Date.UTC(ty, mo, dd) / DAY); return v === undefined ? null : v - o; };
   const lines = [];
-  for (const y of X.anos) { if (!st.anos.has(y)) continue; const pts = []; for (let f = Math.floor(x0); f <= x1; f++) { if (y === cur) { if (f > orig) continue; const v = m.get(f); pts.push({ f, v: v === undefined ? null : v - o }); } else pts.push({ f, v: val(y, f) }); } lines.push({ y, pts, c: colAno(y), w: y === cur ? (st.hc ? 3 : 2.6) : (st.hc ? 2.2 : 1.8) }); }
+  for (const y of X.anos) { if (!st.anos.has(y)) continue; const pts = []; for (let f = Math.floor(x0); f <= x1; f++) { if (y === cur) { if (f > orig) continue; const v = m.get(f); pts.push({ f, v: v === undefined ? null : v - o }); } else pts.push({ f, v: val(y, f) }); } lines.push({ y, pts, c: colAno(y), w: y === cur ? (st.hc ? 3.2 : 2.8) : (st.hc ? 2.2 : 1.4) }); }
   const fc = []; for (let h = 0; h <= 100; h++) { const f = orig + h; if (f < x0 || f > x1 || P.f[h] == null) continue; const v = P.f[h] - o, g = (a, s) => (a[h] == null ? null : v + s * a[h]); fc.push({ f, h, v, nl: g(P.nom, -1), nh: g(P.nom, 1), el: g(P.el, -1), eh: g(P.eh, 1), ql: g(P.ql, -1), qh: g(P.qh, 1) }); }
   const r7 = P.taxa_cm_dia / 100, trend = [{ f: orig, v: P.L0 - o }, { f: orig + 7, v: P.L0 + r7 * 7 - o }];
   const med = []; if (c.med) for (let f = Math.floor(x0); f <= x1; f++) { const v = []; for (const y of X.anos) { const q = y < cur ? val(y, f) : (f <= orig ? (m.has(f) ? m.get(f) - o : null) : (P.f[f - orig] == null ? null : P.f[f - orig] - o)); if (q != null) v.push(q); } if (v.length >= 3) { v.sort((a, b) => a - b); med.push({ f, v: v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2 }); } }
@@ -157,27 +157,27 @@ function grafico() {
   const tk = ticks(lo, hi, 7); lo = Math.min(lo, tk.t[0]); hi = Math.max(hi, tk.t[tk.t.length - 1]);
   const xs = lin(x0, x1, mg.l, W - mg.r), yl = lin(lo, hi, Ht - mg.b, mg.t), xa = Ht - mg.b;
   const svg = sv('svg', { width: '100%', viewBox: `0 0 ${W} ${Ht}`, height: Ht, role: 'img', 'aria-label': 'Hidrograma de ' + e.nome });
-  if (orig < x1) svg.append(sv('rect', { x: xs(Math.max(orig, x0)), y: mg.t, width: xs(x1) - xs(Math.max(orig, x0)), height: xa - mg.t, fill: 'var(--ink)', opacity: 0.04 }));
+  if (orig < x1) svg.append(sv('rect', { x: xs(Math.max(orig, x0)), y: mg.t, width: xs(x1) - xs(Math.max(orig, x0)), height: xa - mg.t, fill: 'var(--fc)', opacity: 0.045 })); if (orig < x1 && xs(x1) - xs(Math.max(orig, x0)) > 60) svg.append(sv('text', { x: xs(x1) - 4, y: xa - 6, 'text-anchor': 'end', style: 'fill:var(--fc);font-style:italic' }, 'previsão'));
   const fmtY = (v) => num(v, tk.s < 1 ? 1 : 0);
-  for (const v of tk.t) { svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(v), y2: yl(v), stroke: 'var(--grid)' })); svg.append(sv('text', { x: mg.l - 6, y: yl(v) + 3.5, 'text-anchor': 'end' }, fmtY(v))); }
-  svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: xa, y2: xa, stroke: 'var(--line)' }));
+  for (const v of tk.t) { svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(v), y2: yl(v), stroke: 'var(--grid)', 'stroke-width': 0.8 })); svg.append(sv('line', { x1: mg.l - 4, x2: mg.l, y1: yl(v), y2: yl(v), stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('text', { x: mg.l - 7, y: yl(v) + 3.5, 'text-anchor': 'end' }, fmtY(v))); }
+  svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: xa, y2: xa, stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('line', { x1: mg.l, x2: mg.l, y1: mg.t, y2: xa, stroke: 'var(--ink)', 'stroke-width': 0.9 }));
   const lab = (f) => { const d = new Date(f * DAY); return String(d.getUTCDate()).padStart(2, '0') + ' ' + MES[d.getUTCMonth()]; };
   if (st.jan === '365' || st.jan === '180') {
     let d = new Date(x0 * DAY); d = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / DAY;
     while (d <= x1) { const dd = new Date(d * DAY), nx = Date.UTC(dd.getUTCFullYear(), dd.getUTCMonth() + 1, 1) / DAY; if (d >= x0) { svg.append(sv('line', { x1: xs(d), x2: xs(d), y1: xa, y2: xa + 5, stroke: 'var(--line)' })); if (d > x0) svg.append(sv('line', { x1: xs(d), x2: xs(d), y1: mg.t, y2: xa, stroke: 'var(--grid)', 'stroke-dasharray': '1 3' })); } const a = Math.max(d, x0), b = Math.min(nx, x1); if (b - a >= 14) svg.append(sv('text', { x: xs((a + b) / 2), y: xa + 18, 'text-anchor': 'middle' }, (W < 460 ? MES[dd.getUTCMonth()][0] : MES[dd.getUTCMonth()]) + (dd.getUTCMonth() === 0 && st.jan === '180' ? ' ' + dd.getUTCFullYear() : ''))); d = nx; }
   } else {
-    const sm = W < 520, step = { 7: 1, 15: sm ? 3 : 1, 30: sm ? 10 : 5, 45: sm ? 15 : 5, 60: sm ? 20 : 10, 90: sm ? 30 : 15 }[st.jan] || 15;
-    for (let k = -Math.floor((HOJE - x0) / step); HOJE + k * step <= x1; k++) { const f = HOJE + k * step; if (f < x0) continue; svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: mg.t, y2: xa, stroke: 'var(--grid)', 'stroke-dasharray': '1 3' })); svg.append(sv('text', { x: xs(f), y: xa + 18, 'text-anchor': 'middle' }, lab(f))); }
+    const sm = W < 520, step = { 7: 1, 15: sm ? 3 : 1, 30: sm ? 10 : 5, 60: sm ? 20 : 10, 90: sm ? 30 : 15 }[st.jan] || 15;
+    for (let k = -Math.floor((HOJE - x0) / step); HOJE + k * step <= x1; k++) { const f = HOJE + k * step; if (f < x0) continue; svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: mg.t, y2: xa, stroke: 'var(--grid)', 'stroke-dasharray': '1 3' })); svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: xa, y2: xa + 4, stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('text', { x: xs(f), y: xa + 17, 'text-anchor': 'middle' }, lab(f))); }
   }
   svg.append(sv('text', { transform: `translate(11 ${(mg.t + xa) / 2}) rotate(-90)`, 'text-anchor': 'middle' }, ref() ? 'Nível acima do NR (m)' : 'Leitura da régua (m)'));
   if (c.ref) { const yr = ref() ? 0 : e.nr; svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(yr), y2: yl(yr), stroke: 'var(--bad)', 'stroke-width': 1.4 })); svg.append(sv('text', { x: mg.l + 4, y: yl(yr) - 4, fill: 'var(--bad)', style: 'fill:var(--bad)' }, 'NR (datum da carta)' + (ref() ? '' : ' = ' + num(e.nr) + ' m'))); }
-  if (c.emp && fc.length) { svg.append(sv('path', { d: band(fc, 'el', 'eh', xs, yl), fill: 'var(--band)', opacity: st.hc ? 0.3 : 0.2 })); svg.append(sv('path', { d: band(fc, 'ql', 'qh', xs, yl), fill: 'var(--band)', opacity: st.hc ? 0.45 : 0.32 })); }
-  if (c.nom && fc.length) { for (const k of ['nl', 'nh']) { const q = fc.map((p) => ({ f: p.f, v: p[k] })); svg.append(sv('path', { d: pth(q, xs, yl), fill: 'none', stroke: 'var(--band2)', 'stroke-dasharray': '5 3', 'stroke-width': 1.4 })); } }
-  if (med.length) svg.append(sv('path', { d: pth(med, xs, yl), fill: 'none', stroke: 'var(--mut)', 'stroke-dasharray': '1 4', 'stroke-linecap': 'round', 'stroke-width': 2 }));
-  for (const l of [...lines].sort((a, b) => (a.y === cur) - (b.y === cur))) svg.append(sv('path', { d: pth(l.pts, xs, yl), fill: 'none', stroke: l.c, 'stroke-width': l.w, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
-  if (c.prev && fc.length > 1) svg.append(sv('path', { d: pth(fc, xs, yl), fill: 'none', stroke: 'var(--ink)', 'stroke-width': st.hc ? 3 : 2.6, 'stroke-dasharray': '7 4' }));
+  if (c.emp && fc.length) { svg.append(sv('path', { d: band(fc, 'el', 'eh', xs, yl), fill: 'var(--band)', opacity: st.hc ? 0.26 : 0.16 })); svg.append(sv('path', { d: band(fc, 'ql', 'qh', xs, yl), fill: 'var(--band)', opacity: st.hc ? 0.42 : 0.30 })); }
+  if (c.nom && fc.length) { for (const k of ['nl', 'nh']) { const q = fc.map((p) => ({ f: p.f, v: p[k] })); svg.append(sv('path', { d: pth(q, xs, yl), fill: 'none', stroke: 'var(--band2)', 'stroke-dasharray': '4 3', 'stroke-width': 1.1 })); } }
+  if (med.length) svg.append(sv('path', { d: pth(med, xs, yl), fill: 'none', stroke: 'var(--mut)', 'stroke-dasharray': '1 4', 'stroke-linecap': 'round', 'stroke-width': 2.2 }));
+  for (const l of [...lines].sort((a, b) => (a.y === cur) - (b.y === cur))) { const d = pth(l.pts, xs, yl); if (l.y === cur) svg.append(sv('path', { d, fill: 'none', stroke: 'var(--panel)', 'stroke-width': l.w + 3, opacity: 0.85, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' })); svg.append(sv('path', { d, fill: 'none', stroke: l.c, 'stroke-width': l.w, opacity: l.y === cur ? 1 : 0.92, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' })); }
+  if (c.prev && fc.length > 1) { const d = pth(fc, xs, yl); svg.append(sv('path', { d, fill: 'none', stroke: 'var(--panel)', 'stroke-width': 6, opacity: 0.85 })); svg.append(sv('path', { d, fill: 'none', stroke: 'var(--fc)', 'stroke-width': st.hc ? 3.2 : 2.8, 'stroke-dasharray': '6 3.5' })); }
   if (c.tend) { svg.append(sv('path', { d: pth(trend, xs, yl), fill: 'none', stroke: 'var(--trend)', 'stroke-width': 2, 'stroke-dasharray': '2 3', 'stroke-linecap': 'round' })); if (orig + 7 <= x1) svg.append(sv('circle', { cx: xs(orig + 7), cy: yl(trend[1].v), r: 3.5, fill: 'var(--trend)' })); }
-  for (const p of sip) svg.append(sv('path', { transform: `translate(${xs(p.f)} ${yl(p.v)})`, d: p.k === 1 ? 'M-4.5 0a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0' : 'M0-5.5L5.5 4.5H-5.5Z', fill: 'var(--panel)', stroke: 'var(--ink)', 'stroke-width': 1.5 }));
+  for (const p of sip) svg.append(sv('path', { transform: `translate(${xs(p.f)} ${yl(p.v)})`, d: p.k === 1 ? 'M-4.5 0a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0' : 'M0-5.5L5.5 4.5H-5.5Z', fill: 'var(--sip)', stroke: 'var(--panel)', 'stroke-width': 1.4 }));
   if (HOJE >= x0 && HOJE <= x1) { svg.append(sv('line', { x1: xs(HOJE), x2: xs(HOJE), y1: mg.t, y2: xa, stroke: 'var(--ink)', 'stroke-dasharray': '2 3', opacity: 0.7 })); svg.append(sv('text', { class: 'ink', x: xs(HOJE) + 4, y: mg.t + 10 }, 'últ. leitura ' + dm(ISO(HOJE)))); }
   if (orig >= x0 && orig <= x1 && m.has(orig)) svg.append(sv('circle', { cx: xs(orig), cy: yl(m.get(orig) - o), r: 4, fill: 'var(--ink)', stroke: 'var(--panel)', 'stroke-width': 1.5 }));
   const ends = lines.map((l) => { let q = null; for (const p of l.pts) if (p.v != null) q = p; return q && l.y !== cur ? { y: l.y, c: l.c, py: yl(q.v) } : null; }).filter(Boolean);
@@ -192,13 +192,15 @@ function grafico() {
     const rc = svg.getBoundingClientRect(), px = (ev.clientX - rc.left) * (W / rc.width), py = (ev.clientY - rc.top) * (W / rc.width), f = Math.round(xs.inv(px));
     if (f < x0 || f > x1) return; cross.setAttribute('x1', xs(f)); cross.setAttribute('x2', xs(f)); cross.setAttribute('opacity', 1);
     const rows = [], dd = []; for (const l of [...lines].reverse()) { const p = l.pts.find((q) => q.f === f); if (p && p.v != null) { rows.push({ c: l.c, t: l.y + (l.y === cur ? ' (obs.)' : ''), v: p.v }); dd.push({ c: l.c, v: p.v }); } }
-    const q = fcm.get(f); if (q && f > orig && c.prev) { rows.unshift({ c: 'var(--ink)', t: cur + ' (prev.)', v: q.v }); dd.push({ c: 'var(--ink)', v: q.v }); }
+    const q = fcm.get(f); if (q && f > orig && c.prev) { rows.unshift({ c: 'var(--fc)', t: cur + ' (prev.)', v: q.v }); dd.push({ c: 'var(--fc)', v: q.v }); }
     dots.replaceChildren(...dd.map((p) => sv('circle', { cx: xs(f), cy: yl(p.v), r: 3.5, fill: p.c, stroke: 'var(--panel)' })));
     tip.innerHTML = `<div class="h">${lab(f)}${f > HOJE ? ' · +' + (f - HOJE) + ' d' : ''}</div>` + rows.map((r) => `<div class="r"><span><i style="--c:${r.c}"></i>${r.t}</span><b>${num(r.v)}</b></div>`).join('') + (q && f > orig && c.emp && q.el != null ? `<div class="n">Empírica 95%: ${num(q.el)} a ${num(q.eh)}</div>` : '') + (q && f > orig && c.nom && q.nl != null ? `<div class="n">Nominal 95%: ${num(q.nl)} a ${num(q.nh)}</div>` : '');
     tip.style.opacity = 1; const tw = tip.offsetWidth; tip.style.left = Math.max(4, Math.min(W - tw - 4, px + 14 + tw > W ? px - tw - 14 : px + 14)) + 'px'; tip.style.top = Math.max(4, Math.min(Ht - tip.offsetHeight - 4, py - 20)) + 'px';
   };
   ov.addEventListener('pointermove', mover); ov.addEventListener('pointerdown', mover); ov.addEventListener('pointerleave', () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); dots.replaceChildren(); });
   svg.append(ov); box.replaceChildren(svg, tip);
+  const lg = []; if (st.anos.has(cur)) lg.push(['', 'var(--ink)', 'Observado ' + cur]); if (c.prev) lg.push(['d', 'var(--fc)', 'Previsão']); if (c.emp) lg.push(['f', 'var(--band)', 'Incerteza empírica 50 e 95%']); if (c.tend) lg.push(['t', 'var(--trend)', 'Tendência 7 d']); if (c.sip) lg.push(['s', 'var(--sip)', 'Prev. SipamHidro']);
+  $('#leg').innerHTML = lg.map(([k, col, t]) => `<span><i class="${k}" style="--c:${col}"></i>${t}</span>`).join('');
   const head = ['data', ...lines.map((l) => l.y), 'previsao', 'emp_inf', 'emp_sup', 'nom_inf', 'nom_sup'], csv = [head.join(';')];
   for (let f = Math.floor(x0); f <= x1; f++) { const q = fcm.get(f); csv.push([ISO(f), ...lines.map((l) => { const p = l.pts.find((z) => z.f === f); return p && p.v != null ? num(p.v) : ''; }), q ? num(q.v) : '', q && q.el != null ? num(q.el) : '', q && q.eh != null ? num(q.eh) : '', q && q.nl != null ? num(q.nl) : '', q && q.nh != null ? num(q.nh) : ''].join(';')); }
   csvG = '# ' + e.nome + ' · ' + uni() + '\n' + csv.join('\n');
@@ -231,15 +233,43 @@ function prever() {
     <div class="qa"><button class="btn" data-a="ficha" type="button">Detalhes</button><button class="btn" data-a="conv" type="button">Converter na carta</button><button class="btn" data-a="comp" type="button">Compartilhar</button></div></div>`;
   const ch = $('#chips'); ch.replaceChildren(...X.list.map((s) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(s.id === st.est)); b.style.setProperty('--c', CORES[s.r.s.c]); b.innerHTML = `<i></i>${esc(s.nome)}`; b.onclick = () => { st.est = s.id; LS.set('est', s.id); redraw(); }; return b; }));
   const sel = $('#chips [aria-selected=true]'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'center' });
-  $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Contínua: observado. Tracejada espessa: previsão (100 d). Laranja: tendência de 7 d. Sombreado: incerteza empírica; tracejadas finas: faixa nominal 95%. Triângulo/círculo: modelos 2/1 do SipamHidro. Shift-clique isola um ano.`;
+  $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Contínua: observado. Tracejada laranja: previsão (100 d). Pontilhada azul: tendência de 7 d. Sombreado: incerteza empírica (50 e 95%); tracejadas finas: faixa nominal 95%. Triângulo/círculo verdes: modelos 2/1 do SipamHidro. Shift-clique isola um ano.`;
   $('#q1-c').textContent = 'Horizonte a partir da última leitura (' + dmy(ISO(X.HOJE)) + ').';
-  $('#q1 tbody').innerHTML = [0, 7, 15, 30, 60, 90].map((h) => { const i = h + atr; if (i > 100 || e.prev.f[i] == null) return ''; const v = vv(e, e.prev.f[i]), P = e.prev, rg = (a, b) => (a == null ? '—' : num(v - a) + ' a ' + num(v + b)); return `<tr><td>${h ? '+' + h + ' d' : 'atual'}</td><td>${dmy(ISO(X.HOJE + h))}</td><td class="n${ref() && v < 0 ? ' neg' : ''}">${num(v)}</td><td class="n">${rg(P.el[i], P.eh[i])}</td><td class="n">${rg(P.nom[i], P.nom[i])}</td></tr>`; }).join('');
+  $('#q1 tbody').innerHTML = [0, 7, 15, 30, 60, 90].map((h) => { const i = h + atr; if (i > 100 || e.prev.f[i] == null) return ''; const v = vv(e, e.prev.f[i]), P = e.prev, rg = (a, b) => (a == null ? '—' : num(v - a) + '<span class="hm"> a </span><span class="hs">…</span>' + num(v + b)); return `<tr><td>${h ? '+' + h + ' d' : 'atual'}<small class="hs"> ${dm(ISO(X.HOJE + h))}</small></td><td class="hm">${dmy(ISO(X.HOJE + h))}</td><td class="n${ref() && v < 0 ? ' neg' : ''}">${num(v)}</td><td class="n">${rg(P.el[i], P.eh[i])}</td><td class="n">${rg(P.nom[i], P.nom[i])}</td></tr>`; }).join('');
   ['q1-n'].forEach((i) => { $('#' + i).textContent = 'Nível (' + uni() + ')'; });
-  $('#q2-c').textContent = 'Toque na linha para o resumo.';
+  $('#q2-c').textContent = 'Toque na linha para o resumo. ● situação: vermelho = abaixo ou próximo do NR; âmbar = atenção; verde = normal.';
   const ord = { bad: 0, warn: 1, ok: 2 };
-  $('#q2 tbody').innerHTML = [...X.list].sort((a, b) => ord[a.r.s.c] - ord[b.r.s.c] || (a.r.L0 - a.nr) - (b.r.L0 - b.nr)).map((s) => { const q = s.r, n = (v) => `<td class="n${ref() && vv(s, v) < 0 ? ' neg' : ''}">${num(vv(s, v))}</td>`; return `<tr data-id="${s.id}" class="${s.id === st.est ? 'sel' : ''}"><td>${esc(s.nome)}</td><td><span class="pill ${q.s.c}">${esc(q.s.t)}</span></td>${n(q.L0)}<td class="n">${sg(q.d1, 0)}</td><td class="n">${sg(q.d7, 0)}</td><td class="n">${sg(q.taxa, 1)}</td>${n(q.f7)}${n(q.f15)}${n(q.f30)}${n(q.min)}</tr>`; }).join('');
+  $('#q2 tbody').innerHTML = [...X.list].sort((a, b) => ord[a.r.s.c] - ord[b.r.s.c] || (a.r.L0 - a.nr) - (b.r.L0 - b.nr)).map((s) => { const q = s.r, n = (v) => `<td class="n${ref() && vv(s, v) < 0 ? ' neg' : ''}">${num(vv(s, v))}</td>`; return `<tr data-id="${s.id}" class="${s.id === st.est ? 'sel' : ''}"><td><i class="dot ${q.s.c}" title="${esc(q.s.t)}"></i>${esc(s.nome)}</td><td class="hm"><span class="pill ${q.s.c}">${esc(q.s.t)}</span></td>${n(q.L0)}<td class="n hm">${sg(q.d1, 0)}</td><td class="n">${sg(q.d7, 0)}</td><td class="n hm">${sg(q.taxa, 1)}</td>${n(q.f7)}${n(q.f15)}${n(q.f30)}${n(q.min)}</tr>`; }).join('');
   $$('#q2 tbody tr').forEach((tr) => tr.addEventListener('click', () => sheetEstacao(tr.dataset.id)));
-  controles(); if (st.tab === 'prev') grafico();
+  cmpSip(); controles(); if (st.tab === 'prev') grafico();
+}
+
+// ---------- comparação com SipamHidro (muda com a janela) ----------
+function cmpSip() {
+  const e = E(), r = e.r, o = off(e), u = uni(), h = st.jan === '365' ? null : (st.jan === '180' ? 91 : +st.jan / 2), HOJE = X.HOJE;
+  const fim = h == null ? Date.UTC(X.cur, 11, 31) / DAY : HOJE + h, rows = [], tx = [];
+  const s15 = D.sipam.var15.find((s) => s.codigo_ana && s.codigo_ana === e.ana);
+  const cmp = []; for (const z of X.list) { const s = D.sipam.var15.find((q) => q.codigo_ana && q.codigo_ana === z.ana); if (s && z.r.d15 != null) cmp.push([z.r.d15, s.var15_cm]); }
+  let rr = null; if (cmp.length > 2) { const mx = mean(cmp.map((c) => c[0])), my = mean(cmp.map((c) => c[1])); rr = cmp.reduce((a, c) => a + (c[0] - mx) * (c[1] - my), 0) / Math.sqrt(cmp.reduce((a, c) => a + (c[0] - mx) ** 2, 0) * cmp.reduce((a, c) => a + (c[1] - my) ** 2, 0)); }
+  if (s15 && r.d15 != null) {
+    if (h != null && h <= 3.5) { const a = r.taxa, b = s15.var15_cm / 15; rows.push(['Taxa, cm/d (SipamHidro: 15 d)', sg(a, 1), sg(b, 1), sg(a - b, 1)]); tx.push(`Taxa de ${sg(a, 1)} cm/d no painel contra ${sg(b, 1)} cm/d no boletim (média de 15 d)`); }
+    else { rows.push(['Variação em 15 d, cm', sg(r.d15, 0), sg(s15.var15_cm, 0), sg(r.d15 - s15.var15_cm, 0)]); tx.push(`Em 15 d o painel registra ${sg(r.d15, 0)} cm e o boletim ${sg(s15.var15_cm, 0)} cm (diferença ${sg(r.d15 - s15.var15_cm, 0)} cm)`); }
+  } else tx.push('Esta estação não consta na tabela de variação em 15 d do boletim');
+  const meses = [], dif = [];
+  for (const p of D.sipam.prog) if (p.estacao === e.nome) {
+    const [ano, mm] = p.mes.split('-').map(Number), ini = Date.UTC(ano, mm - 1, 1) / DAY, fm = Date.UTC(ano, mm, 0) / DAY;
+    if (fm < HOJE || ini > fim) continue;
+    const v = []; e.m.forEach((val, f) => { if (f >= ini && f <= fm) v.push(val); }); for (let k = 1; k <= 100; k++) { const f = r.t0 + k; if (f >= ini && f <= fm && e.prev.f[k] != null) v.push(e.prev.f[k]); }
+    if (!v.length) continue; const mn = Math.min(...v) - o, m1 = p.modelo1_cm == null ? null : p.modelo1_cm / 100 - o, m2 = p.modelo2_cm == null ? null : p.modelo2_cm / 100 - o;
+    rows.push([MES[mm - 1].charAt(0) + MES[mm - 1].slice(1).toLowerCase() + '/' + String(ano).slice(2) + ', mínima, m', num(mn), (m1 == null ? '—' : num(m1)) + ' | ' + (m2 == null ? '—' : num(m2)), m2 == null ? '—' : sg(mn - m2)]);
+    meses.push(MES[mm - 1].toLowerCase()); if (m2 != null) dif.push([MES[mm - 1].toLowerCase(), mn - m2]);
+  }
+  if (meses.length) { const mx = dif.reduce((a, b) => (Math.abs(b[1]) > Math.abs(a[1]) ? b : a), dif[0]); tx.push(dif.length ? `${meses.length > 1 ? 'Nos meses da janela' : 'No mês da janela'} (${meses.join(', ')}), o painel fica ${num(Math.abs(mx[1]))} m ${mx[1] >= 0 ? 'acima' : 'abaixo'} do modelo 2 em ${mx[0]}, a maior diferença` : 'O boletim não traz o modelo 2 para este mês') + ` (modelos 1 | 2 do boletim, leitura gráfica ±0,15 m)`; }
+  else tx.push(D.sipam.prog.some((p) => p.estacao === e.nome) ? 'Sem mês de modelo do boletim dentro da janela' : 'O boletim não traz modelos mensais para esta estação');
+  if (rr != null && (h == null || h > 3.5)) tx.push(`Nas ${cmp.length} estações comuns a variação em 15 d do painel e do boletim tem r = ${num(rr, 2)}`);
+  $('#cs-t').textContent = e.nome + ' · janela ' + (h == null ? 'Ano' : st.jan + ' d') + ' · boletim ' + dmy(D.sipam.boletim) + '. ' + tx.join('. ') + '.';
+  $('#cs-tab tbody').innerHTML = rows.length ? rows.map((q, i) => `<tr><td>${esc(q[0])}</td><td class="n">${q[1]}</td><td class="n">${q[2]}</td><td class="n">${q[3]}</td></tr>`).join('') : '<tr><td colspan="4">Sem dados do boletim para esta estação.</td></tr>';
+  $('#cs-n').textContent = 'Níveis em ' + u + '. Dif. = painel − SipamHidro (modelo 2 nos meses).';
 }
 
 // ---------- diagnóstico ----------
@@ -282,17 +312,17 @@ function rfReset() { const e = E(); $('#rf-est').value = e.id; $('#rf-nr').value
 function rfCalc(from) {
   const nr = parseFloat($('#rf-nr').value), l = parseFloat($('#rf-leit').value), c = parseFloat($('#rf-col').value);
   if (from === 'leit' || from === 'nr') { if (isFinite(l) && isFinite(nr)) $('#rf-col').value = (Math.round((l - nr) * 100) / 100).toFixed(2); } else if (from === 'col' && isFinite(c) && isFinite(nr)) $('#rf-leit').value = (Math.round((c + nr) * 100) / 100).toFixed(2);
-  const col = parseFloat($('#rf-col').value), s = parseFloat($('#rf-sond').value), cal = parseFloat($('#rf-cal').value), pr = s + col, uk = pr - cal;
+  const col = parseFloat($('#rf-col').value), s = parseFloat($('#rf-sond').value), cal = parseFloat($('#rf-cal').value), pr = s + col, sq = parseFloat($('#rf-sq').value), uk = col + s - cal - (isFinite(sq) ? sq : 0);
   $('#rs-col').textContent = isFinite(col) ? sg(col) + ' m' : '—'; $('#rs-prof').textContent = isFinite(pr) ? num(pr) + ' m' : '—'; const u = $('#rs-ukc'); u.textContent = isFinite(uk) ? sg(uk) + ' m' : '—'; u.style.color = uk < 0 ? 'var(--bad)' : '';
 }
-['leit', 'nr', 'col'].forEach((k) => $('#rf-' + k).addEventListener('input', () => rfCalc(k))); ['sond', 'cal'].forEach((k) => $('#rf-' + k).addEventListener('input', () => rfCalc('x')));
+['leit', 'nr', 'col'].forEach((k) => $('#rf-' + k).addEventListener('input', () => rfCalc(k))); ['sond', 'cal', 'sq'].forEach((k) => $('#rf-' + k).addEventListener('input', () => rfCalc('x')));
 $('#rf-est').addEventListener('change', (ev) => { st.est = ev.target.value; LS.set('est', st.est); rfReset(); });
 $('#rf-ult').addEventListener('click', () => { $('#rf-leit').value = E().r.L0; rfCalc('leit'); });
 $('#rf-nrad').addEventListener('click', () => { $('#rf-nr').value = E().nr; rfCalc('nr'); });
-function rfTabela() { $('#rf-log tbody').innerHTML = rfLog.length ? rfLog.map((r) => `<tr>${r.map((c, i) => `<td class="${i > 1 ? 'n' : ''}">${esc(c)}</td>`).join('')}</tr>`).join('') : '<tr><td colspan="9">Nenhum registro.</td></tr>'; }
-$('#rf-reg').addEventListener('click', () => { const v = (i) => parseFloat($('#' + i).value); if (!isFinite(v('rf-col'))) return; const col = v('rf-col'), pr = v('rf-sond') + col; rfLog.unshift([new Date().toLocaleString('pt-BR'), E().nome, num(v('rf-leit')), num(v('rf-nr')), sg(col), num(v('rf-sond')), num(pr), num(v('rf-cal')), sg(pr - v('rf-cal'))]); rfLog = rfLog.slice(0, 300); LS.set('log', rfLog); rfTabela(); toast('Conversão registrada neste aparelho.'); });
+function rfTabela() { $('#rf-log tbody').innerHTML = rfLog.length ? rfLog.map((r0) => { const r = r0.length === 9 ? [...r0.slice(0, 8), '—', r0[8]] : r0; return r; }).map((r) => `<tr>${r.map((c, i) => `<td class="${i > 1 ? 'n' : ''}">${esc(c)}</td>`).join('')}</tr>`).join('') : '<tr><td colspan="10">Nenhum registro.</td></tr>'; }
+$('#rf-reg').addEventListener('click', () => { const v = (i) => parseFloat($('#' + i).value); if (!isFinite(v('rf-col'))) return; const col = v('rf-col'), pr = v('rf-sond') + col; rfLog.unshift([new Date().toLocaleString('pt-BR'), E().nome, num(v('rf-leit')), num(v('rf-nr')), sg(col), num(v('rf-sond')), num(pr), num(v('rf-cal')), num(isFinite(v('rf-sq')) ? v('rf-sq') : 0), sg(col + v('rf-sond') - v('rf-cal') - (isFinite(v('rf-sq')) ? v('rf-sq') : 0))]); rfLog = rfLog.slice(0, 300); LS.set('log', rfLog); rfTabela(); toast('Conversão registrada neste aparelho.'); });
 $('#rf-clear').addEventListener('click', () => { if (rfLog.length && confirm('Apagar todos os registros deste aparelho?')) { rfLog = []; LS.set('log', rfLog); rfTabela(); } });
-$('#rf-copy').addEventListener('click', () => copiar(['data_hora;estacao;leitura_m;nr_m;coluna_m;sondagem_m;profundidade_m;calado_m;folga_m', ...rfLog.map((r) => r.join(';'))].join('\n').replace(/−/g, '-'), 'Registros copiados (CSV).'));
+$('#rf-copy').addEventListener('click', () => copiar(['data_hora;estacao;leitura_m;nr_m;coluna_m;sondagem_m;profundidade_m;calado_m;squat_m;faq_m', ...rfLog.map((r) => (r.length === 9 ? [...r.slice(0, 8), '', r[8]] : r).join(';'))].join('\n').replace(/−/g, '-'), 'Registros copiados (CSV).'));
 function refPag() {
   const sel = $('#rf-est'); if (!sel.options.length) sel.innerHTML = X.list.map((e) => `<option value="${e.id}">${esc(e.nome)}</option>`).join(''); sel.value = st.est; if (!$('#rf-nr').value) rfReset();
   $('#t-nr tbody').innerHTML = X.list.map((e) => { const f = (v) => num(v, 3).replace(/,?0$/, ''); return `<tr><td>${esc(e.nome)}</td><td>${esc(e.carta)}</td><td>${esc(e.rn)}</td><td class="n">${num(e.nr_rn_cm)}</td><td class="n">${num(e.zero_rn_cm)}</td><td class="n">${f(e.nr_f43)}</td><td class="n" style="font-weight:600">${f(e.nr)}</td><td>${esc(e.fonte_nr)}${Math.abs(e.nr - e.nr_f43) > 0.0005 ? ' (' + sg(e.nr - e.nr_f43) + ' m vs. F-43)' : ''}</td><td><a href="files/${fileOf(e.nome)}" target="_blank" rel="noopener">F-43 (PDF)</a></td></tr>`; }).join(''); rfTabela();
@@ -401,7 +431,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 let lastCheck = Date.now();
 async function iniciar() {
   layout(); tema(); banner();
-  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').then((r) => { r.addEventListener('updatefound', () => { const w = r.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) toast('Nova versão do app disponível.', 'Atualizar', () => location.reload()); }); }); }).catch(() => {}); }
+  if ('serviceWorker' in navigator && !window.__ZP1__) { navigator.serviceWorker.register('sw.js').then((r) => { r.addEventListener('updatefound', () => { const w = r.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) toast('Nova versão do app disponível.', 'Atualizar', () => location.reload()); }); }); }).catch(() => {}); }
   try { await carregar(false); } catch (e) { $('#carga').innerHTML = '<div class="fail">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</div>'; return; }
   $('#carga').hidden = true; show(st.tab);
 }

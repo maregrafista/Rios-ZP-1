@@ -8,9 +8,10 @@ if [ -n "$TEM_REMOTO" ]; then
   git pull --rebase --autostash -q origin main || echo "Aviso: git pull falhou (login ou rede). Seguindo com os arquivos locais."
 fi
 python3 tools/atualizar.py || exit 1
-if [ -n "$(git status --porcelain -- data.json sw.js dados/base)" ]; then
+python3 tools/gerar_artefato.py >/dev/null && echo "Artefato regenerado (artefato/index.html)."
+if [ -n "$(git status --porcelain -- data.json sw.js dados/base artefato)" ]; then
   ATE=$(python3 -c "import json;print(json.load(open('data.json'))['hoje'])")
-  git add data.json sw.js dados/base
+  git add data.json sw.js dados/base artefato
   git commit -q -m "Atualiza dados até ${ATE}"
   echo "Commit local: dados até ${ATE}."
   if [ -n "$TEM_REMOTO" ]; then

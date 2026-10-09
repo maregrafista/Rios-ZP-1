@@ -6,6 +6,13 @@
 <title>Rios ZP-1 · Nível e previsão</title>
 <meta name="description" content="Níveis observados e previsão dos rios da ZP-1 em referência ao nível de redução (NR) da carta.">
 <meta name="theme-color" content="#ffffff">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rios ZP-1">
+<meta property="og:title" content="Rios ZP-1 · Nível e previsão dos rios">
+<meta property="og:description" content="Níveis observados e previsão em relação ao NR: Manaus a Porto Trombetas.">
+<meta property="og:url" content="https://maregrafista.github.io/Rios-ZP-1/">
+<meta property="og:image" content="https://maregrafista.github.io/Rios-ZP-1/icon-512.png">
+<meta name="twitter:card" content="summary">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -32,7 +39,6 @@
 </header>
 
 <div class="tools">
-  <div class="seg" id="seg-ref" role="group" aria-label="Referencial vertical"><button data-r="nr" type="button">Acima do NR</button><button data-r="regua" type="button">Zero da régua</button></div>
   <div class="tr">
     <div class="seg" id="seg-lay" role="group" aria-label="Versão da tela"><button data-l="mobile" type="button">Celular</button><button data-l="desktop" type="button">Computador</button></div>
     <button class="icon" id="b-tema" type="button" aria-label="Alternar modo escuro" title="Modo claro/escuro"></button>
@@ -59,22 +65,27 @@
     <div class="chips" id="chips" role="tablist" aria-label="Estações"></div>
     <div class="card">
       <div class="row"><span class="t">Janela</span>
-        <div class="seg" id="seg-jan" role="group" aria-label="Janela temporal"><button data-j="7" type="button">7 d</button><button data-j="15" type="button">15 d</button><button data-j="30" type="button">30 d</button><button data-j="45" type="button">45 d</button><button data-j="60" type="button">60 d</button><button data-j="90" type="button">90 d</button><button data-j="180" type="button">180 d</button><button data-j="365" type="button">Ano</button></div>
+        <div class="seg" id="seg-jan" role="group" aria-label="Janela temporal"><button data-j="7" type="button">7 d</button><button data-j="15" type="button">15 d</button><button data-j="30" type="button">30 d</button><button data-j="60" type="button">60 d</button><button data-j="90" type="button">90 d</button><button data-j="180" type="button">180 d</button><button data-j="365" type="button">Ano</button></div>
       </div>
       <div class="ctrls">
         <details class="ctrl" id="ctrl-cam"><summary>Camadas</summary><div class="row" id="row-cam"></div></details>
         <details class="ctrl" id="ctrl-anos"><summary>Anos</summary><div class="row" id="row-anos"></div></details>
       </div>
+      <div class="row refrow"><div class="seg" id="seg-ref" role="group" aria-label="Referencial vertical"><button data-r="nr" type="button">Acima do NR</button><button data-r="regua" type="button">Zero da régua</button></div></div>
       <div class="chart" id="chart" aria-label="Hidrograma"></div>
+      <div class="leg" id="leg"></div>
       <p class="cap" id="cap1"></p>
       <div class="row"><button class="lk" id="b-csv-g" type="button">Exportar dados do gráfico (CSV)</button><button class="lk" id="b-share" type="button">Compartilhar situação</button></div>
     </div>
-    <h2>Previsão da estação</h2>
+    <div class="card" id="cmp-sip" style="margin-top:12px"><h2 style="margin:0 0 4px">Comparação com SipamHidro</h2><p class="cap" id="cs-t"></p><div class="tw"><table id="cs-tab"><thead><tr><th>Item</th><th class="n">Painel</th><th class="n">SipamHidro</th><th class="n">Dif.</th></tr></thead><tbody></tbody></table></div><p class="cap" id="cs-n" style="margin:6px 0 0"></p></div>
+    <h2>Previsão da estação*</h2>
     <p class="cap" id="q1-c"></p>
-    <div class="tw"><table id="q1"><thead><tr><th>Horizonte</th><th>Data</th><th class="n" id="q1-n">Nível (m)</th><th class="n">Faixa empírica 95%</th><th class="n">Faixa nominal 95%</th></tr></thead><tbody></tbody></table></div>
-    <h2>Todas as estações</h2>
+    <div class="tw"><table id="q1"><thead><tr><th>Horizonte</th><th class="hm">Data</th><th class="n" id="q1-n">Nível (m)</th><th class="n">Emp. 95%</th><th class="n">Nom. 95%</th></tr></thead><tbody></tbody></table></div>
+    <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p>
+    <h2>Todas as estações*</h2>
     <p class="cap" id="q2-c"></p>
-    <div class="tw"><table class="click" id="q2"><thead><tr><th>Estação</th><th>Situação</th><th class="n" id="q2-a">Nível (m)</th><th class="n">Δ 24 h</th><th class="n">Δ 7 d</th><th class="n">cm/d</th><th class="n" id="q2-7">+7 d</th><th class="n" id="q2-15">+15 d</th><th class="n" id="q2-30">+30 d</th><th class="n" id="q2-m">Mínimo previsto</th></tr></thead><tbody></tbody></table></div>
+    <div class="tw"><table class="click" id="q2"><thead><tr><th>Estação</th><th class="hm">Situação</th><th class="n" id="q2-a">Nível (m)</th><th class="n hm">Δ 24 h</th><th class="n">Δ 7 d</th><th class="n hm">cm/d</th><th class="n" id="q2-7">+7 d</th><th class="n" id="q2-15">+15 d</th><th class="n" id="q2-30">+30 d</th><th class="n" id="q2-m"><span class="hm">Mínimo previsto</span><span class="hs">Mín.</span></th></tr></thead><tbody></tbody></table></div>
+    <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p>
   </section>
 
   <section class="view" id="v-diag" hidden>
@@ -94,7 +105,7 @@
 
   <section class="view" id="v-ref" hidden>
     <h2 style="margin-top:0">Referência vertical</h2>
-    <p class="cap">Coluna acima do NR = leitura − NR na régua. Profundidade = sondagem da carta + coluna. Válido junto à estação.</p>
+    <p class="cap">Coluna acima do NR = leitura − NR na régua. FAQ = coluna acima do NR + sondagem − calado − squat. Válido junto à estação.</p>
     <h3>Aplicação local</h3>
     <div class="tool">
       <label>Estação<select id="rf-est"></select></label>
@@ -103,13 +114,14 @@
       <label>Coluna acima do NR (m)<input type="number" step="0.01" id="rf-col" inputmode="decimal"></label>
       <label>Sondagem na carta (m)<input type="number" step="0.1" id="rf-sond" inputmode="decimal" value="3.0"></label>
       <label>Calado (m)<input type="number" step="0.1" id="rf-cal" inputmode="decimal" value="2.5"></label>
+      <label>Squat (m)<input type="number" step="0.05" min="0" id="rf-sq" inputmode="decimal" value="0.0"></label>
     </div>
     <div class="row"><button class="lk" id="rf-ult" type="button">Usar última leitura</button><button class="lk" id="rf-nrad" type="button">Restaurar NR adotado</button></div>
-    <div class="res"><div><b id="rs-col">—</b><span>Coluna acima do NR</span></div><div><b id="rs-prof">—</b><span>Profundidade real</span></div><div><b id="rs-ukc">—</b><span>Folga sob a quilha</span></div></div>
+    <div class="res"><div><b id="rs-col">—</b><span>Coluna acima do NR</span></div><div><b id="rs-prof">—</b><span>Profundidade real</span></div><div><b id="rs-ukc">—</b><span>Folga Abaixo da Quilha (FAQ)</span></div></div>
     <div class="row"><button class="btn pri" id="rf-reg" type="button">Registrar conversão</button></div>
     <h3>Memória de conversão</h3>
     <p class="cap">Gravada neste aparelho.</p>
-    <div class="tw"><table id="rf-log"><thead><tr><th>Data/hora</th><th>Estação</th><th class="n">Leitura</th><th class="n">NR</th><th class="n">Coluna</th><th class="n">Sondagem</th><th class="n">Prof.</th><th class="n">Calado</th><th class="n">Folga</th></tr></thead><tbody></tbody></table></div>
+    <div class="tw"><table id="rf-log"><thead><tr><th>Data/hora</th><th>Estação</th><th class="n">Leitura</th><th class="n">NR</th><th class="n">Coluna</th><th class="n">Sondagem</th><th class="n">Prof.</th><th class="n">Calado</th><th class="n">Squat</th><th class="n">FAQ</th></tr></thead><tbody></tbody></table></div>
     <div class="row" style="margin-top:6px"><button class="lk" id="rf-copy" type="button">Copiar (CSV)</button><button class="lk" id="rf-clear" type="button">Limpar</button></div>
     <h3>Níveis de redução adotados</h3>
     <p class="cap">Fonte: F-43 (DHN). Itacoatiara e Parintins: nivelamento UNIPILOT.</p>
