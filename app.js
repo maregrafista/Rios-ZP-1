@@ -428,7 +428,7 @@ let bItens = [], bSel = 0;
 function abrirBusca() { if (!X) return; const d = $('#dlg-busca'); $('#bq').value = ''; buscaLista(''); d.showModal(); $('#bq').focus(); }
 function buscaLista(q) {
   const n = norm(q), acoes = [['Resumo do dia', 'Ação', () => abrirStory()], ['Alternar referencial (NR / régua)', 'Ação', () => { st.ref = ref() ? 'regua' : 'nr'; LS.set('ref', st.ref); redraw(); }], ['Alternar modo escuro', 'Ação', () => $('#b-tema').click()], ['Janela 30 dias', 'Gráfico', () => { st.jan = '30'; LS.set('jan', '30'); show('prev'); }], ['Janela 90 dias', 'Gráfico', () => { st.jan = '90'; LS.set('jan', '90'); show('prev'); }], ['Janela ano todo', 'Gráfico', () => { st.jan = '365'; LS.set('jan', '365'); show('prev'); }], ['Exportar série integrada (CSV)', 'Ação', () => $('#b-csv-s').click()], ['Como instalar o app', 'Ação', () => abrirInstalar()]];
-  const abas = [['Previsão', 'prev'], ['Diagnóstico', 'diag'], ['Calcular FAQ', 'ref'], ['Ciência e dados', 'cie']].map(([t, v]) => [t, 'Seção', () => show(v)]);
+  const abas = [['Previsão', 'prev'], ['Diagnóstico', 'diag'], ['Calcular FAQ', 'ref'], ['Info', 'cie']].map(([t, v]) => [t, 'Seção', () => show(v)]);
   const ests = X.list.map((e) => [e.nome + ' · ' + e.rio, 'Estação', () => { st.est = e.id; LS.set('est', e.id); show('prev'); }]);
   bItens = [...ests, ...abas, ...acoes].filter(([t]) => !n || norm(t).includes(n)).slice(0, 14); bSel = 0;
   $('#bl').innerHTML = bItens.map(([t, k], i) => `<li role="option" data-i="${i}" aria-selected="${i === 0}"><span>${esc(t)}</span><small>${k}</small></li>`).join('') || '<li><span>Nada encontrado</span></li>';
