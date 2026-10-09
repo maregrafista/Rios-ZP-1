@@ -24,8 +24,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem('zp1-tema');if(t)document.documentElement.dataset.theme=JSON.parse(t);var p=localStorage.getItem('zp1-paleta');if(p)document.documentElement.dataset.paleta=JSON.parse(p)}catch(e){}</script>
-<link rel="stylesheet" href="styles.css?v=20261009185616">
-<script defer src="app.js?v=20261009185616"></script>
+<link rel="stylesheet" href="styles.css?v=20261009191215">
+<script defer src="app.js?v=20261009191215"></script>
 </head>
 <body>
 <a class="skip" href="#main">Ir ao conteúdo</a>
@@ -49,7 +49,7 @@
 <nav class="tabs" id="tabs" aria-label="Seções">
   <button data-v="prev" type="button" aria-current="page">Previsão</button>
   <button data-v="diag" type="button">Diagnóstico</button>
-  <button data-v="ref" type="button">Referência vertical</button>
+  <button data-v="ref" type="button">Calcular FAQ</button>
   <button data-v="cie" type="button">Ciência e dados</button>
 </nav>
 
@@ -88,7 +88,7 @@
     <h2 style="margin-top:0" id="dg-t">Diagnóstico e prognóstico</h2>
     <p class="cap" id="dg-c"></p>
     <h3>1. Síntese</h3><div id="dg-sint"></div>
-    <h3>2. Diagnóstico e prognóstico por rio</h3><div id="dg-rios"></div>
+    <h3>2. Estações por rio</h3><div id="dg-rios"></div>
     <h3 id="dg-h3">3. Correlação com o boletim SipamHidro</h3>
     <p class="cap" id="dg-cc"></p>
     <div class="grid2">
@@ -100,23 +100,30 @@
   </section>
 
   <section class="view" id="v-ref" hidden>
-    <h2 style="margin-top:0">Referência vertical</h2>
-    <p class="cap">Coluna acima do NR = leitura − NR na régua. FAQ = coluna acima do NR + sondagem − calado − squat. Válido junto à estação.</p>
-    <h3>Aplicação local</h3>
-    <div class="tool">
-      <label>Estação<select id="rf-est"></select></label>
-      <label>Leitura da régua (m)<input type="number" step="0.01" id="rf-leit" inputmode="decimal"></label>
-      <label>NR na régua (m)<input type="number" step="0.01" id="rf-nr" inputmode="decimal"></label>
-      <label>Coluna acima do NR (m)<input type="number" step="0.01" id="rf-col" inputmode="decimal"></label>
-      <label>Sondagem na carta (m)<input type="number" step="0.1" id="rf-sond" inputmode="decimal" value="3.0"></label>
-      <label>Calado (m)<input type="number" step="0.1" id="rf-cal" inputmode="decimal" value="2.5"></label>
-      <label>Squat (m)<input type="number" step="0.05" min="0" id="rf-sq" inputmode="decimal" value="0.0"></label>
+    <header class="ph"><h2>Calcular FAQ</h2><p class="cap">FAQ = coluna acima do NR + sondagem − calado − squat</p></header>
+    <div class="card fq">
+      <label class="fq-e">Estação<select id="rf-est"></select></label>
+      <div class="fq-g">
+        <fieldset><legend>Régua <small>(m)</small></legend><div class="g3">
+          <label>Leitura<input type="number" step="0.01" id="rf-leit" inputmode="decimal"></label>
+          <label>NR<input type="number" step="0.01" id="rf-nr" inputmode="decimal"></label>
+          <label>Acima do NR<input type="number" step="0.01" id="rf-col" inputmode="decimal"></label></div>
+          <div class="row"><button class="lk" id="rf-ult" type="button">Última leitura</button><button class="lk" id="rf-nrad" type="button">NR adotado</button></div>
+        </fieldset>
+        <fieldset><legend>Navio e canal <small>(m)</small></legend><div class="g3">
+          <label>Sondagem<input type="number" step="0.1" id="rf-sond" inputmode="decimal" value="3.0"></label>
+          <label>Calado<input type="number" step="0.1" id="rf-cal" inputmode="decimal" value="2.5"></label>
+          <label>Squat<input type="number" step="0.05" min="0" id="rf-sq" inputmode="decimal" value="0.0"></label></div>
+        </fieldset>
+      </div>
     </div>
-    <div class="row"><button class="lk" id="rf-ult" type="button">Usar última leitura</button><button class="lk" id="rf-nrad" type="button">Restaurar NR adotado</button></div>
-    <div class="res"><div><b id="rs-col">—</b><span>Coluna acima do NR</span></div><div><b id="rs-prof">—</b><span>Profundidade real</span></div><div><b id="rs-ukc">—</b><span>Folga Abaixo da Quilha (FAQ)</span></div></div>
-    <div class="row"><button class="btn pri" id="rf-reg" type="button">Registrar conversão</button></div>
-    <h3>Memória de conversão</h3>
-    <p class="cap">Gravada neste aparelho.</p>
+    <div class="card fq-r">
+      <div class="fq-main"><span>Folga Abaixo da Quilha (FAQ)</span><b id="rs-ukc">—</b></div>
+      <div class="fq-eq" id="rs-eq"></div>
+      <div class="fq-s"><div><b id="rs-col">—</b><span>Coluna acima do NR</span></div><div><b id="rs-prof">—</b><span>Profundidade real</span></div></div>
+      <button class="btn pri" id="rf-reg" type="button">Registrar cálculo</button>
+    </div>
+    <h3>Registros deste aparelho</h3>
     <div class="tw"><table id="rf-log"><thead><tr><th>Data/hora</th><th>Estação</th><th class="n">Leitura</th><th class="n">NR</th><th class="n">Coluna</th><th class="n">Sondagem</th><th class="n">Prof.</th><th class="n">Calado</th><th class="n">Squat</th><th class="n">FAQ</th></tr></thead><tbody></tbody></table></div>
     <div class="row" style="margin-top:6px"><button class="lk" id="rf-copy" type="button">Copiar (CSV)</button><button class="lk" id="rf-clear" type="button">Limpar</button></div>
     <h3>Níveis de redução adotados</h3>
@@ -176,7 +183,7 @@
 <nav class="bnav" id="bnav" aria-label="Seções">
   <button data-v="prev" type="button" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-8M3 21h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Previsão</button>
   <button data-v="diag" type="button"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7M9 8h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Diagnóstico</button>
-  <button data-v="ref" type="button"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 6h4M8 10h4M8 14h4M8 18h4M14 13c2 0 2-1.5 4-1.5s2 1.5 4 1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Referência</button>
+  <button data-v="ref" type="button"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 6h4M8 10h4M8 14h4M8 18h4M14 13c2 0 2-1.5 4-1.5s2 1.5 4 1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>FAQ</button>
   <button data-v="cie" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ciência</button>
 </nav>
 

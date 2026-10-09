@@ -124,16 +124,21 @@ function fecharSheet() { $('#ovl').hidden = true; document.body.style.overflow =
 $('#sh-x').addEventListener('click', fecharSheet); $('#ovl').addEventListener('click', (e) => { if (e.target.id === 'ovl') fecharSheet(); });
 (() => { let y0 = null; const sh = $('#sheet'); sh.addEventListener('touchstart', (e) => { y0 = sh.scrollTop === 0 ? e.touches[0].clientY : null; }, { passive: true }); sh.addEventListener('touchmove', (e) => { if (y0 != null && e.touches[0].clientY - y0 > 90) { y0 = null; fecharSheet(); } }, { passive: true }); })();
 function sheetEstacao(id) {
-  const e = X.E.get(id), r = e.r, o = off(e), c = (v) => num(vv(e, v));
-  const html = `<p class="cap">${esc(e.rio)} · ${e.ana ? 'ANA ' + e.ana + ' · ' : ''}carta ${esc(e.carta)} · NR ${num(e.nr)} m na régua</p>
-    <p><span class="pill ${r.s.c}">${esc(r.s.t)}</span> <span class="cap">${esc(r.cond)} (z ${num(r.z, 2)})</span></p>
-    <div class="kg"><div><span>Nível (${dm(r.data)})</span><b>${c(r.L0)} m</b></div><div><span>Δ 24 h</span><b>${sg(r.d1, 0)} cm</b></div><div><span>Taxa 7 d</span><b>${sg(r.taxa, 1)} cm/d</b></div>
-    <div><span>+7 d</span><b>${c(r.f7)}</b></div><div><span>+15 d</span><b>${c(r.f15)}</b></div><div><span>+30 d</span><b>${c(r.f30)}</b></div>
-    <div><span>Mínimo previsto</span><b>${c(r.min)}</b></div><div><span>Em</span><b>${dm(r.minData)}</b></div><div><span>Cruza o NR</span><b>${r.cruza ? dm(r.cruza) : 'não'}</b></div></div>
-    <div class="mini" id="sh-mini"></div>
-    <div class="row"><button class="btn pri" id="sh-abrir" type="button">Abrir no gráfico</button><button class="btn" id="sh-comp" type="button">Compartilhar</button><button class="btn" id="sh-conv" type="button">Converter na carta</button></div>
-`;
-  const b = abrirSheet(e.nome, html); $('#sh-mini', b).append(miniFig(e, 380, 150));
+  const e = X.E.get(id), r = e.r, c = (v) => num(vv(e, v)), lm = (v, l) => (v == null ? '—' : c(v) + ' <small>[' + c(l[0]) + '; ' + c(l[1]) + ']</small>');
+  const html = `<p class="jk">${esc(e.rio)}${e.ana ? ' · ANA ' + e.ana : ''} · NR ${num(e.nr)} m na régua</p>
+    <p class="jp"><span class="pill ${r.s.c}">${esc(r.s.t)}</span><span>${esc(r.cond)}, z = ${num(r.z, 2)}</span></p>
+    <table class="jt"><caption>Tabela. Situação em ${dm(r.data)} (${uni()}); previsão com faixa empírica de 95%.</caption><tbody>
+      <tr><th>Nível</th><td>${c(r.L0)} m</td></tr>
+      <tr><th>Variação em 24 h · 7 d</th><td>${sg(r.d1, 0)} · ${sg(r.d7, 0)} cm</td></tr>
+      <tr><th>Taxa de 7 d</th><td>${sg(r.taxa, 1)} cm/d</td></tr>
+      <tr><th>Previsão em +7 d</th><td>${lm(r.f7, r.lim7)}</td></tr>
+      <tr><th>Previsão em +15 d</th><td>${lm(r.f15, r.lim15)}</td></tr>
+      <tr><th>Previsão em +30 d</th><td>${lm(r.f30, r.lim30)}</td></tr>
+      <tr><th>Mínimo previsto</th><td>${c(r.min)} m em ${dm(r.minData)}</td></tr>
+      <tr><th>Cruzamento do NR</th><td>${r.cruza ? dm(r.cruza) : 'não prevista'}</td></tr></tbody></table>
+    <figure class="jf"><div class="mini" id="sh-mini"></div><figcaption><b>Figura.</b> Observado (preto), previsão (laranja tracejada) e incerteza empírica; barras: variação diária.</figcaption></figure>
+    <div class="jb"><button class="btn pri" id="sh-abrir" type="button">Abrir no principal</button><button class="btn" id="sh-conv" type="button">Calcular FAQ</button><button class="btn" id="sh-comp" type="button">Compartilhar</button></div>`;
+  const b = abrirSheet(e.nome, html); $('#sh-mini', b).append(miniFig(e, 380, 210));
   $('#sh-abrir', b).onclick = () => { fecharSheet(); st.est = id; LS.set('est', id); show('prev'); };
   $('#sh-comp', b).onclick = () => compartilhar(id);
   $('#sh-conv', b).onclick = () => { fecharSheet(); st.est = id; LS.set('est', id); rfReset(); show('ref'); };
@@ -317,14 +322,16 @@ function diag() {
   $$('#t-sint tbody tr').forEach((tr) => tr.addEventListener('click', () => sheetEstacao(tr.dataset.id)));
   const host = $('#dg-rios'); host.innerHTML = '';
   const rios = [...new Set(R.map((e) => e.rio))];
-  rios.forEach((rio, ri) => { host.insertAdjacentHTML('beforeend', `<div class="rio">${ri + 1}. ${esc(rio)}</div>`);
-    R.filter((e) => e.rio === rio).forEach((e, si) => { const r = e.r, sf = (v, l) => (v == null ? '—' : k(e, v) + ' [' + k(e, l[0]) + '; ' + k(e, l[1]) + ']'), c15 = D.sipam.var15.find((s) => s.codigo_ana && s.codigo_ana === e.ana), prog = D.sipam.prog.filter((p) => p.estacao === e.nome);
-      const div = document.createElement('div'); div.className = 'est';
-      const left = document.createElement('div'); left.innerHTML = `<h4>${ri + 1}.${si + 1}. Níveis do rio nos últimos 15 dias na estação: ${esc(e.nome)}${e.ana ? ' (ANA ' + e.ana + ')' : ''}</h4><div class="mini"></div><p class="cap">Variação das cotas nos últimos 15 dias: ${sg(r.d15, 0)} cm, em média ${sg(r.d15 / 15, 2)} cm por dia.</p>`; $('.mini', left).append(miniFig(e));
-      const rows = [['Cota atual', k(e, r.L0) + ' ' + u + ' (' + dm(r.data) + ')' + (ref() ? '' : ' · ' + num(r.L0 - e.nr) + ' m acima do NR')], ['Tendência 7 d', sg(r.taxa, 1) + ' cm/dia'], ['Previsão em ' + dm(r.dataF[0]), sf(r.f7, r.lim7) + ' m'], ['Previsão em ' + dm(r.dataF[2]), sf(r.f30, r.lim30) + ' m'], ['Mínimo previsto', k(e, r.min) + ' m em ' + dm(r.minData) + (r.minBorda ? ' (fim do horizonte)' : '')], ['Cruzamento do NR', r.cruza ? dm(r.cruza) : 'não prevista em 100 dias']];
-      if (c15) rows.push(['SipamHidro, 15 d', sg(c15.var15_cm, 0) + ' cm (painel − boletim: ' + sg(r.d15 - c15.var15_cm, 0) + ' cm)']);
-      if (prog.length) rows.push(['SipamHidro, Modelo 2', prog.map((p) => MES[+p.mes.slice(5) - 1] + ': ' + (p.modelo2_cm == null ? '—' : num(p.modelo2_cm / 100 - off(e)))).join(' · ')]);
-      const right = document.createElement('dl'); right.className = 'kv'; right.innerHTML = rows.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join(''); div.append(left, right); host.append(div); }); });
+  rios.forEach((rio, ri) => { const es = R.filter((e) => e.rio === rio); host.insertAdjacentHTML('beforeend', `<h4 class="rio2"><span>${esc(rio)}</span><small>${es.length} ${es.length > 1 ? 'estações' : 'estação'}</small></h4>`);
+    es.forEach((e, si) => { const r = e.r, sf = (v, l) => (v == null ? '—' : k(e, v) + ' <small>[' + k(e, l[0]) + '; ' + k(e, l[1]) + ']</small>'), c15 = D.sipam.var15.find((s) => s.codigo_ana && s.codigo_ana === e.ana), prog = D.sipam.prog.filter((p) => p.estacao === e.nome);
+      const rows = [['Nível em ' + dm(r.data), k(e, r.L0) + ' m'], ['Taxa de 7 d', sg(r.taxa, 1) + ' cm/d'], ['Previsão em ' + dm(r.dataF[0]), sf(r.f7, r.lim7) + ' m'], ['Previsão em ' + dm(r.dataF[2]), sf(r.f30, r.lim30) + ' m'], ['Mínimo previsto', k(e, r.min) + ' m em ' + dm(r.minData) + (r.minBorda ? ' (fim do horizonte)' : '')], ['Cruza o NR', r.cruza ? dm(r.cruza) : 'não prevista']];
+      if (c15) rows.push(['SipamHidro, 15 d', sg(c15.var15_cm, 0) + ' cm <small>(dif. ' + sg(r.d15 - c15.var15_cm, 0) + ')</small>']);
+      if (prog.length) rows.push(['SipamHidro, modelo 2', prog.map((p) => MES[+p.mes.slice(5) - 1].toLowerCase() + ' ' + (p.modelo2_cm == null ? '—' : num(p.modelo2_cm / 100 - off(e)))).join(' · ')]);
+      const art = document.createElement('article'); art.className = 'est';
+      art.innerHTML = `<header><b>${esc(e.nome)}</b><span class="pill ${r.s.c}">${esc(r.s.t)}</span><small>${e.ana ? 'ANA ' + e.ana : ''}</small></header>
+        <figure class="jf"><div class="mini"></div><figcaption><b>Figura 2.${ri + 1}.${si + 1}.</b> Últimos 15 d e próximos 15 d (${u}). Variação em 15 d: ${sg(r.d15, 0)} cm (${sg(r.d15 / 15, 1)} cm/d).</figcaption></figure>
+        <table class="jt"><tbody>${rows.map(([x, y]) => `<tr><th>${esc(x)}</th><td>${y}</td></tr>`).join('')}</tbody></table>`;
+      $('.mini', art).append(miniFig(e)); art.addEventListener('click', (ev) => { if (!ev.target.closest('a')) sheetEstacao(e.id); }); host.append(art); }); });
   $('#dg-h3').textContent = '3. Correlação com o boletim SipamHidro (' + dmy(D.sipam.boletim) + ')';
   $('#dg-cc').textContent = 'Quadro B em ' + u + '; painel = mínima do mês (observado + previsto).';
   const cmp = []; for (const e of R) { const s = D.sipam.var15.find((x) => x.codigo_ana && x.codigo_ana === e.ana); if (s && e.r.d15 != null) cmp.push({ e, p: e.r.d15, s: s.var15_cm }); }
@@ -347,7 +354,7 @@ function rfCalc(from) {
   const nr = parseFloat($('#rf-nr').value), l = parseFloat($('#rf-leit').value), c = parseFloat($('#rf-col').value);
   if (from === 'leit' || from === 'nr') { if (isFinite(l) && isFinite(nr)) $('#rf-col').value = (Math.round((l - nr) * 100) / 100).toFixed(2); } else if (from === 'col' && isFinite(c) && isFinite(nr)) $('#rf-leit').value = (Math.round((c + nr) * 100) / 100).toFixed(2);
   const col = parseFloat($('#rf-col').value), s = parseFloat($('#rf-sond').value), cal = parseFloat($('#rf-cal').value), pr = s + col, sq = parseFloat($('#rf-sq').value), uk = col + s - cal - (isFinite(sq) ? sq : 0);
-  $('#rs-col').textContent = isFinite(col) ? sg(col) + ' m' : '—'; $('#rs-prof').textContent = isFinite(pr) ? num(pr) + ' m' : '—'; const u = $('#rs-ukc'); u.textContent = isFinite(uk) ? sg(uk) + ' m' : '—'; u.style.color = uk < 0 ? 'var(--bad)' : '';
+  $('#rs-col').textContent = isFinite(col) ? sg(col) + ' m' : '—'; $('#rs-prof').textContent = isFinite(pr) ? num(pr) + ' m' : '—'; const u = $('#rs-ukc'); u.textContent = isFinite(uk) ? sg(uk) + ' m' : '—'; u.style.color = uk < 0 ? 'var(--bad)' : ''; $('#rs-eq').innerHTML = [[col, 'coluna'], [s, 'sondagem'], [-cal, 'calado'], [-(isFinite(sq) ? sq : 0), 'squat']].map(([v, t]) => `<span><b>${isFinite(v) ? sg(v) : '—'}</b> ${t}</span>`).join('') + `<span class="eq">= <b>${isFinite(uk) ? sg(uk) : '—'} m</b></span>`;
 }
 ['leit', 'nr', 'col'].forEach((k) => $('#rf-' + k).addEventListener('input', () => rfCalc(k))); ['sond', 'cal', 'sq'].forEach((k) => $('#rf-' + k).addEventListener('input', () => rfCalc('x')));
 $('#rf-est').addEventListener('change', (ev) => { st.est = ev.target.value; LS.set('est', st.est); rfReset(); });
@@ -421,7 +428,7 @@ let bItens = [], bSel = 0;
 function abrirBusca() { if (!X) return; const d = $('#dlg-busca'); $('#bq').value = ''; buscaLista(''); d.showModal(); $('#bq').focus(); }
 function buscaLista(q) {
   const n = norm(q), acoes = [['Resumo do dia', 'Ação', () => abrirStory()], ['Alternar referencial (NR / régua)', 'Ação', () => { st.ref = ref() ? 'regua' : 'nr'; LS.set('ref', st.ref); redraw(); }], ['Alternar modo escuro', 'Ação', () => $('#b-tema').click()], ['Janela 30 dias', 'Gráfico', () => { st.jan = '30'; LS.set('jan', '30'); show('prev'); }], ['Janela 90 dias', 'Gráfico', () => { st.jan = '90'; LS.set('jan', '90'); show('prev'); }], ['Janela ano todo', 'Gráfico', () => { st.jan = '365'; LS.set('jan', '365'); show('prev'); }], ['Exportar série integrada (CSV)', 'Ação', () => $('#b-csv-s').click()], ['Como instalar o app', 'Ação', () => abrirInstalar()]];
-  const abas = [['Previsão', 'prev'], ['Diagnóstico', 'diag'], ['Referência vertical', 'ref'], ['Ciência e dados', 'cie']].map(([t, v]) => [t, 'Seção', () => show(v)]);
+  const abas = [['Previsão', 'prev'], ['Diagnóstico', 'diag'], ['Calcular FAQ', 'ref'], ['Ciência e dados', 'cie']].map(([t, v]) => [t, 'Seção', () => show(v)]);
   const ests = X.list.map((e) => [e.nome + ' · ' + e.rio, 'Estação', () => { st.est = e.id; LS.set('est', e.id); show('prev'); }]);
   bItens = [...ests, ...abas, ...acoes].filter(([t]) => !n || norm(t).includes(n)).slice(0, 14); bSel = 0;
   $('#bl').innerHTML = bItens.map(([t, k], i) => `<li role="option" data-i="${i}" aria-selected="${i === 0}"><span>${esc(t)}</span><small>${k}</small></li>`).join('') || '<li><span>Nada encontrado</span></li>';

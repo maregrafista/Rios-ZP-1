@@ -242,3 +242,46 @@ html[data-layout=mobile] .rodape{margin-bottom:8px}
 html[data-layout=desktop] .hero .qa{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:380px){.hero .qa .btn{font-size:11.5px}}
 .hero .qa .btn{padding:4px 2px;font-size:11.5px;letter-spacing:-.01em}@media(min-width:900px){html[data-layout=desktop] .hero .qa .btn{font-size:12.5px}}
+
+/* arte final de periódico: detalhes, estações por rio, calcular FAQ */
+:root{--serif:Charter,"Iowan Old Style","Palatino Linotype",Georgia,serif}
+.jk{font-size:12px;color:var(--mut);margin:0 0 6px;letter-spacing:.02em}
+.jp{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--mut);margin:0 0 10px}
+table.jt{width:100%;border-collapse:collapse;font-size:13.5px;margin:0 0 4px;border-top:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink)}
+table.jt caption{caption-side:top;text-align:left;font-size:12px;color:var(--mut);padding:0 0 6px}
+table.jt th{font-weight:400;color:var(--mut);text-align:left;padding:6px 8px 6px 0;border-bottom:1px solid var(--line);width:46%;vertical-align:top;white-space:normal}
+table.jt td{padding:6px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+table.jt tr:last-child th,table.jt tr:last-child td{border-bottom:0}
+table.jt small{font-weight:400;color:var(--mut);font-size:11.5px}
+figure.jf{margin:8px 0 10px}figure.jf figcaption{font-size:12px;color:var(--mut);margin-top:4px;line-height:1.4}figure.jf figcaption b{color:var(--ink)}
+.jb{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.jb .btn{flex:1 1 auto}
+#sh-t,.sh-h b{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:-.01em}
+h4.rio2{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 8px;padding-bottom:4px;border-bottom:1.5px solid var(--ink);font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:-.01em}h4.rio2 small{font-family:var(--font);font-size:12px;font-weight:400;color:var(--mut)}
+article.est{display:block;background:var(--panel);border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin:0 0 12px;cursor:pointer;border-bottom:0}
+article.est>header{display:flex;align-items:center;gap:10px;margin-bottom:4px}article.est>header b{font-family:var(--serif);font-size:18px;font-weight:600}article.est>header small{margin-left:auto;color:var(--mut);font-size:11.5px}
+article.est .mini{box-shadow:none;padding:0;background:none}
+html[data-layout=desktop] article.est{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:4px 22px;align-items:start}
+html[data-layout=desktop] article.est>header{grid-column:1/-1}
+html[data-layout=desktop] article.est>figure{grid-column:1;grid-row:2;margin:0}html[data-layout=desktop] article.est>table{grid-column:2;grid-row:2}
+/* Calcular FAQ */
+.ph{margin:0 0 12px}.ph h2{margin:0 0 2px;font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:-.015em}
+.fq{display:flex;flex-direction:column;gap:12px}.fq-e{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:600;color:var(--mut)}
+.fq-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.fq fieldset{border:0;margin:0;padding:12px;background:var(--bg);border-radius:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.fq legend{float:left;width:100%;padding:0 0 2px;font-family:var(--serif);font-size:15px;font-weight:600}.fq legend+*{clear:left}
+.fq label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:600;color:var(--mut)}
+.fq input,.fq select{background:var(--panel);font-weight:600;color:var(--ink)}
+.fq .row{margin:0}
+.fq-r{margin-top:12px;display:flex;flex-direction:column;gap:12px}
+.fq-main{display:flex;flex-direction:column;gap:0}.fq-main span{font-size:12.5px;font-weight:600;color:var(--mut)}.fq-main b{font-family:var(--serif);font-size:clamp(40px,12vw,56px);font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.fq-eq{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:12.5px;color:var(--mut);padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.fq-eq b{color:var(--ink);font-variant-numeric:tabular-nums}.fq-eq .eq{margin-left:auto}
+.fq-s{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.fq-s b{display:block;font-family:var(--serif);font-size:24px;font-weight:600}.fq-s span{font-size:12px;color:var(--mut)}
+.fq-r .btn{align-self:flex-start}
+
+#v-ref{display:flex;flex-direction:column}#v-ref>.ph{order:0}#v-ref>.fq-r{order:1;margin:0 0 12px}#v-ref>.fq{order:2}#v-ref>h3,#v-ref>.tw,#v-ref>.row,#v-ref>p{order:3}
+.fq .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.fq legend small{font-family:var(--font);font-weight:400;color:var(--mut);font-size:12px}
+.fq input[type=number]{min-height:42px;padding:6px 8px;font-size:15px;width:100%}
+.fq label{font-size:11.5px}
+.fq-g{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+table.jt th{width:42%}
+html[data-layout=desktop] article.est>figure{max-width:560px}
