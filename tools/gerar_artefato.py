@@ -21,7 +21,7 @@ tit = re.search(r"<title>.*?</title>", h).group(0)
 sty = re.search(r"<style>.*?</style>", h, flags=re.S).group(0)
 corpo = re.search(r"<body[^>]*>(.*?)</body>", h, flags=re.S).group(1)
 corpo = re.sub(r"<script>try\{var t=localStorage.*?</script>\n?", "", corpo)
-h = tit + "\n" + sty + "\n" + corpo
+h = '<meta charset="utf-8">\n' + tit + "\n" + sty + "\n" + corpo
 (R / "artefato").mkdir(exist_ok=True)
 (R / "artefato" / "index.html").write_text(h, encoding="utf-8")
 print("artefato/index.html", len(h) // 1024, "KB")

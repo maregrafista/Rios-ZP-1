@@ -23,3 +23,19 @@ Cada pessoa confirma no próprio aparelho. Android: Chrome → ⋮ → Instalar 
 
 ## Teste local
 `python3 -m http.server 8000` e abrir http://localhost:8000.
+
+## Texto para compartilhar
+
+```
+*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
+
+• Nível observado e previsão de 100 dias, sempre em relação ao NR da carta (ou ao zero da régua)
+• Alerta de cruzamento do NR e comparação com o boletim SipamHidro
+• Calculadora de FAQ (folga abaixo da quilha) com calado e squat
+• Para celular e computador; instale pelo navegador (Android: Chrome ⋮ › Instalar app; iPhone: Safari › Compartilhar › Adicionar à Tela de Início)
+
+Previsões empíricas, de caráter informativo.
+https://maregrafista.github.io/Rios-ZP-1/
+```
+
+O mesmo texto está no app (Ciência › Compartilhar o app). `tools/gerar_artefato.py` gera `artefato/index.html`, a versão de arquivo único hospedada como artefato do Claude.

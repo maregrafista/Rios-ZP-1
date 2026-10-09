@@ -10,7 +10,7 @@ const sg = (v, d = 2) => { if (v == null || !isFinite(v)) return '—'; const r 
 const dnum = (s) => Date.parse(s + 'T00:00:00Z') / DAY, ISO = (d) => new Date(d * DAY).toISOString().slice(0, 10);
 const dm = (s) => (s ? s.slice(8, 10) + '/' + s.slice(5, 7) : '—'), dmy = (s) => (s ? dm(s) + '/' + s.slice(0, 4) : '—');
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const norm = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const norm = (s) => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 const NS = 'http://www.w3.org/2000/svg';
 const sv = (t, a = {}, k = []) => { const n = document.createElementNS(NS, t); for (const [x, v] of Object.entries(a)) if (v != null) n.setAttribute(x, v); for (const c of [].concat(k)) if (c != null) n.append(c); return n; };
@@ -20,6 +20,16 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
+const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
+const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
+
+• Nível observado e previsão de 100 dias, sempre em relação ao NR da carta (ou ao zero da régua)
+• Alerta de cruzamento do NR e comparação com o boletim SipamHidro
+• Calculadora de FAQ (folga abaixo da quilha) com calado e squat
+• Para celular e computador; instale pelo navegador (Android: Chrome ⋮ › Instalar app; iPhone: Safari › Compartilhar › Adicionar à Tela de Início)
+
+Previsões empíricas, de caráter informativo.
+${APP_URL}`;
 const PAL = { soft: ['#332288', '#88CCEE', '#117733', '#DDCC77', '#AA4499', '#888888', '#44AA99', '#CC6677'], dk: ['#9C93E8', '#88CCEE', '#4DB88A', '#DDCC77', '#D68AC4', '#AEAEAE', '#44AA99', '#CC6677'], hc: ['#33BBEE', '#009988', '#EE7733', '#CC3311', '#EE3377', '#0077BB', '#BBBBBB', '#555555'] };
 const CORES = { bad: 'var(--bad)', warn: 'var(--warn)', ok: 'var(--ok)' };
 const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '60', '90', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
@@ -79,7 +89,7 @@ function layout() {
   root.dataset.layout = mode; $$('#seg-lay button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.l === mode)));
   const phone = matchMedia('(pointer:coarse)').matches && screen.width <= 800, vp = $('meta[name=viewport]');
   if (root.dataset.prevLayout !== mode) { $$('details.ctrl').forEach((d) => { d.open = mode === 'desktop'; }); root.dataset.prevLayout = mode; }
-  const nvp = document.createElement('meta'); nvp.name = 'viewport'; nvp.content = mode === 'desktop' && phone ? 'width=1024,initial-scale=1,viewport-fit=cover' : 'width=device-width,initial-scale=1,viewport-fit=cover'; vp.replaceWith(nvp);
+  const nvp = document.createElement('meta'); nvp.name = 'viewport'; nvp.content = mode === 'desktop' && phone ? 'width=1024,initial-scale=1,viewport-fit=cover' : 'width=device-width,initial-scale=1,viewport-fit=cover'; if (vp) vp.replaceWith(nvp); else document.head.append(nvp);
   ajustaZoom();
   if (X) { setTimeout(redraw, 60); setTimeout(redraw, 400); }
 }
@@ -88,7 +98,7 @@ addEventListener('resize', () => { ajustaZoom(); });
 $$('#seg-lay button').forEach((b) => b.addEventListener('click', () => { LS.set('layout', b.dataset.l); layout(); redraw(); }));
 matchMedia('(max-width:800px)').addEventListener('change', () => { if (LS.get('layout', 'auto') === 'auto') { layout(); redraw(); } });
 const dark = () => (root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme:dark)').matches));
-function tema() { const d = dark(); $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; $('meta[name=theme-color]').content = d ? '#141c26' : '#ffffff'; }
+function tema() { const d = dark(); $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = '#0b1f4d'; }
 $('#b-tema').addEventListener('click', () => { const n = dark() ? 'light' : 'dark'; root.dataset.theme = n; LS.set('tema', n); tema(); redraw(); });
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { tema(); redraw(); });
 function show(v) { st.tab = v; LS.set('tab', v); $$('#tabs button,#bnav button').forEach((b) => { if (b.dataset.v === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); $$('.view').forEach((s) => { s.hidden = s.id !== 'v-' + v; }); scrollTo(0, 0); redraw(); }
@@ -102,7 +112,7 @@ $('#b-busca').addEventListener('click', () => abrirBusca());
 let toastT;
 function toast(t, label, fn) { const b = $('#toast'); $('#toast-t').textContent = t; const bt = $('#toast-b'); bt.textContent = label || 'OK'; bt.onclick = () => { b.hidden = true; fn && fn(); }; b.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { b.hidden = true; }, 9000); }
 async function copiar(txt, msg) { try { await navigator.clipboard.writeText(txt); toast(msg || 'Copiado.'); } catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.append(ta); ta.select(); try { document.execCommand('copy'); toast(msg || 'Copiado.'); } catch (x) { toast('Não foi possível copiar.'); } ta.remove(); } }
-function baixar(nome, txt, tipo) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + txt.replace(/−/g, '-')], { type: tipo || 'text/csv;charset=utf-8' })); a.download = nome; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+function baixar(nome, txt, tipo) { if (ART) return copiar(txt.replace(/−/g, '-'), 'Dados copiados (CSV). Cole em uma planilha.'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + txt.replace(/−/g, '-')], { type: tipo || 'text/csv;charset=utf-8' })); a.download = nome; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 
 // ---------- folha (bottom sheet) ----------
 function abrirSheet(titulo, html) { $('#sh-t').textContent = titulo; $('#sh-b').innerHTML = html; $('#ovl').hidden = false; document.body.style.overflow = 'hidden'; $('#sh-x').focus(); return $('#sh-b'); }
@@ -126,7 +136,7 @@ function sheetEstacao(id) {
 }
 function compartilhar(id) {
   const e = X.E.get(id || st.est), r = e.r, c = (v) => num(vv(e, v));
-  const txt = `Rios ZP-1 · ${e.nome} (${e.rio}), ${dm(r.data)}: ${c(r.L0)} ${uni()}${ref() ? ' (régua ' + num(r.L0) + ' m)' : ''}; ${r.taxa < 0 ? 'vazante' : 'enchente'} ${num(Math.abs(r.taxa), 1)} cm/d. +7 d: ${c(r.f7)} m; +30 d: ${c(r.f30)} m. Mínimo previsto ${c(r.min)} m em ${dm(r.minData)}. ${location.href.split('#')[0]}`;
+  const txt = `Rios ZP-1 · ${e.nome} (${e.rio}), ${dm(r.data)}: ${c(r.L0)} ${uni()}${ref() ? ' (régua ' + num(r.L0) + ' m)' : ''}; ${r.taxa < 0 ? 'vazante' : 'enchente'} ${num(Math.abs(r.taxa), 1)} cm/d. +7 d: ${c(r.f7)} m; +30 d: ${c(r.f30)} m. Mínimo previsto ${c(r.min)} m em ${dm(r.minData)}. ${APP_URL}`;
   if (navigator.share) navigator.share({ title: 'Rios ZP-1', text: txt }).catch(() => {}); else copiar(txt, 'Texto copiado.');
 }
 
@@ -236,11 +246,11 @@ function prever() {
     <div class="qa"><button class="btn" data-a="ficha" type="button">Detalhes</button><button class="btn" data-a="conv" type="button">Converter na carta</button><button class="btn" data-a="comp" type="button">Compartilhar</button></div></div>`;
   const ch = $('#chips'); ch.replaceChildren(...X.list.map((s) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(s.id === st.est)); b.style.setProperty('--c', CORES[s.r.s.c]); b.innerHTML = `<i></i>${esc(s.nome)}`; b.onclick = () => { st.est = s.id; LS.set('est', s.id); redraw(); }; return b; }));
   const sel = $('#chips [aria-selected=true]'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'center' });
-  $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Contínua: observado. Tracejada laranja: previsão (100 d). Pontilhada azul: tendência de 7 d. Sombreado: incerteza empírica (50 e 95%); tracejadas finas: faixa nominal 95%. Triângulo/círculo verdes: modelos 2/1 do SipamHidro. Shift-clique isola um ano.`;
+  $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Contínua: observado. Tracejadas finas: faixa nominal 95%. Triângulo/círculo: modelos 2/1 do SipamHidro. Shift-clique isola um ano.`;
   $('#q1-c').textContent = 'Horizonte a partir da última leitura (' + dmy(ISO(X.HOJE)) + ').';
   $('#q1 tbody').innerHTML = [0, 7, 15, 30, 60, 90].map((h) => { const i = h + atr; if (i > 100 || e.prev.f[i] == null) return ''; const v = vv(e, e.prev.f[i]), P = e.prev, rg = (a, b) => (a == null ? '—' : num(v - a) + '<span class="hm"> a </span><span class="hs">…</span>' + num(v + b)); return `<tr><td>${h ? '+' + h + ' d' : 'atual'}<small class="hs"> ${dm(ISO(X.HOJE + h))}</small></td><td class="hm">${dmy(ISO(X.HOJE + h))}</td><td class="n${ref() && v < 0 ? ' neg' : ''}">${num(v)}</td><td class="n">${rg(P.el[i], P.eh[i])}</td><td class="n">${rg(P.nom[i], P.nom[i])}</td></tr>`; }).join('');
   ['q1-n'].forEach((i) => { $('#' + i).textContent = 'Nível (' + uni() + ')'; });
-  $('#q2-c').textContent = 'Toque na linha para o resumo. ● situação: vermelho = abaixo ou próximo do NR; âmbar = atenção; verde = normal.';
+  $('#q2-c').textContent = 'Toque na linha para o resumo. Ponto: vermelho, abaixo do NR ou cruzando em até 7 d; âmbar, atenção; verde, normal.';
   const ord = { bad: 0, warn: 1, ok: 2 };
   $('#q2 tbody').innerHTML = [...X.list].sort((a, b) => ord[a.r.s.c] - ord[b.r.s.c] || (a.r.L0 - a.nr) - (b.r.L0 - b.nr)).map((s) => { const q = s.r, n = (v) => `<td class="n${ref() && vv(s, v) < 0 ? ' neg' : ''}">${num(vv(s, v))}</td>`; return `<tr data-id="${s.id}" class="${s.id === st.est ? 'sel' : ''}"><td><i class="dot ${q.s.c}" title="${esc(q.s.t)}"></i>${esc(s.nome)}</td><td class="hm"><span class="pill ${q.s.c}">${esc(q.s.t)}</span></td>${n(q.L0)}<td class="n hm">${sg(q.d1, 0)}</td><td class="n">${sg(q.d7, 0)}</td><td class="n hm">${sg(q.taxa, 1)}</td>${n(q.f7)}${n(q.f15)}${n(q.f30)}${n(q.min)}</tr>`; }).join('');
   $$('#q2 tbody tr').forEach((tr) => tr.addEventListener('click', () => sheetEstacao(tr.dataset.id)));
@@ -272,7 +282,7 @@ function cmpSip() {
   if (rr != null && (h == null || h > 3.5)) tx.push(`Nas ${cmp.length} estações comuns a variação em 15 d do painel e do boletim tem r = ${num(rr, 2)}`);
   $('#cs-t').textContent = e.nome + ' · janela ' + (h == null ? 'Ano' : st.jan + ' d') + ' · boletim ' + dmy(D.sipam.boletim) + '. ' + tx.join('. ') + '.';
   $('#cs-tab tbody').innerHTML = rows.length ? rows.map((q, i) => `<tr><td>${esc(q[0])}</td><td class="n">${q[1]}</td><td class="n">${q[2]}</td><td class="n">${q[3]}</td></tr>`).join('') : '<tr><td colspan="4">Sem dados do boletim para esta estação.</td></tr>';
-  $('#cs-n').textContent = 'Níveis em ' + u + '. Dif. = painel − SipamHidro (modelo 2 nos meses).';
+  $('#cs-n').textContent = u + '. Dif. = painel − SipamHidro (modelo 2 nos meses).';
 }
 
 // ---------- diagnóstico ----------
@@ -347,6 +357,8 @@ function cie() {
   const ds = $('#dl-est'); if (!ds.options.length) { ds.innerHTML = X.list.map((e) => `<option value="${e.id}">${esc(e.nome)}</option>`).join(''); ds.value = st.est; ds.onchange = leit; $('#dl-det').ontoggle = leit; $('#dl-copy').onclick = () => { const e = X.list.find((z) => z.id === ds.value), ks = [...e.m.keys()].sort((x, y) => x - y); copiar(['data;regua_m;acima_nr_m', ...ks.map((f) => ISO(f) + ';' + e.m.get(f).toFixed(2) + ';' + (e.m.get(f) - e.nr).toFixed(2))].join('\n'), 'Leituras de ' + e.nome + ' copiadas (CSV).'); }; }
   function leit() { if (!$('#dl-det').open) return; const e = X.list.find((z) => z.id === ds.value), ks = [...e.m.keys()].sort((x, y) => y - x); $('#dl-n').textContent = ks.length + ' dias · ' + dmy(ISO(ks[ks.length - 1])) + ' a ' + dmy(ISO(ks[0])); $('#dl-tab tbody').innerHTML = ks.map((f) => `<tr><td>${dmy(ISO(f))}</td><td class="n">${num(e.m.get(f))}</td><td class="n">${num(e.m.get(f) - e.nr)}</td></tr>`).join(''); }
   leit();
+  if (ART) { $('#b-instalar').hidden = true; $('#b-csv-s').textContent = 'Copiar série integrada (CSV)'; $('#b-csv-g').textContent = 'Copiar dados do gráfico (CSV)'; }
+  $('#b-app').onclick = () => { if (navigator.share) navigator.share({ title: 'Rios ZP-1', text: TEXTO_APP }).catch(() => {}); else copiar(TEXTO_APP, 'Texto e link copiados.'); }; $('#b-app-c').onclick = () => copiar(TEXTO_APP, 'Texto e link copiados.'); $('#b-app-w').href = 'https://wa.me/?text=' + encodeURIComponent(TEXTO_APP); $('#app-txt').textContent = TEXTO_APP;
   const g = new Date(D.gerado); $('#cie-u').textContent = 'Dados gerados em ' + g.toLocaleString('pt-BR') + '. O app confere se há versão nova ao abrir e ao voltar para ele.';
 }
 $('#b-recarregar').addEventListener('click', async () => { try { const m = await carregar(false); redraw(); toast(m ? 'Dados novos carregados (' + dmy(D.hoje) + ').' : 'Você já está com a versão mais recente (' + dmy(D.hoje) + ').'); if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then((r) => r && r.update()); } catch (e) { toast('Sem conexão: usando os dados guardados.'); } });
@@ -420,7 +432,7 @@ $('#inst-go').addEventListener('click', async () => { if (!evInst) return; const
 $('#inst-x').addEventListener('click', () => $('#dlg-inst').close()); $('#dlg-inst').addEventListener('click', (e) => { if (e.target.id === 'dlg-inst') e.target.close(); });
 $('#b-instalar').addEventListener('click', abrirInstalar); $('#ban-como').addEventListener('click', abrirInstalar);
 $('#ban-x').addEventListener('click', () => { $('#ban').hidden = true; LS.set('ban-x', Date.now()); });
-function banner() { if (standalone() || Date.now() - LS.get('ban-x', 0) < 14 * DAY) return; const p = plataforma(); $('#ban-t').textContent = p === 'ios' ? 'Para usar como app: Safari → Compartilhar → Adicionar à Tela de Início.' : p === 'android' ? 'Para usar como app: Chrome → menu ⋮ → Instalar app.' : p === 'app' ? 'Abra este link no Chrome ou no Safari para instalar o app.' : 'Este site pode ser instalado como app (PWA).'; $('#ban').hidden = false; if (new URLSearchParams(location.search).has('instalar')) abrirInstalar(); }
+function banner() { if (ART || standalone() || Date.now() - LS.get('ban-x', 0) < 14 * DAY) return; const p = plataforma(); $('#ban-t').textContent = p === 'ios' ? 'Para usar como app: Safari → Compartilhar → Adicionar à Tela de Início.' : p === 'android' ? 'Para usar como app: Chrome → menu ⋮ → Instalar app.' : p === 'app' ? 'Abra este link no Chrome ou no Safari para instalar o app.' : 'Este site pode ser instalado como app (PWA).'; $('#ban').hidden = false; if (new URLSearchParams(location.search).has('instalar')) abrirInstalar(); }
 
 // ---------- ciclo ----------
 function redraw() {
