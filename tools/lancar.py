@@ -10,7 +10,7 @@ Uso:
 Formatos aceitos (vírgulas opcionais; as 6 ordens funcionam):
     estação: nome sem acento/maiúsculas; basta o começo (ex.: "porto", "itaco")
     régua:   25 | 25 m | 25,3 | 25.30m | -0,4 m
-    data:    10/12/2025 | 10-12-25 | 10.12.2025 | 10/12 (ano atual); hora opcional 14:30
+    data:    10/12/2025 | 10-12-25 | 10.12.2025 | 10/12 (ano atual); com ponto, o ano é obrigatório; hora opcional 14:30
 Grava em dados/base/leituras.json (substitui o valor do mesmo dia) e recalcula data.json.
 """
 import sys, re, json, unicodedata, subprocess, datetime as dt
@@ -26,7 +26,7 @@ def norm(s):
     return "".join(c for c in unicodedata.normalize("NFD", str(s)) if unicodedata.category(c) != "Mn").strip().lower()
 
 
-RE_DATA = re.compile(r"(?<!\d)(\d{1,2})[/.\-](\d{1,2})(?:[/.\-](\d{2,4}))?(?!\d)")
+RE_DATA = re.compile(r"(?<![\d.,])(?:(\d{1,2})([/\-])(\d{1,2})(?:\2(\d{2,4}))?|(\d{1,2})\.(\d{1,2})\.(\d{2,4}))(?![\d.,]\d)(?!\d)")
 RE_HORA = re.compile(r"(?<!\d)(\d{1,2}):(\d{2})(?!\d)")
 RE_REG = re.compile(r"(?<![\w/.:])(-?\d+(?:[.,]\d+)?)\s*m?(?![\w/.:])", re.I)
 
@@ -45,7 +45,10 @@ def entender(linha, estacoes, hoje=None):
     if len(datas) != 1:
         raise ValueError("não achei uma data (ex.: 10/12/2025)" if not datas else "há mais de uma data")
     m = datas[0]
-    d, mo, a = int(m.group(1)), int(m.group(2)), m.group(3)
+    if m.group(1):
+        d, mo, a = int(m.group(1)), int(m.group(3)), m.group(4)
+    else:
+        d, mo, a = int(m.group(5)), int(m.group(6)), m.group(7)
     a = hoje.year if a is None else (2000 + int(a) if len(a) == 2 else int(a))
     try:
         data = dt.date(a, mo, d)

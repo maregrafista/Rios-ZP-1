@@ -186,6 +186,11 @@ def main():
         idx.write_text(_re.sub(r"(styles\.css|app\.js)\?v=[^\"]*", lambda m: m.group(1) + "?v=" + v, idx.read_text(encoding="utf-8")), encoding="utf-8")
     if not regen:
         (BASE / "relatorio.txt").write_text("\n".join(RELATORIO) + "\n", encoding="utf-8")
+    try:
+        import subprocess as _sp
+        _sp.run([sys.executable, str(RAIZ / "tools" / "gerar_previa.py")], check=False, capture_output=True)
+    except Exception:
+        pass
     print(f"\ndata.json gravado ({data_p.stat().st_size // 1024} KB), dados até {out['hoje']}.")
     return 0
 
