@@ -107,8 +107,6 @@ function show(v) { st.tab = v; LS.set('tab', v); $$('#tabs button,#bnav button')
 $$('#tabs button,#bnav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.v)));
 $$('#seg-ref button').forEach((b) => b.addEventListener('click', () => { st.ref = b.dataset.r; LS.set('ref', st.ref); redraw(); }));
 $$('#seg-jan button').forEach((b) => b.addEventListener('click', () => { st.jan = b.dataset.j; LS.set('jan', st.jan); redraw(); }));
-$('#b-resumo').addEventListener('click', () => abrirStory());
-$('#b-busca').addEventListener('click', () => abrirBusca());
 $('#b-aj').addEventListener('click', () => $('#dlg-aj').showModal()); $('#aj-x').addEventListener('click', () => $('#dlg-aj').close()); $('#dlg-aj').addEventListener('click', (e) => { if (e.target.id === 'dlg-aj') e.target.close(); });
 $('#aj-inst').addEventListener('click', () => { $('#dlg-aj').close(); abrirInstalar(); });
 if (window.ResizeObserver) new ResizeObserver(() => root.style.setProperty('--toph', $('.top').offsetHeight + 'px')).observe($('.top'));
@@ -228,18 +226,33 @@ $('#b-share').addEventListener('click', () => compartilhar());
 $('#hero').addEventListener('click', (ev) => { const b = ev.target.closest('[data-a]'); if (!b) return; ({ resumo: () => abrirStory(), comp: () => compartilhar(), conv: () => { rfReset(); show('ref'); }, ficha: () => sheetEstacao(st.est) })[b.dataset.a](); });
 
 // ---------- previsão ----------
-function miniFig(e, W = 380, Ht = 170) {
-  const r = e.r, t0 = r.t0, o = off(e), pts = []; for (let f = t0 - 15; f <= t0; f++) if (e.m.has(f)) pts.push({ f, v: e.m.get(f) - o });
-  const svg = sv('svg', { width: '100%', viewBox: `0 0 ${W} ${Ht}`, height: Ht }); if (pts.length < 3) return svg;
-  const top = Ht > 160 ? 70 : 60, xs = lin(t0 - 15, t0, 38, W - 8); let lo = Math.min(...pts.map((p) => p.v)), hi = Math.max(...pts.map((p) => p.v)); const tk = ticks(lo, hi, 3); lo = Math.min(lo, tk.t[0]); hi = Math.max(hi, tk.t[tk.t.length - 1]); const y1 = lin(lo, hi, top, 8);
-  for (const v of tk.t) { svg.append(sv('line', { x1: 38, x2: W - 8, y1: y1(v), y2: y1(v), stroke: 'var(--grid)' })); svg.append(sv('text', { x: 34, y: y1(v) + 3, 'text-anchor': 'end' }, num(v, tk.s < 1 ? 1 : 0))); }
-  svg.append(sv('path', { d: pth(pts, xs, y1), fill: 'none', stroke: 'var(--ink)', 'stroke-width': 2 })); if (ref() && lo < 0 && hi > 0) svg.append(sv('line', { x1: 38, x2: W - 8, y1: y1(0), y2: y1(0), stroke: 'var(--bad)' }));
+function miniFig(e, W = 380, Ht = 230) {
+  const r = e.r, P = e.prev, o = off(e), orig = dnum(P.origem), x0 = orig - 15, x1 = orig + 15, nr = ref() ? 0 : e.nr, pts = [], fc = [];
+  for (let f = x0; f <= orig; f++) if (e.m.has(f)) pts.push({ f, v: e.m.get(f) - o });
+  for (let h = 0; h <= 15; h++) if (P.f[h] != null) { const v = P.f[h] - o; fc.push({ f: orig + h, v, el: P.el[h] == null ? null : v - P.el[h], eh: P.eh[h] == null ? null : v + P.eh[h] }); }
+  const svg = sv('svg', { width: '100%', viewBox: `0 0 ${W} ${Ht}`, height: Ht, role: 'img', 'aria-label': 'Últimos 15 dias e previsão de 15 dias, ' + e.nome }); if (pts.length < 3) return svg;
+  const L = 40, Rr = W - 46, top = 14, yb = 142, ys = [...pts.map((p) => p.v), ...fc.flatMap((p) => [p.v, p.el, p.eh].filter((v) => v != null))];
+  let lo = Math.min(...ys), hi = Math.max(...ys); if (nr >= lo - 0.6 && nr <= hi + 0.6) { lo = Math.min(lo, nr); hi = Math.max(hi, nr); } if (hi - lo < 0.4) { hi += 0.2; lo -= 0.2; }
+  const tk = ticks(lo, hi, 4); lo = Math.min(lo, tk.t[0]); hi = Math.max(hi, tk.t[tk.t.length - 1]); const xs = lin(x0, x1, L, Rr), yl = lin(lo, hi, yb, top);
+  svg.append(sv('rect', { x: xs(orig), y: top, width: Rr - xs(orig), height: yb - top, fill: 'var(--fc)', opacity: 0.05 }));
+  for (const v of tk.t) { svg.append(sv('line', { x1: L, x2: Rr, y1: yl(v), y2: yl(v), stroke: 'var(--grid)', 'stroke-width': 0.8 })); svg.append(sv('text', { x: L - 5, y: yl(v) + 3.5, 'text-anchor': 'end' }, num(v, tk.s < 1 ? 1 : 0))); }
+  svg.append(sv('line', { x1: L, x2: L, y1: top, y2: yb, stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('line', { x1: L, x2: Rr, y1: yb, y2: yb, stroke: 'var(--ink)', 'stroke-width': 0.9 }));
+  if (nr >= lo && nr <= hi) { svg.append(sv('line', { x1: L, x2: Rr, y1: yl(nr), y2: yl(nr), stroke: 'var(--bad)', 'stroke-width': 1.2 })); svg.append(sv('text', { x: L + 3, y: yl(nr) - 3, style: 'fill:var(--bad)' }, 'NR')); }
+  svg.append(sv('path', { d: band(fc, 'el', 'eh', xs, yl), fill: 'var(--band)', opacity: 0.18 }));
+  svg.append(sv('path', { d: pth(pts, xs, yl), fill: 'none', stroke: 'var(--ink)', 'stroke-width': 2.4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+  svg.append(sv('path', { d: pth(fc, xs, yl), fill: 'none', stroke: 'var(--fc)', 'stroke-width': 2.4, 'stroke-dasharray': '5 3' }));
+  const a = pts[pts.length - 1], b = fc[fc.length - 1];
+  svg.append(sv('circle', { cx: xs(a.f), cy: yl(a.v), r: 3.6, fill: 'var(--ink)', stroke: 'var(--panel)', 'stroke-width': 1.5 }));
+  if (b) { svg.append(sv('circle', { cx: xs(b.f), cy: yl(b.v), r: 3.2, fill: 'var(--fc)', stroke: 'var(--panel)', 'stroke-width': 1.5 })); svg.append(sv('text', { x: Rr + 4, y: yl(b.v) + 3.5, style: 'fill:var(--fc);font-weight:600' }, num(b.v))); }
+  svg.append(sv('text', { x: xs(a.f) - 4, y: Math.max(yl(a.v) - 8, top + 8), 'text-anchor': 'end', style: 'fill:var(--ink);font-weight:600' }, num(a.v)));
+  svg.append(sv('text', { x: Rr, y: top - 3, 'text-anchor': 'end' }, uni()));
   const dl = []; for (let i = 1; i < pts.length; i++) if (pts[i].f - pts[i - 1].f === 1) dl.push({ f: pts[i].f, v: Math.round((pts[i].v - pts[i - 1].v) * 100) });
-  const m2 = Math.max(1, ...dl.map((d) => Math.abs(d.v))), y2 = lin(-m2, m2, Ht - 20, top + 24), bw = Math.max(3, (W - 46) / 16 - 3);
-  svg.append(sv('line', { x1: 38, x2: W - 8, y1: y2(0), y2: y2(0), stroke: 'var(--line)' }));
-  for (const d of dl) svg.append(sv('rect', { x: xs(d.f) - bw / 2, width: bw, y: d.v < 0 ? y2(0) : y2(d.v), height: Math.abs(y2(d.v) - y2(0)), fill: d.v < 0 ? '#CC6677' : '#4F7CAC' }));
-  svg.append(sv('text', { x: 38, y: top + 18 }, 'Δ diária (cm)')); svg.append(sv('text', { x: W - 8, y: 8, 'text-anchor': 'end' }, uni()));
-  for (const f of [t0 - 15, t0 - 10, t0 - 5, t0]) svg.append(sv('text', { x: xs(f), y: Ht - 4, 'text-anchor': 'middle' }, dm(ISO(f)))); return svg;
+  const m2 = Math.max(2, ...dl.map((d) => Math.abs(d.v))), y2 = lin(-m2, m2, Ht - 20, yb + 34), bw = Math.max(3, (xs(orig) - L) / 16 - 2);
+  svg.append(sv('line', { x1: L, x2: xs(orig), y1: y2(0), y2: y2(0), stroke: 'var(--line)' }));
+  for (const d of dl) svg.append(sv('rect', { x: xs(d.f) - bw / 2, width: bw, y: d.v < 0 ? y2(0) : y2(d.v), height: Math.max(1, Math.abs(y2(d.v) - y2(0))), rx: 1.5, fill: d.v < 0 ? 'var(--bad)' : 'var(--sel)', opacity: 0.85 }));
+  svg.append(sv('text', { x: L, y: yb + 28 }, 'Δ diária (cm)')); svg.append(sv('text', { x: L - 5, y: y2(m2) + 3, 'text-anchor': 'end' }, '+' + m2)); svg.append(sv('text', { x: L - 5, y: y2(-m2) + 3, 'text-anchor': 'end' }, '−' + m2));
+  for (const f of [x0, x0 + 5, x0 + 10, orig, orig + 5, orig + 10, x1]) { svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: yb, y2: yb + 4, stroke: 'var(--ink)', 'stroke-width': 0.9 })); if (f !== x0 + 10 || true) svg.append(sv('text', { x: xs(f), y: Ht - 4, 'text-anchor': 'middle' }, dm(ISO(f)))); }
+  return svg;
 }
 function prever() {
   const e = E(), r = e.r, c = (v) => num(vv(e, v)), atr = r.atraso;
@@ -248,7 +261,7 @@ function prever() {
     <div class="big">${ref() ? sg(vv(e, r.L0)) : num(r.L0)}<small> ${uni()}</small></div>
     <div><span class="pill ${r.s.c}">${esc(r.s.t)}</span> <span class="cap">${ref() ? 'régua ' + num(r.L0) + ' m' : 'NR em ' + num(e.nr) + ' m na régua'}</span></div></div>
     <div><div class="kv2"><div><span>Taxa 7 d</span><b>${sg(r.taxa, 1)} cm/d</b></div><div><span>Δ 24 h · 7 d</span><b>${sg(r.d1, 0)} · ${sg(r.d7, 0)} cm</b></div><div><span>+7 d (${dm(r.dataF[0])})</span><b>${c(r.f7)} m</b></div><div><span>+30 d (${dm(r.dataF[2])})</span><b>${c(r.f30)} m</b></div><div><span>Mínimo previsto</span><b>${c(r.min)} m</b></div><div><span>Em</span><b>${dm(r.minData)}</b></div></div>
-    <div class="qa"><button class="btn" data-a="ficha" type="button">Detalhes</button><button class="btn" data-a="conv" type="button">Converter na carta</button><button class="btn" data-a="comp" type="button">Compartilhar</button></div></div>`;
+    <div class="qa"><button class="btn" data-a="ficha" type="button">Detalhes</button><button class="btn" data-a="conv" type="button">Calcular FAQ</button><button class="btn" data-a="resumo" type="button">Resumo</button><button class="btn" data-a="comp" type="button">Compartilhar</button></div></div>`;
   const ch = $('#chips'); ch.replaceChildren(...X.list.map((s) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(s.id === st.est)); b.style.setProperty('--c', CORES[s.r.s.c]); b.innerHTML = `<i></i>${esc(s.nome)}`; b.onclick = () => { st.est = s.id; LS.set('est', s.id); redraw(); }; return b; }));
   const sel = $('#chips [aria-selected=true]'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'center' });
   $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Contínua: observado. Tracejadas finas: faixa nominal 95%. Triângulo/círculo: modelos 2/1 do SipamHidro. Shift-clique isola um ano.`;
@@ -294,11 +307,13 @@ function cmpSip() {
 function diag() {
   const R = X.list, u = uni(), k = (e, v) => num(vv(e, v));
   $('#dg-t').textContent = 'Diagnóstico e prognóstico de nível · ' + dmy(D.hoje);
-  $('#dg-c').textContent = 'Níveis em ' + u + ', no formato do boletim SipamHidro.';
+  $('#dg-c').textContent = 'Níveis em ' + u + '; cm/d = taxa de 7 d; Mín. = menor nível previsto em 100 d.';
   const neg = R.filter((e) => e.r.L0 - e.nr < 0), baixo = R.filter((e) => e.r.L0 - e.nr >= 0 && e.r.L0 - e.nr < 1), vaz = R.filter((e) => e.r.taxa < 0), mm = [...R].sort((a, b) => (a.r.min - a.nr) - (b.r.min - b.nr))[0];
-  $('#dg-sint').innerHTML = `<li>${vaz.length} de ${R.length} estações em vazante (taxa média de 7 d: ${num(vaz.length ? mean(vaz.map((e) => e.r.taxa)) : 0, 1)} cm/dia).</li>
-    <li>${neg.length ? esc(neg.map((e) => e.nome).join(', ')) + ' abaixo do NR (' + neg.map((e) => num(e.r.L0 - e.nr) + ' m').join('; ') + '). ' : 'Nenhuma estação abaixo do NR. '}${baixo.length ? baixo.length + ' com menos de 1 m acima do NR: ' + esc(baixo.map((e) => e.nome).join(', ')) + '.' : ''}</li>
-    <li>Previsão: ${R.filter((e) => e.r.cruza).length} estações cruzam o NR nos próximos 100 dias; menor nível previsto em ${esc(mm.nome)} (${num(mm.r.min - mm.nr)} m acima do NR em ${dm(mm.r.minData)}).</li>`;
+  const cr = R.filter((e) => e.r.cruza), ord = { bad: 0, warn: 1, ok: 2 }, rk = [...R].sort((x, y) => ord[x.r.s.c] - ord[y.r.s.c] || (x.r.L0 - x.nr) - (y.r.L0 - y.nr));
+  const tl = (v, l, s) => `<div class="kt"><b>${v}</b><span>${l}</span>${s ? '<small>' + s + '</small>' : ''}</div>`;
+  $('#dg-sint').innerHTML = `<div class="kts">${tl(vaz.length + '/' + R.length, 'em vazante', 'média ' + sg(vaz.length ? mean(vaz.map((e) => e.r.taxa)) : 0, 1) + ' cm/d')}${tl(neg.length, 'abaixo do NR', baixo.length ? baixo.length + ' a menos de 1 m' : 'nenhuma a menos de 1 m')}${tl(cr.length + '/' + R.length, 'cruzam o NR em 100 d', cr.length ? 'primeira: ' + esc(cr.sort((x, y) => x.r.cruza.localeCompare(y.r.cruza))[0].nome) + ' ' + dm(cr[0].r.cruza) : '')}${tl(k(mm, mm.r.min) + ' m', 'menor nível previsto', esc(mm.nome) + ', ' + dm(mm.r.minData))}</div>
+    <div class="tw"><table class="click" id="t-sint"><thead><tr><th>Estação</th><th class="n">Nível</th><th class="n">Δ 7 d</th><th class="n hm">cm/d</th><th class="n">Cruza NR</th><th class="n">Mín.</th></tr></thead><tbody>${rk.map((e) => { const q = e.r; return `<tr data-id="${e.id}"><td><i class="dot ${q.s.c}"></i>${esc(e.nome)}<small class="mut hm"> ${esc(q.s.t)}</small></td><td class="n${ref() && q.L0 - e.nr < 0 ? ' neg' : ''}">${k(e, q.L0)}</td><td class="n">${sg(q.d7, 0)}</td><td class="n hm">${sg(q.taxa, 1)}</td><td class="n">${q.cruza ? dm(q.cruza) : '—'}</td><td class="n">${k(e, q.min)}<small class="mut hm"> ${dm(q.minData)}</small></td></tr>`; }).join('')}</tbody></table></div>`;
+  $$('#t-sint tbody tr').forEach((tr) => tr.addEventListener('click', () => sheetEstacao(tr.dataset.id)));
   const host = $('#dg-rios'); host.innerHTML = '';
   const rios = [...new Set(R.map((e) => e.rio))];
   rios.forEach((rio, ri) => { host.insertAdjacentHTML('beforeend', `<div class="rio">${ri + 1}. ${esc(rio)}</div>`);
