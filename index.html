@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR" data-layout="auto" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rios ZP-1 · Nível e previsão</title>
+<meta name="description" content="Níveis observados e previsão dos rios da ZP-1 em referência ao nível de redução (NR) da carta.">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Rios ZP-1">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<script>try{var t=localStorage.getItem('zp1-tema');if(t)document.documentElement.dataset.theme=JSON.parse(t)}catch(e){}</script>
+<link rel="stylesheet" href="styles.css">
+<script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Ir ao conteúdo</a>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M2 14c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M12 3v6M9.5 6.5 12 9l2.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><b>Rios ZP-1</b><small id="sub">Carregando…</small></div>
+  </div>
+  <div class="acts">
+    <button class="btn" id="b-resumo" type="button">Resumo</button>
+    <button class="icon" id="b-busca" type="button" aria-label="Buscar (Ctrl+K)" title="Buscar"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  </div>
+</header>
+
+<div class="tools">
+  <div class="seg" id="seg-ref" role="group" aria-label="Referencial vertical"><button data-r="nr" type="button">Acima do NR</button><button data-r="regua" type="button">Zero da régua</button></div>
+  <div class="tr">
+    <div class="seg" id="seg-lay" role="group" aria-label="Versão da tela"><button data-l="mobile" type="button">Celular</button><button data-l="desktop" type="button">Computador</button></div>
+    <button class="icon" id="b-tema" type="button" aria-label="Alternar modo escuro" title="Modo claro/escuro"></button>
+  </div>
+</div>
+
+<div id="ban" class="ban" hidden>
+  <span id="ban-t"></span>
+  <span class="ban-a"><button class="btn" id="ban-como" type="button">Como instalar</button><button class="lk" id="ban-x" type="button">Dispensar</button></span>
+</div>
+
+<nav class="tabs" id="tabs" aria-label="Seções">
+  <button data-v="prev" type="button" aria-current="page">Previsão</button>
+  <button data-v="diag" type="button">Diagnóstico</button>
+  <button data-v="ref" type="button">Referência vertical</button>
+  <button data-v="cie" type="button">Ciência e dados</button>
+</nav>
+
+<main id="main">
+  <div id="carga" class="carga">Carregando dados…</div>
+
+  <section class="view" id="v-prev" hidden>
+    <div class="hero" id="hero"></div>
+    <div class="chips" id="chips" role="tablist" aria-label="Estações"></div>
+    <div class="card">
+      <div class="row"><span class="t">Janela</span>
+        <div class="seg" id="seg-jan" role="group" aria-label="Janela temporal"><button data-j="30" type="button">30 d</button><button data-j="60" type="button">60 d</button><button data-j="90" type="button">90 d</button><button data-j="180" type="button">6 meses</button><button data-j="365" type="button">Ano</button></div>
+      </div>
+      <details class="ctrl" id="ctrl"><summary>Camadas e anos</summary>
+        <div class="row" id="row-cam"><span class="t">Camadas</span></div>
+        <div class="row" id="row-anos"><span class="t">Anos</span></div>
+      </details>
+      <div class="chart" id="chart" aria-label="Hidrograma"></div>
+      <p class="cap" id="cap1"></p>
+      <div class="row"><button class="lk" id="b-csv-g" type="button">Exportar dados do gráfico (CSV)</button><button class="lk" id="b-share" type="button">Compartilhar situação</button></div>
+    </div>
+    <h2>Previsão da estação</h2>
+    <p class="cap" id="q1-c"></p>
+    <div class="tw"><table id="q1"><thead><tr><th>Horizonte</th><th>Data</th><th class="n" id="q1-n">Nível (m)</th><th class="n">Faixa empírica 95%</th><th class="n">Faixa nominal 95%</th></tr></thead><tbody></tbody></table></div>
+    <h2>Todas as estações</h2>
+    <p class="cap" id="q2-c"></p>
+    <div class="tw"><table class="click" id="q2"><thead><tr><th>Estação</th><th>Situação</th><th class="n" id="q2-a">Nível (m)</th><th class="n">Δ 24 h</th><th class="n">Δ 7 d</th><th class="n">cm/d</th><th class="n" id="q2-7">+7 d</th><th class="n" id="q2-15">+15 d</th><th class="n" id="q2-30">+30 d</th><th class="n" id="q2-m">Mínimo previsto</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="view" id="v-diag" hidden>
+    <h2 style="margin-top:0" id="dg-t">Diagnóstico e prognóstico</h2>
+    <p class="cap" id="dg-c"></p>
+    <h3>1. Síntese</h3><ul class="lim" id="dg-sint"></ul>
+    <h3>2. Diagnóstico e prognóstico por rio</h3><div id="dg-rios"></div>
+    <h3 id="dg-h3">3. Correlação com o boletim SipamHidro</h3>
+    <p class="cap" id="dg-cc"></p>
+    <div class="grid2">
+      <div><p class="cap"><b>Quadro A.</b> Variação das cotas em 15 dias.</p><div class="tw"><table id="t-c15"><thead><tr><th>Estação</th><th class="n">Painel (cm)</th><th class="n">SipamHidro (cm)</th><th class="n">Diferença (cm)</th></tr></thead><tbody></tbody></table></div><p class="cap" id="dg-r" style="margin-top:6px"></p></div>
+      <div><p class="cap"><b>Quadro B.</b> Modelos 1 e 2 do boletim (leitura gráfica, ±0,15 m) e painel.</p><div class="tw"><table id="t-cm"><thead><tr><th>Estação</th><th>Mês</th><th class="n">Modelo 1</th><th class="n">Modelo 2</th><th class="n">Painel, mínima</th></tr></thead><tbody></tbody></table></div></div>
+    </div>
+    <p class="cap" id="dg-mont" style="margin-top:8px"></p>
+    <h3>4. Considerações</h3><ul class="lim" id="dg-cons"></ul>
+  </section>
+
+  <section class="view" id="v-ref" hidden>
+    <h2 style="margin-top:0">Referência vertical</h2>
+    <p class="cap">Coluna acima do NR = leitura − NR na régua. Profundidade = sondagem da carta + coluna. Válido junto à estação.</p>
+    <h3>Aplicação local</h3>
+    <div class="tool">
+      <label>Estação<select id="rf-est"></select></label>
+      <label>Leitura da régua (m)<input type="number" step="0.01" id="rf-leit" inputmode="decimal"></label>
+      <label>NR na régua (m)<input type="number" step="0.01" id="rf-nr" inputmode="decimal"></label>
+      <label>Coluna acima do NR (m)<input type="number" step="0.01" id="rf-col" inputmode="decimal"></label>
+      <label>Sondagem na carta (m)<input type="number" step="0.1" id="rf-sond" inputmode="decimal" value="3.0"></label>
+      <label>Calado (m)<input type="number" step="0.1" id="rf-cal" inputmode="decimal" value="2.5"></label>
+    </div>
+    <div class="row"><button class="lk" id="rf-ult" type="button">Usar última leitura</button><button class="lk" id="rf-nrad" type="button">Restaurar NR adotado</button></div>
+    <div class="res"><div><b id="rs-col">—</b><span>Coluna acima do NR</span></div><div><b id="rs-prof">—</b><span>Profundidade real</span></div><div><b id="rs-ukc">—</b><span>Folga sob a quilha</span></div></div>
+    <div class="row"><button class="btn pri" id="rf-reg" type="button">Registrar conversão</button></div>
+    <h3>Memória de conversão</h3>
+    <p class="cap">Gravada neste aparelho.</p>
+    <div class="tw"><table id="rf-log"><thead><tr><th>Data/hora</th><th>Estação</th><th class="n">Leitura</th><th class="n">NR</th><th class="n">Coluna</th><th class="n">Sondagem</th><th class="n">Prof.</th><th class="n">Calado</th><th class="n">Folga</th></tr></thead><tbody></tbody></table></div>
+    <div class="row" style="margin-top:6px"><button class="lk" id="rf-copy" type="button">Copiar (CSV)</button><button class="lk" id="rf-clear" type="button">Limpar</button></div>
+    <h3>Níveis de redução adotados</h3>
+    <p class="cap">Fonte: F-43 (DHN). Itacoatiara e Parintins: nivelamento UNIPILOT.</p>
+    <div class="tw"><table id="t-nr"><thead><tr><th>Estação</th><th>Carta</th><th>RN</th><th class="n">NR abaixo da RN (cm)</th><th class="n">Zero abaixo da RN (cm)</th><th class="n">NR F-43 (m)</th><th class="n">NR adotado (m)</th><th>Fonte</th><th>Ficha</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="view" id="v-cie" hidden>
+    <h2 style="margin-top:0">Escopo</h2>
+    <dl class="kv">
+      <dt>Objetivos</dt><dd>Acompanhar a variação, antecipar tendências e apoiar gestores e práticos da ZP-1, preservando evidências para publicação científica.</dd>
+      <dt>Entregas</dt><dd>Painel por rio, série em referência explícita, camadas de análise, taxas, alertas, exportações e base de aplicativo instalável.</dd>
+      <dt>Público</dt><dd>Práticos, hidrógrafos, hidrólogos, oceanógrafos, gestores navais e desenvolvedores.</dd>
+      <dt>Camadas</dt><dd>Observação, histórico, tendência, incerteza, referência vertical, qualidade e memória científica.</dd>
+    </dl>
+    <h2>Dados</h2>
+    <p class="cap" id="cie-d"></p>
+    <div class="tw"><table id="t-dados"><thead><tr><th>Estação</th><th>Início</th><th>Fim</th><th class="n">Dias</th><th class="n">Cobertura</th><th class="n">Descartadas (QC)</th><th class="n">Anos na climatologia</th></tr></thead><tbody></tbody></table></div>
+    <div class="row" style="margin-top:6px"><button class="lk" id="b-csv-s" type="button">Exportar série integrada (CSV)</button></div>
+    <h2>Situação (alertas)</h2>
+    <ul class="lim"><li><b>Abaixo do NR:</b> nível atual menor que o NR.</li><li><b>NR em N d:</b> a previsão cruza o NR em até 15 dias (≤ 7: vermelho).</li><li><b>&lt; 1 m do NR:</b> coluna menor que 1 m.</li></ul>
+    <h2>Métodos</h2>
+    <ol class="met">
+      <li><b>Série diária:</b> última leitura do dia; lacunas de até 7 dias interpoladas só para o cálculo.</li>
+      <li><b>Qualidade:</b> descarta leitura a mais de 0,8 m da mediana de ±5 dias.</li>
+      <li><b>Redução:</b> <code>h<sub>NR</sub> = leitura − NR<sub>régua</sub></code>.</li>
+      <li><b>Taxa:</b> regressão linear dos últimos 8 dias (cm/d).</li>
+      <li><b>Previsão (100 d):</b> <code>F(h) = L<sub>0</sub> + w·r·h + (1 − w)·C(h)</code>, <code>w = e<sup>−h/7</sup></code>; <code>C(h)</code> é a mediana de <code>L(t+h) − L(t)</code> nos outros anos, na mesma data ±10 d.</li>
+      <li><b>Incerteza:</b> retroprevisão deixando um ano de fora. Empírica: quantis 2,5–97,5% e 25–75% do erro. Nominal: ±1,96 × raiz do erro quadrático médio.</li>
+      <li><b>Posição (z):</b> desvio da mesma data em 2020–2025, com as classes do boletim SipamHidro (leve 1–1,5; moderada 1,5–2; severa 2–3; extrema &gt; 3).</li>
+    </ol>
+    <h2>Validação da previsão</h2>
+    <p class="cap">Erro quadrático médio da retroprevisão (m): método (persistência entre parênteses).</p>
+    <div class="tw"><table id="t-val"><thead><tr><th>Estação</th><th class="n">Origens</th><th class="n">+7 d</th><th class="n">+15 d</th><th class="n">+30 d</th><th class="n">+60 d</th><th class="n">+90 d</th></tr></thead><tbody></tbody></table></div>
+    <h2>Limitações</h2>
+    <ul class="lim">
+      <li>Base de 4 a 6 anos, com as estiagens de 2023 e 2024: a previsão e o z refletem esse período.</li>
+      <li>Método local: não usa chuva nem cotas a montante.</li>
+      <li>Complementar: não substitui a carta nem os avisos oficiais.</li>
+    </ul>
+    <h2>Atualização e instalação</h2>
+    <p class="cap" id="cie-u"></p>
+    <div class="row"><button class="btn" id="b-instalar" type="button">Como instalar o app</button><button class="lk" id="b-recarregar" type="button">Verificar atualização agora</button></div>
+    <details><summary id="qc-sum">Leituras descartadas</summary><div class="tw" style="max-height:340px"><table id="t-qc"><thead><tr><th>Estação</th><th>Data</th><th class="n">Leitura (m)</th><th class="n">Mediana local (m)</th><th class="n">Desvio (m)</th></tr></thead><tbody></tbody></table></div></details>
+  </section>
+  <p class="foot">Fontes: leituras de régua (UNIPILOT), fichas F-43 (DHN), boletim SipamHidro (Censipam).</p>
+</main>
+
+<nav class="bnav" id="bnav" aria-label="Seções">
+  <button data-v="prev" type="button" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-8M3 21h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Previsão</button>
+  <button data-v="diag" type="button"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7M9 8h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Diagnóstico</button>
+  <button data-v="ref" type="button"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 6h4M8 10h4M8 14h4M8 18h4M14 13c2 0 2-1.5 4-1.5s2 1.5 4 1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Referência</button>
+  <button data-v="cie" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ciência</button>
+</nav>
+
+<div id="ovl" class="ovl" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab" id="grab"></div><div class="sh-h"><b id="sh-t"></b><button class="icon" id="sh-x" type="button" aria-label="Fechar">×</button></div><div id="sh-b"></div></div></div>
+
+<div id="story" class="story" hidden role="dialog" aria-modal="true" aria-label="Resumo do dia">
+  <div class="stbar" id="stbar"></div>
+  <button class="stx" id="stx" type="button" aria-label="Fechar">×</button>
+  <div class="stzone l" id="stl"></div><div class="stzone r" id="str"></div>
+  <div class="stc" id="stc"></div>
+</div>
+
+<dialog id="dlg-busca" class="dlg"><input id="bq" type="search" placeholder="Estação, seção ou ação" autocomplete="off" aria-label="Buscar"><ul id="bl" role="listbox"></ul></dialog>
+
+<dialog id="dlg-inst" class="dlg">
+  <div class="sh-h"><b>Instalar Rios ZP-1</b><button class="icon" id="inst-x" type="button" aria-label="Fechar">×</button></div>
+  <p class="cap">App web instalável (PWA), não de loja. Você confirma a instalação no seu aparelho.</p>
+  <div id="inst-b"></div>
+  <p class="cap" style="margin-top:10px">Instalado, abre em tela cheia, funciona sem internet e se atualiza com dados novos.</p>
+  <div class="row"><button class="btn pri" id="inst-go" type="button" hidden>Instalar neste aparelho</button></div>
+</dialog>
+
+<div id="toast" class="toast" hidden><span id="toast-t"></span><button class="lk" id="toast-b" type="button"></button></div>
+</body>
+</html>

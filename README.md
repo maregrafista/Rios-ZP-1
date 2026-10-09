@@ -1,0 +1,25 @@
+# Rios ZP-1
+
+App web instalável (PWA): níveis observados e previsão dos rios da ZP-1 em referência ao NR da carta.
+
+## Arquivos
+- `index.html`, `styles.css`, `app.js`: o app, sem dependências.
+- `data.json`: dados prontos, gerados por `tools/atualizar.py`. Não editar.
+- `dados/`: a planilha `.xlsx` de leituras. `dados/base/` guarda a base acumulada e as tabelas editáveis (`estacoes.json` com o NR adotado; `sipam.json` e `sipam_prog.json` com o boletim SipamHidro).
+- `tools/atualizar.py`: lê a planilha, cadastra só os dias novos, refaz o controle de qualidade, recalcula a previsão e grava `data.json`.
+- `tools/sincronizar.sh`: `git pull`, `atualizar.py`, commit e push. Só age se a planilha mudou.
+- `files/`: fichas F-43.
+
+## Atualizar
+1. Envie a nova planilha para `dados/`.
+2. A tarefa agendada roda `tools/sincronizar.sh`. À mão: `bash tools/sincronizar.sh`.
+
+Um valor por dia (a última leitura). Dia fechado com valor diferente não sobrescreve a base e aparece em `dados/base/relatorio.txt` (`--revisar` aceita). Requer `pip install openpyxl`.
+
+Para mudar um NR: edite `nr_adotado_m` em `dados/base/estacoes.json` e rode `python3 tools/atualizar.py --forcar`.
+
+## Instalar
+Cada pessoa confirma no próprio aparelho. Android: Chrome → ⋮ → Instalar app. iPhone: Safari → Compartilhar → Adicionar à Tela de Início.
+
+## Teste local
+`python3 -m http.server 8000` e abrir http://localhost:8000.
