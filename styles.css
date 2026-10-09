@@ -229,3 +229,4 @@ html[data-layout=mobile] #t-sint td,html[data-layout=mobile] #t-sint th{padding:
 .rodape svg{color:var(--acc)}.rodape b{color:var(--ink);font-size:13px;letter-spacing:.01em}
 html[data-layout=mobile] .rodape{margin-bottom:8px}
 @media print{.rodape{border:0}}
+.rodape{width:100%;text-align:center;align-items:center;justify-content:center}.rodape>*{margin-inline:auto}

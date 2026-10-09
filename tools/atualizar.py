@@ -179,6 +179,11 @@ def main():
         t = sw.read_text(encoding="utf-8")
         import re
         sw.write_text(re.sub(r"const VERSAO='[^']*'", f"const VERSAO='{out['hoje']}-{out['gerado'][11:19].replace(':','')}'", t), encoding="utf-8")
+    idx = RAIZ / "index.html"
+    if idx.exists():
+        import re as _re
+        v = out["hoje"].replace("-", "") + out["gerado"][11:19].replace(":", "")
+        idx.write_text(_re.sub(r"(styles\.css|app\.js)\?v=[^\"]*", lambda m: m.group(1) + "?v=" + v, idx.read_text(encoding="utf-8")), encoding="utf-8")
     if not regen:
         (BASE / "relatorio.txt").write_text("\n".join(RELATORIO) + "\n", encoding="utf-8")
     print(f"\ndata.json gravado ({data_p.stat().st_size // 1024} KB), dados até {out['hoje']}.")

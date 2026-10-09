@@ -10,9 +10,9 @@ js = (R / "app.js").read_text(encoding="utf-8").replace("</script", "<\\/script"
 dados = (R / "data.json").read_text(encoding="utf-8")
 h = re.sub(r'<link rel="(manifest|apple-touch-icon|icon)"[^>]*>\n?', "", h)
 h = re.sub(r'<meta property="og:[^>]*>\n?|<meta name="twitter:[^>]*>\n?', "", h)
-h = h.replace('<link rel="stylesheet" href="styles.css">', "<style>" + css + "</style>")
+h = re.sub(r'<link rel="stylesheet" href="styles.css[^"]*">', lambda m: "<style>" + css + "</style>", h)
 boot = "<script>window.__ZP1__={url:'https://maregrafista.github.io/Rios-ZP-1/data.json',dados:" + dados.replace("</", "<\\/") + "};</script>\n<script>" + js + "</script>"
-h = h.replace('<script defer src="app.js"></script>', "")
+h = re.sub(r'<script defer src="app.js[^"]*"></script>', "", h)
 h = h.replace("</body>", boot + "\n</body>")
 h = h.replace("files/", "https://maregrafista.github.io/Rios-ZP-1/files/")
 # o Artifact já embrulha a página: manter só título, <style> e corpo
