@@ -1,5 +1,5 @@
 // Service worker do Rios ZP-1. VERSAO é reescrita por tools/atualizar.py a cada atualização de dados.
-const VERSAO='2026-10-09-193906';
+const VERSAO='2026-10-09-194751';
 const CACHE='rios-zp1-'+VERSAO;
 const CORE=['./','index.html','styles.css','app.js','manifest.webmanifest','icon.svg','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
