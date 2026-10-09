@@ -110,3 +110,6 @@ html[data-layout=desktop] .sheet{border-radius:10px;align-self:center;max-height
 html[data-layout=desktop] .toast{bottom:24px}
 @media(max-width:560px){.seg button{padding:5px 8px;font-size:12.5px}.tools{padding-inline:12px}.top,main{padding-inline:12px}.tabs,.ban{margin-inline:12px}}
 details.ctrl{margin:0 0 8px}details.ctrl>summary{display:inline-block;border:1px solid var(--line);border-radius:4px;padding:5px 12px;font-size:13px;color:var(--ink);background:var(--panel);min-height:34px;list-style:none}details.ctrl>summary::-webkit-details-marker{display:none}details.ctrl[open]>summary{background:var(--ink);color:var(--panel)}details.ctrl[open]{padding-bottom:2px}details.ctrl .row{margin-top:8px}
+
+.ctrls{display:flex;flex-wrap:wrap;gap:6px 8px;margin:0 0 8px}.ctrls details.ctrl{margin:0}.ctrls details.ctrl[open]{flex:1 1 100%}
+#seg-jan{flex-wrap:wrap}@media(max-width:560px){#seg-jan button{padding:5px 7px;font-size:12.5px}}

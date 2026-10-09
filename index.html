@@ -59,12 +59,12 @@
     <div class="chips" id="chips" role="tablist" aria-label="Estações"></div>
     <div class="card">
       <div class="row"><span class="t">Janela</span>
-        <div class="seg" id="seg-jan" role="group" aria-label="Janela temporal"><button data-j="30" type="button">30 d</button><button data-j="60" type="button">60 d</button><button data-j="90" type="button">90 d</button><button data-j="180" type="button">6 meses</button><button data-j="365" type="button">Ano</button></div>
+        <div class="seg" id="seg-jan" role="group" aria-label="Janela temporal"><button data-j="7" type="button">7 d</button><button data-j="15" type="button">15 d</button><button data-j="30" type="button">30 d</button><button data-j="45" type="button">45 d</button><button data-j="60" type="button">60 d</button><button data-j="90" type="button">90 d</button><button data-j="180" type="button">180 d</button><button data-j="365" type="button">Ano</button></div>
       </div>
-      <details class="ctrl" id="ctrl"><summary>Camadas e anos</summary>
-        <div class="row" id="row-cam"><span class="t">Camadas</span></div>
-        <div class="row" id="row-anos"><span class="t">Anos</span></div>
-      </details>
+      <div class="ctrls">
+        <details class="ctrl" id="ctrl-cam"><summary>Camadas</summary><div class="row" id="row-cam"></div></details>
+        <details class="ctrl" id="ctrl-anos"><summary>Anos</summary><div class="row" id="row-anos"></div></details>
+      </div>
       <div class="chart" id="chart" aria-label="Hidrograma"></div>
       <p class="cap" id="cap1"></p>
       <div class="row"><button class="lk" id="b-csv-g" type="button">Exportar dados do gráfico (CSV)</button><button class="lk" id="b-share" type="button">Compartilhar situação</button></div>
