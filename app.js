@@ -33,7 +33,7 @@ Previsões empíricas, de caráter informativo.
 ${APP_URL}`;
 const PAL = { soft: ['#332288', '#88CCEE', '#117733', '#DDCC77', '#AA4499', '#888888', '#44AA99', '#CC6677'], dk: ['#9C93E8', '#88CCEE', '#4DB88A', '#DDCC77', '#D68AC4', '#AEAEAE', '#44AA99', '#CC6677'], hc: ['#33BBEE', '#009988', '#EE7733', '#CC3311', '#EE3377', '#0077BB', '#BBBBBB', '#555555'] };
 const CORES = { bad: 'var(--bad)', warn: 'var(--warn)', ok: 'var(--ok)' };
-const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '60', '90', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), pal: LS.get('paleta', 'marinho'), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
+const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '45', '60', '90', '120', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), pal: LS.get('paleta', 'marinho'), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
 let D = null, X = null;
 
 // ---------- dados ----------
@@ -188,7 +188,7 @@ function grafico() {
     let d = new Date(x0 * DAY); d = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / DAY;
     while (d <= x1) { const dd = new Date(d * DAY), nx = Date.UTC(dd.getUTCFullYear(), dd.getUTCMonth() + 1, 1) / DAY; if (d >= x0) { svg.append(sv('line', { x1: xs(d), x2: xs(d), y1: xa, y2: xa + 5, stroke: 'var(--line)' })); if (d > x0) svg.append(sv('line', { x1: xs(d), x2: xs(d), y1: mg.t, y2: xa, stroke: 'var(--grid)', 'stroke-dasharray': '1 3' })); } const a = Math.max(d, x0), b = Math.min(nx, x1); if (b - a >= 14) svg.append(sv('text', { x: xs((a + b) / 2), y: xa + 18, 'text-anchor': 'middle' }, (W < 460 ? MES[dd.getUTCMonth()][0] : MES[dd.getUTCMonth()]) + (dd.getUTCMonth() === 0 && st.jan === '180' ? ' ' + dd.getUTCFullYear() : ''))); d = nx; }
   } else {
-    const sm = W < 520, step = { 7: 1, 15: sm ? 3 : 1, 30: sm ? 10 : 5, 60: sm ? 20 : 10, 90: sm ? 30 : 15 }[st.jan] || 15;
+    const sm = W < 520, step = { 7: 1, 15: sm ? 3 : 1, 30: sm ? 10 : 5, 45: sm ? 15 : 5, 120: sm ? 30 : 15, 60: sm ? 20 : 10, 90: sm ? 30 : 15 }[st.jan] || 15;
     for (let k = -Math.floor((HOJE - x0) / step); HOJE + k * step <= x1; k++) { const f = HOJE + k * step; if (f < x0) continue; svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: mg.t, y2: xa, stroke: 'var(--grid)', 'stroke-dasharray': '1 3' })); svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: xa, y2: xa + 4, stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('text', { x: xs(f), y: xa + 17, 'text-anchor': 'middle' }, lab(f))); }
   }
   svg.append(sv('text', { transform: `translate(11 ${(mg.t + xa) / 2}) rotate(-90)`, 'text-anchor': 'middle' }, ref() ? 'Nível acima do NR (m)' : 'Leitura da régua (m)'));

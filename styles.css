@@ -344,3 +344,4 @@ html[data-layout=mobile] .bnav{padding-top:3px}html[data-layout=mobile] .bnav bu
 html[data-layout=mobile] .bnav button[aria-current=page]{background:none;box-shadow:inset 0 2px 0 var(--acc)}
 .ajr{padding:8px 0}
 html[data-layout=mobile] .bnav button{border-radius:0}
+@media(max-width:560px){#seg-jan button,html[data-layout=mobile] #seg-jan button{padding:5px 4px;font-size:12px}}html[data-layout=mobile] #seg-jan button{padding:5px 4px;font-size:12px}
