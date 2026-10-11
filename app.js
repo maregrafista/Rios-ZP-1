@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.4';
+const APP_VER = '1.5';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -76,7 +76,7 @@ function resumir(e) {
   let cruza = null; for (let i = 1; i <= 100; i++) if (p.f[i] != null && p.f[i] - nr <= 0) { cruza = i; break; }
   const dias = cruza == null ? null : Math.max(0, cruza - atraso), n0 = p.L0 - nr;
   let s = { t: 'Normal', c: 'ok' };
-  if (n0 < 0) s = { t: 'Abaixo do NR', c: 'bad' }; else if (dias != null && dias <= 7) s = { t: 'NR em ' + dias + ' d', c: 'bad' }; else if (dias != null && dias <= 15) s = { t: 'NR em ' + dias + ' d', c: 'warn' }; else if (n0 < 1) s = { t: '< 1 m do NR', c: 'warn' };
+  if (n0 < 0) s = { t: 'Abaixo do NR', c: 'bad' }; else if (dias != null && dias <= 7) s = { t: 'Cruza o NR em ' + dias + ' d', c: 'bad' }; else if (dias != null && dias <= 15) s = { t: 'Cruza o NR em ' + dias + ' d', c: 'warn' }; else if (n0 < 1) s = { t: 'Menos de 1 m do NR', c: 'warn' };
   const o = { data: p.origem, t0, atraso, nr, taxa: Math.round(p.taxa_cm_dia * 10) / 10, d1: dif(1), d7: dif(7), d15: dif(15), mu, sd, z: z == null ? null : Math.round(z * 100) / 100, cond, s, L0: p.L0,
     f7: at(7), f15: at(15), f30: at(30), lim7: lim(7), lim15: lim(15), lim30: lim(30), min: mn, minData: mi == null ? null : ISO(t0 + mi), minBorda: mi === last, cruza: cruza == null ? null : ISO(t0 + cruza) };
   o.dataF = [7, 15, 30].map((h) => ISO(X.HOJE + h)); return o;
@@ -286,11 +286,11 @@ function prever() {
   const atras = Math.floor(Date.now() / DAY - dnum(D.hoje)); $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + (atras >= 3 ? ' (há ' + atras + ' d)' : '') + ' · ' + (ref() ? 'm acima do NR' : 'm na régua');
   $('#hero').innerHTML = `<div class="hh"><div class="nome"><b>${esc(e.nome)}</b> · ${esc(e.rio)} · ${dm(r.data)}${atr ? ' (' + atr + ' d sem leitura)' : ''}</div><button class="btn dt" data-a="ficha" type="button">Detalhes</button></div>
     <div class="hb"><span class="big">${ref() ? sg(vv(e, r.L0)) : num(r.L0)}<small> ${uni()}</small></span><span class="pill ${r.s.c}">${esc(r.s.t)}</span><span class="cap">${ref() ? 'régua ' + num(r.L0) + ' m' : 'NR ' + num(e.nr) + ' m na régua'}</span></div>
-    <div class="hg"><i>Obs.</i><div><span>Taxa 7 d</span><b>${sg(r.taxa, 1)} cm/d</b></div><div><span>Δ 24 h</span><b>${sg(r.d1, 0)} cm</b></div><div><span>Δ 7 d</span><b>${sg(r.d7, 0)} cm</b></div>
-    <i>Prev.</i><div><span>+7 d · ${dm(r.dataF[0])}</span><b>${c(r.f7)} m</b></div><div><span>+30 d · ${dm(r.dataF[2])}</span><b>${c(r.f30)} m</b></div><div><span>Mínimo · ${dm(r.minData)}</span><b>${c(r.min)} m</b></div></div>`;
+    <div class="hg"><i>Observado</i><div><span>Taxa 7 d</span><b>${sg(r.taxa, 1)} cm/d</b></div><div><span>Var. 24 h</span><b>${sg(r.d1, 0)} cm</b></div><div><span>Var. 7 d</span><b>${sg(r.d7, 0)} cm</b></div>
+    <i>Previsto</i><div><span>+7 d · ${dm(r.dataF[0])}</span><b>${c(r.f7)} m</b></div><div><span>+30 d · ${dm(r.dataF[2])}</span><b>${c(r.f30)} m</b></div><div><span>Mínimo · ${dm(r.minData)}</span><b>${c(r.min)} m</b></div></div>`;
   mapa();
-  $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Contínua: observado. Tracejadas finas: faixa nominal 95%. Triângulo/círculo: modelos 2/1 do SipamHidro. Shift-clique isola um ano.`;
-  $('#q1-c').textContent = 'Horizonte a partir da última leitura (' + dmy(ISO(X.HOJE)) + ').';
+  $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Toque ou passe o dedo no gráfico para ler os valores. Tracejadas finas: faixa nominal 95%. Triângulo/círculo: modelos 2/1 do SipamHidro. No computador, Shift+clique isola um ano.`;
+  $('#q1-c').textContent = 'A partir da última leitura (' + dmy(ISO(X.HOJE)) + '). Emp. = faixa empírica de 95%; Nom. = faixa nominal de 95%.';
   $('#q1 tbody').innerHTML = [0, 7, 15, 30, 60, 90].map((h) => { const i = h + atr; if (i > 100 || e.prev.f[i] == null) return ''; const v = vv(e, e.prev.f[i]), P = e.prev, rg = (a, b) => (a == null ? '—' : num(v - a) + '<span class="hm"> a </span><span class="hs">…</span>' + num(v + b)); return `<tr><td>${h ? '+' + h + ' d' : 'atual'}<small class="hs"> ${dm(ISO(X.HOJE + h))}</small></td><td class="hm">${dmy(ISO(X.HOJE + h))}</td><td class="n${ref() && v < 0 ? ' neg' : ''}">${num(v)}</td><td class="n">${rg(P.el[i], P.eh[i])}</td><td class="n">${rg(P.nom[i], P.nom[i])}</td></tr>`; }).join('');
   ['q1-n'].forEach((i) => { $('#' + i).textContent = 'Nível (' + uni() + ')'; });
   $('#q2-c').textContent = 'Toque na linha para o resumo. Ponto: vermelho, abaixo do NR ou cruzando em até 7 d; âmbar, atenção; verde, normal.';

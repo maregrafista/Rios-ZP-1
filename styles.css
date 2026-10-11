@@ -386,3 +386,8 @@ html[data-layout=desktop] .chips svg{max-height:none}
 .card{margin-bottom:0}
 #v-prev>.hero{margin-bottom:6px}
 .hero .hg{grid-template-columns:34px repeat(3,minmax(0,1fr))}.ctrls>.seg button{padding:5px 8px;font-size:12.5px}.ctrls details.ctrl>summary{padding:4px 9px;font-size:12.5px}
+
+/* v1.5: clareza */
+.hero .hg{grid-template-columns:58px repeat(3,minmax(0,1fr))}.hero .hg i{text-transform:none;letter-spacing:0;font-size:10.5px}
+details.ctrl>summary::after{content:" ▾";font-size:10px;color:var(--mut)}details.ctrl[open]>summary::after{content:" ▴";color:#fff}
+.guia li{margin:5px 0}

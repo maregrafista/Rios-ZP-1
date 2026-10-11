@@ -24,8 +24,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem('zp1-tema');if(t)document.documentElement.dataset.theme=JSON.parse(t);var p=localStorage.getItem('zp1-paleta');if(p)document.documentElement.dataset.paleta=JSON.parse(p)}catch(e){}</script>
-<link rel="stylesheet" href="styles.css?v=20261011141718">
-<script defer src="app.js?v=20261011141718"></script>
+<link rel="stylesheet" href="styles.css?v=20261011143409">
+<script defer src="app.js?v=20261011143409"></script>
 </head>
 <body>
 <a class="skip" href="#main">Ir ao conteúdo</a>
@@ -64,7 +64,7 @@
         <div class="seg" id="seg-jan" role="group" aria-label="Janela temporal"><button data-j="7" type="button">7 d</button><button data-j="15" type="button">15 d</button><button data-j="30" type="button">30 d</button><button data-j="45" type="button">45 d</button><button data-j="60" type="button">60 d</button><button data-j="90" type="button">90 d</button><button data-j="120" type="button">120 d</button><button data-j="180" type="button">180 d</button><button data-j="365" type="button">Ano</button></div>
       </div>
       <div class="ctrls">
-        <div class="seg" id="seg-ref" role="group" aria-label="Referencial vertical"><button data-r="nr" type="button">Acima do NR</button><button data-r="regua" type="button">Zero da régua</button></div>
+        <div class="seg" id="seg-ref" role="group" aria-label="Referencial vertical"><button data-r="nr" type="button">Acima do NR</button><button data-r="regua" type="button">Régua</button></div>
         <details class="ctrl" id="ctrl-cam"><summary>Camadas</summary><div class="row" id="row-cam"></div></details>
         <details class="ctrl" id="ctrl-anos"><summary>Anos</summary><div class="row" id="row-anos"></div></details>
       </div>
@@ -73,7 +73,7 @@
       <p class="cap" id="cap1"></p>
       <div class="row"><button class="lk" id="b-csv-g" type="button">Exportar dados do gráfico (CSV)</button></div>
     </div>
-    <div class="seg full" id="seg-sub" role="tablist" aria-label="Tabelas"><button data-s="prev" type="button">Previsão*</button><button data-s="sip" type="button">SipamHidro</button><button data-s="all" type="button">Estações*</button></div>
+    <div class="seg full" id="seg-sub" role="tablist" aria-label="Tabelas"><button data-s="prev" type="button">Previsão</button><button data-s="sip" type="button">SipamHidro</button><button data-s="all" type="button">Estações</button></div>
     <div id="sb-prev" class="sb"><p class="cap" id="q1-c"></p>
     <div class="tw"><table id="q1"><thead><tr><th>Horizonte</th><th class="hm">Data</th><th class="n" id="q1-n">Nível (m)</th><th class="n">Emp. 95%</th><th class="n">Nom. 95%</th></tr></thead><tbody></tbody></table></div>
     <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p></div>
@@ -132,6 +132,14 @@
   </section>
 
   <section class="view" id="v-cie" hidden>
+    <h2 style="margin-top:0">Guia rápido</h2>
+    <ul class="lim guia">
+      <li><b>Estação:</b> toque no esquema do rio (ou use ← → no computador). A cor mostra a situação e a seta, a tendência.</li>
+      <li><b>Gráfico:</b> escolha a janela (dias) e a referência: <i>Acima do NR</i> ou <i>Régua</i>. Toque no gráfico para ler os valores. Em Camadas e Anos, ligue e desligue as curvas.</li>
+      <li><b>Detalhes:</b> tabela completa da estação, com faixa de incerteza da previsão.</li>
+      <li><b>FAQ:</b> informe leitura, sondagem, calado e squat para obter a folga abaixo da quilha.</li>
+      <li><b>Tabelas:</b> Previsão da estação, comparação com o SipamHidro e todas as estações.</li>
+    </ul>
     <h2 style="margin-top:0">Escopo</h2>
     <dl class="kv">
       <dt>Objetivos</dt><dd>Acompanhar a variação, antecipar tendências e apoiar gestores e práticos da ZP-1, preservando evidências para publicação científica.</dd>
@@ -148,7 +156,7 @@
     </details>
     <div class="row" style="margin-top:6px"><button class="lk" id="b-csv-s" type="button">Exportar série integrada (CSV)</button></div>
     <h2>Situação (alertas)</h2>
-    <ul class="lim"><li><b>Abaixo do NR:</b> nível atual menor que o NR.</li><li><b>NR em N d:</b> a previsão cruza o NR em até 15 dias (≤ 7: vermelho).</li><li><b>&lt; 1 m do NR:</b> coluna menor que 1 m.</li></ul>
+    <ul class="lim"><li><b>Abaixo do NR:</b> nível atual menor que o NR.</li><li><b>Cruza o NR em N d:</b> a previsão cruza o NR em até 15 dias (≤ 7: vermelho).</li><li><b>Menos de 1 m do NR:</b> coluna menor que 1 m.</li></ul>
     <h2>Métodos</h2>
     <ol class="met">
       <li><b>Série diária:</b> última leitura do dia; lacunas de até 7 dias interpoladas só para o cálculo.</li>
