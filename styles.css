@@ -391,3 +391,4 @@ html[data-layout=desktop] .chips svg{max-height:none}
 .hero .hg{grid-template-columns:58px repeat(3,minmax(0,1fr))}.hero .hg i{text-transform:none;letter-spacing:0;font-size:10.5px}
 details.ctrl>summary::after{content:" ▾";font-size:10px;color:var(--mut)}details.ctrl[open]>summary::after{content:" ▴";color:#fff}
 .guia li{margin:5px 0}
+#rod-c{margin-top:4px;font-size:11.5px;font-variant-numeric:tabular-nums}

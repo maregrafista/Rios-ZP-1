@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.5';
+const APP_VER = '1.6';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -496,7 +496,22 @@ let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() 
 const safe2 = (f) => { try { f(); } catch (e) { console.error(e); } };
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D && Date.now() - lastCheck > 30 * 60 * 1000) { lastCheck = Date.now(); carregar(true).then((m) => m && redraw()).catch(() => {}); } });
 let lastCheck = Date.now();
+// ---------- contador de visitas e usuários on-line (Abacus; só números, sem dados pessoais) ----------
+function contador() {
+  if (ART) return;
+  const q = new URLSearchParams(location.search); if (q.has('dono')) LS.set('dono', q.get('dono') !== '0');
+  const dono = LS.get('dono', false) || /^(localhost|127\.|\[::1\])/.test(location.hostname) || location.protocol === 'file:';
+  const AB = 'https://abacus.jasoncameron.dev', NS = 'rios-zp1-unipilot', el = $('#rod-c');
+  const get = (k) => fetch(`${AB}/get/${NS}/${k}`).then((r) => (r.ok ? r.json() : { value: 0 })).then((j) => j.value || 0).catch(() => null);
+  const hit = (k) => fetch(`${AB}/hit/${NS}/${k}`).then((r) => r.json()).then((j) => j.value).catch(() => null);
+  const min = (d) => new Date(Date.now() - d * 60000).toISOString().slice(0, 16).replace(/[-:T]/g, '');
+  let ultimo = '';
+  const mostrar = async () => { const [v, a, b] = await Promise.all([get('visitas'), get('on-' + min(0)), get('on-' + min(1))]); if (v == null) return; el.textContent = 'Visitas: ' + v + ' · Online agora: ' + Math.max(a || 0, b || 0, dono ? 0 : 1) + (dono ? ' · seu acesso não conta' : ''); el.hidden = false; };
+  const ping = async () => { if (!dono && document.visibilityState === 'visible') { const k = 'on-' + min(0); if (k !== ultimo) { ultimo = k; await hit(k); } } mostrar(); };
+  (async () => { if (!dono) { let novo = false; try { novo = !sessionStorage.getItem('zp1-sv'); sessionStorage.setItem('zp1-sv', '1'); } catch (e) { novo = true; } if (novo) await hit('visitas'); } ping(); setInterval(ping, 60000); })();
+}
 async function iniciar() {
+  contador();
   $('#rod-v').textContent = 'versão ' + APP_VER + ' · © ' + new Date().getFullYear();
   layout(); paleta(); banner();
   if ('serviceWorker' in navigator && !window.__ZP1__) { navigator.serviceWorker.register('sw.js').then((r) => { r.addEventListener('updatefound', () => { const w = r.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) toast('Nova versão do app disponível.', 'Atualizar', () => location.reload()); }); }); }).catch(() => {}); }
