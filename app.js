@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.2';
+const APP_VER = '1.3';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -260,6 +260,24 @@ function miniFig(e, W = 380, Ht = 230) {
   for (const f of [x0, x0 + 5, x0 + 10, orig, orig + 5, orig + 10, x1]) { svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: yb, y2: yb + 4, stroke: 'var(--ink)', 'stroke-width': 0.9 })); if (f !== x0 + 10 || true) svg.append(sv('text', { x: xs(f), y: Ht - 4, 'text-anchor': 'middle' }, dm(ISO(f)))); }
   return svg;
 }
+// ---------- esquema do sistema fluvial (seleção de estação) ----------
+const POS = { manaus: [34, 100, 'b'], itacoatiara: [96, 100, 'b'], parintins: [158, 100, 'b'], juruti: [220, 100, 'b'], obidos: [282, 100, 'b'], santarem: [344, 100, 'b'], oriximina: [282, 62, 'r'], 'porto-trombetas': [224, 26, 'l'] };
+function mapa() {
+  const host = $('#chips'), svg = sv('svg', { viewBox: '0 0 380 146', width: '100%', role: 'group', 'aria-label': 'Estações no sistema fluvial' }), seta = (v) => (v <= -1 ? '↓' : v >= 1 ? '↑' : '→');
+  svg.append(sv('path', { d: 'M12 100H372', class: 'rv' }), sv('path', { d: 'M282 100V62L224 26', class: 'rv' }), sv('path', { d: 'M366 94l8 6-8 6', class: 'rv', fill: 'none' }));
+  for (const [t, x, y] of [['Rio Negro', 34, 82], ['Amazonas', 158, 82], ['Trombetas', 246, 58]]) svg.append(sv('text', { x, y, class: 'rn', 'text-anchor': 'middle' }, t));
+  for (const e of X.list) {
+    const p = POS[e.id]; if (!p) continue; const [x, y, pos] = p, on = e.id === st.est, r = e.r, lvl = ref() ? sg(vv(e, r.L0)) : num(r.L0), nome = e.nome.replace('Porto Trombetas', 'P. Trombetas');
+    const g = sv('g', { class: 'nd' + (on ? ' on' : ''), tabindex: 0, role: 'button', 'aria-label': e.nome + ', ' + lvl + ' ' + uni() + ', ' + r.s.t, 'aria-pressed': String(on) });
+    g.append(sv('circle', { cx: x, cy: y, r: 22, fill: 'transparent' }), sv('circle', { cx: x, cy: y, r: on ? 11 : 8, class: 'dt', fill: CORES[r.s.c] }));
+    const tx = pos === 'b' || pos === 'e' ? [x, y + 24, y + 38, 'middle'] : pos === 'r' ? [x + 14, y - 2, y + 12, 'start'] : [x - 14, y - 2, y + 12, 'end'];
+    g.append(sv('text', { x: tx[0] + (pos === 'e' ? 14 : 0), y: tx[1], 'text-anchor': tx[3], class: 'nn' }, nome), sv('text', { x: tx[0] + (pos === 'e' ? 14 : 0), y: tx[2], 'text-anchor': tx[3], class: 'nl' }, lvl + ' ' + seta(r.taxa)));
+    const go = () => { st.est = e.id; LS.set('est', e.id); redraw(); }; g.addEventListener('click', go); g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } }); svg.append(g);
+  }
+  const leg = document.createElement('div'); leg.className = 'mleg'; leg.innerHTML = '<span><i class="dot bad"></i>abaixo do NR / ≤ 7 d</span><span><i class="dot warn"></i>atenção</span><span><i class="dot ok"></i>normal</span><span>↓ vazante ↑ cheia</span>';
+  host.replaceChildren(svg, leg);
+}
+function trocaEst(d) { const i = X.list.findIndex((e) => e.id === st.est), n = X.list[(i + d + X.list.length) % X.list.length]; st.est = n.id; LS.set('est', n.id); redraw(); }
 function prever() {
   const e = E(), r = e.r, c = (v) => num(vv(e, v)), atr = r.atraso;
   const atras = Math.floor(Date.now() / DAY - dnum(D.hoje)); $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + (atras >= 3 ? ' (há ' + atras + ' d)' : '') + ' · ' + (ref() ? 'm acima do NR' : 'm na régua');
@@ -268,8 +286,7 @@ function prever() {
     <div><span class="pill ${r.s.c}">${esc(r.s.t)}</span> <span class="cap">${ref() ? 'régua ' + num(r.L0) + ' m' : 'NR em ' + num(e.nr) + ' m na régua'}</span></div></div>
     <div><div class="kv2"><div><span>Taxa 7 d</span><b>${sg(r.taxa, 1)} cm/d</b></div><div><span>Δ 24 h · 7 d</span><b>${sg(r.d1, 0)} · ${sg(r.d7, 0)} cm</b></div><div><span>+7 d (${dm(r.dataF[0])})</span><b>${c(r.f7)} m</b></div><div><span>+30 d (${dm(r.dataF[2])})</span><b>${c(r.f30)} m</b></div><div><span>Mínimo previsto</span><b>${c(r.min)} m</b></div><div><span>Em</span><b>${dm(r.minData)}</b></div></div>
     <div class="qa"><button class="btn" data-a="ficha" type="button">Detalhes</button><button class="btn" data-a="conv" type="button">Calcular FAQ</button><button class="btn" data-a="resumo" type="button">Resumo</button><button class="btn" data-a="comp" type="button">Compartilhar</button></div></div>`;
-  const ch = $('#chips'); ch.replaceChildren(...X.list.map((s) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(s.id === st.est)); b.style.setProperty('--c', CORES[s.r.s.c]); b.innerHTML = `<i></i>${esc(s.nome)}`; b.onclick = () => { st.est = s.id; LS.set('est', s.id); redraw(); }; return b; }));
-  const sel = $('#chips [aria-selected=true]'); if (sel && sel.scrollIntoView) sel.scrollIntoView({ block: 'nearest', inline: 'center' });
+  mapa();
   $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Contínua: observado. Tracejadas finas: faixa nominal 95%. Triângulo/círculo: modelos 2/1 do SipamHidro. Shift-clique isola um ano.`;
   $('#q1-c').textContent = 'Horizonte a partir da última leitura (' + dmy(ISO(X.HOJE)) + ').';
   $('#q1 tbody').innerHTML = [0, 7, 15, 30, 60, 90].map((h) => { const i = h + atr; if (i > 100 || e.prev.f[i] == null) return ''; const v = vv(e, e.prev.f[i]), P = e.prev, rg = (a, b) => (a == null ? '—' : num(v - a) + '<span class="hm"> a </span><span class="hs">…</span>' + num(v + b)); return `<tr><td>${h ? '+' + h + ' d' : 'atual'}<small class="hs"> ${dm(ISO(X.HOJE + h))}</small></td><td class="hm">${dmy(ISO(X.HOJE + h))}</td><td class="n${ref() && v < 0 ? ' neg' : ''}">${num(v)}</td><td class="n">${rg(P.el[i], P.eh[i])}</td><td class="n">${rg(P.nom[i], P.nom[i])}</td></tr>`; }).join('');
@@ -439,7 +456,8 @@ $('#bq').addEventListener('input', (e) => buscaLista(e.target.value));
 $('#bq').addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); bSel = (bSel + (e.key === 'ArrowDown' ? 1 : -1) + bItens.length) % bItens.length; $$('#bl li').forEach((li, i) => li.setAttribute('aria-selected', String(i === bSel))); } else if (e.key === 'Enter') buscaIr(bSel); });
 $('#bl').addEventListener('click', (e) => { const li = e.target.closest('li[data-i]'); if (li) buscaIr(+li.dataset.i); });
 $('#dlg-busca').addEventListener('click', (e) => { if (e.target.id === 'dlg-busca') e.target.close(); });
-addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); abrirBusca(); } else if (e.key === 'Escape') { if (!$('#story').hidden) fecharStory(); else if (!$('#ovl').hidden) fecharSheet(); } else if (!$('#story').hidden) { if (e.key === 'ArrowRight') storyNext(); if (e.key === 'ArrowLeft') storyPrev(); } });
+addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); abrirBusca(); } else if (e.key === 'Escape') { if (!$('#story').hidden) fecharStory(); else if (!$('#ovl').hidden) fecharSheet(); } else if (!$('#story').hidden) { if (e.key === 'ArrowRight') storyNext(); if (e.key === 'ArrowLeft') storyPrev(); } else if (X && st.tab === 'prev' && !/INPUT|SELECT|TEXTAREA/.test((document.activeElement || {}).tagName || '') && !document.querySelector('dialog[open]') && $('#ovl').hidden) { if (e.key === 'ArrowRight') trocaEst(1); if (e.key === 'ArrowLeft') trocaEst(-1); } });
+let tx0 = null; $('#hero').addEventListener('touchstart', (e) => { tx0 = [e.touches[0].clientX, e.touches[0].clientY]; }, { passive: true }); $('#hero').addEventListener('touchend', (e) => { if (!tx0) return; const dx = e.changedTouches[0].clientX - tx0[0], dy = e.changedTouches[0].clientY - tx0[1]; tx0 = null; if (Math.abs(dx) > 70 && Math.abs(dy) < 40) trocaEst(dx < 0 ? 1 : -1); }, { passive: true });
 
 // ---------- instalação (orientação; o prático confirma no aparelho) ----------
 let evInst = null;

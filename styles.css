@@ -345,3 +345,26 @@ html[data-layout=mobile] .bnav button[aria-current=page]{background:none;box-sha
 .ajr{padding:8px 0}
 html[data-layout=mobile] .bnav button{border-radius:0}
 @media(max-width:560px){#seg-jan button,html[data-layout=mobile] #seg-jan button{padding:5px 4px;font-size:12px}}html[data-layout=mobile] #seg-jan button{padding:5px 4px;font-size:12px}
+
+/* v1.3: esquema fluvial interativo no lugar dos botões de estação */
+.chips{display:block;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 6px 6px;margin:0 0 8px;overflow:visible}
+.chips svg{display:block;width:100%;height:auto;max-height:190px}
+.chips .rv{fill:none;stroke:var(--grid);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke:color-mix(in srgb,var(--acc) 22%,var(--panel))}
+.chips .rn{font-size:9.5px;font-style:italic;fill:var(--mut)}
+.chips .nn{font-size:10.5px;fill:var(--mut)}.chips .nl{font-size:12px;font-weight:700;fill:var(--ink);font-variant-numeric:tabular-nums}
+.chips .nd{cursor:pointer;outline:none}.chips .dt{stroke:var(--panel);stroke-width:2.5;transition:r .15s ease}
+.chips .nd:hover .dt{r:10}.chips .nd.on .dt{stroke:var(--sel);stroke-width:3}.chips .nd.on .nn{fill:var(--ink);font-weight:700}
+.chips .nd:focus-visible .dt{stroke:var(--acc);stroke-width:3}
+.mleg{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:11px;color:var(--mut);padding:2px 4px 0}.mleg i.dot{width:8px;height:8px;margin-right:4px;border-radius:50%}
+html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.view{animation:in .16s ease-out}
+.chips{padding:2px 4px 4px}.mleg{font-size:10.5px;gap:0 10px;white-space:nowrap;overflow:hidden}.chips .nn{font-size:10.5px}
+@media(min-width:900px){
+html[data-layout=desktop] #v-prev{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 12px;align-items:stretch}
+html[data-layout=desktop] #v-prev>*{grid-column:1/-1}
+html[data-layout=desktop] #v-prev>.hero{grid-column:1;grid-template-columns:minmax(0,1fr);margin-bottom:8px}
+html[data-layout=desktop] #v-prev>.chips{grid-column:2;margin-bottom:8px;display:flex;flex-direction:column;justify-content:center}
+html[data-layout=desktop] #v-prev>.hero .kv2{grid-template-columns:repeat(3,minmax(0,1fr))}
+html[data-layout=desktop] .chips svg{max-height:none}
+}
+.chips svg{max-height:none}
