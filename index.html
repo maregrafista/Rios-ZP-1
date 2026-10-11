@@ -24,8 +24,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem('zp1-tema');if(t)document.documentElement.dataset.theme=JSON.parse(t);var p=localStorage.getItem('zp1-paleta');if(p)document.documentElement.dataset.paleta=JSON.parse(p)}catch(e){}</script>
-<link rel="stylesheet" href="styles.css?v=20261011132613">
-<script defer src="app.js?v=20261011132613"></script>
+<link rel="stylesheet" href="styles.css?v=20261011141718">
+<script defer src="app.js?v=20261011141718"></script>
 </head>
 <body>
 <a class="skip" href="#main">Ir ao conteúdo</a>
@@ -64,24 +64,24 @@
         <div class="seg" id="seg-jan" role="group" aria-label="Janela temporal"><button data-j="7" type="button">7 d</button><button data-j="15" type="button">15 d</button><button data-j="30" type="button">30 d</button><button data-j="45" type="button">45 d</button><button data-j="60" type="button">60 d</button><button data-j="90" type="button">90 d</button><button data-j="120" type="button">120 d</button><button data-j="180" type="button">180 d</button><button data-j="365" type="button">Ano</button></div>
       </div>
       <div class="ctrls">
+        <div class="seg" id="seg-ref" role="group" aria-label="Referencial vertical"><button data-r="nr" type="button">Acima do NR</button><button data-r="regua" type="button">Zero da régua</button></div>
         <details class="ctrl" id="ctrl-cam"><summary>Camadas</summary><div class="row" id="row-cam"></div></details>
         <details class="ctrl" id="ctrl-anos"><summary>Anos</summary><div class="row" id="row-anos"></div></details>
       </div>
-      <div class="row refrow"><div class="seg" id="seg-ref" role="group" aria-label="Referencial vertical"><button data-r="nr" type="button">Acima do NR</button><button data-r="regua" type="button">Zero da régua</button></div></div>
       <div class="chart" id="chart" aria-label="Hidrograma"></div>
       <div class="leg" id="leg"></div>
       <p class="cap" id="cap1"></p>
-      <div class="row"><button class="lk" id="b-csv-g" type="button">Exportar dados do gráfico (CSV)</button><button class="lk" id="b-share" type="button">Compartilhar situação</button></div>
+      <div class="row"><button class="lk" id="b-csv-g" type="button">Exportar dados do gráfico (CSV)</button></div>
     </div>
-    <div class="card" id="cmp-sip" style="margin-top:12px"><h2 style="margin:0 0 4px">Comparação com SipamHidro</h2><p class="cap" id="cs-t"></p><div class="tw"><table id="cs-tab"><thead><tr><th>Item</th><th class="n">Painel</th><th class="n">SipamHidro</th><th class="n">Dif.</th></tr></thead><tbody></tbody></table></div><p class="cap" id="cs-n" style="margin:6px 0 0"></p></div>
-    <h2>Previsão da estação*</h2>
-    <p class="cap" id="q1-c"></p>
+    <div class="seg full" id="seg-sub" role="tablist" aria-label="Tabelas"><button data-s="prev" type="button">Previsão*</button><button data-s="sip" type="button">SipamHidro</button><button data-s="all" type="button">Estações*</button></div>
+    <div id="sb-prev" class="sb"><p class="cap" id="q1-c"></p>
     <div class="tw"><table id="q1"><thead><tr><th>Horizonte</th><th class="hm">Data</th><th class="n" id="q1-n">Nível (m)</th><th class="n">Emp. 95%</th><th class="n">Nom. 95%</th></tr></thead><tbody></tbody></table></div>
-    <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p>
-    <h2>Todas as estações*</h2>
-    <p class="cap" id="q2-c"></p>
+    <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p></div>
+    <div id="sb-sip" class="sb" hidden><div class="card" id="cmp-sip"><p class="cap" id="cs-t"></p><div class="tw"><table id="cs-tab"><thead><tr><th>Item</th><th class="n">Painel</th><th class="n">SipamHidro</th><th class="n">Dif.</th></tr></thead><tbody></tbody></table></div><p class="cap" id="cs-n" style="margin:6px 0 0"></p></div>
+    </div>
+    <div id="sb-all" class="sb" hidden><p class="cap" id="q2-c"></p>
     <div class="tw"><table class="click" id="q2"><thead><tr><th>Estação</th><th class="hm">Situação</th><th class="n" id="q2-a">Nível (m)</th><th class="n hm">Δ 24 h</th><th class="n">Δ 7 d</th><th class="n hm">cm/d</th><th class="n" id="q2-7">+7 d</th><th class="n" id="q2-15">+15 d</th><th class="n" id="q2-30">+30 d</th><th class="n" id="q2-m"><span class="hm">Mínimo previsto</span><span class="hs">Mín.</span></th></tr></thead><tbody></tbody></table></div>
-    <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p>
+    <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p></div>
   </section>
 
   <section class="view" id="v-diag" hidden>
@@ -201,6 +201,7 @@
   <div class="ajr"><span>Versão da tela</span><div class="seg" id="seg-lay" role="group" aria-label="Versão da tela"><button data-l="mobile" type="button">Celular</button><button data-l="desktop" type="button">Computador</button></div></div>
   <div class="ajr"><span>Modo</span><span class="ajv"><i id="aj-tema"></i><button class="icon" id="b-tema" type="button" aria-label="Alternar modo escuro" title="Modo claro/escuro"></button></span></div>
   <div class="ajr"><span>Cores</span><span class="ajv"><i id="aj-pal"></i><button class="icon" id="b-pal" type="button" aria-label="Esquema de cores" title="Esquema de cores: Marinho / Amazônia"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 19C5 10 10 5 20 4c0 10-5 15-13 15zM5 19c3-5 6-8 10-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span></div>
+  <div class="ajr"><span>Resumo do dia</span><button class="btn" id="aj-res" type="button">Abrir</button></div>
   <div class="ajr"><span>Aplicativo</span><button class="btn" id="aj-inst" type="button">Como instalar</button></div>
 </dialog>
 

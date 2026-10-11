@@ -368,3 +368,21 @@ html[data-layout=desktop] #v-prev>.hero .kv2{grid-template-columns:repeat(3,minm
 html[data-layout=desktop] .chips svg{max-height:none}
 }
 .chips svg{max-height:none}
+
+/* v1.4: cartão compacto, controles agrupados, tabelas em abas */
+.hero,html[data-layout=desktop] .hero{display:block!important;padding:8px 10px}
+.hero .hh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hero .nome{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.hero .nome b{color:var(--ink);font-size:13.5px}
+.hero .dt{min-height:28px;padding:2px 10px;font-size:12px;flex:0 0 auto}
+.hero .hb{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 10px;margin:2px 0 6px}.hero .hb .big{font-size:30px;margin:0;line-height:1.1}.hero .hb .pill{align-self:center}.hero .hb .cap{font-size:12px;margin:0}
+.hero .hg{display:grid;grid-template-columns:54px repeat(3,minmax(0,1fr));gap:4px 8px;align-items:end;border-top:1px solid var(--line);padding-top:6px}
+.hero .hg i{font-style:normal;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);padding-bottom:2px}
+.hero .hg span{display:block;font-size:10.5px;color:var(--mut);white-space:nowrap}.hero .hg b{font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ctrls{align-items:center}.ctrls>.seg{flex:0 1 auto}
+.ctrls>.seg button{min-height:32px}
+#seg-sub{display:flex;width:100%;margin:8px 0 6px}#seg-sub button{flex:1}
+.sb{margin:0}
+.chips{margin-bottom:6px}
+.card{margin-bottom:0}
+#v-prev>.hero{margin-bottom:6px}
+.hero .hg{grid-template-columns:34px repeat(3,minmax(0,1fr))}.ctrls>.seg button{padding:5px 8px;font-size:12.5px}.ctrls details.ctrl>summary{padding:4px 9px;font-size:12.5px}
