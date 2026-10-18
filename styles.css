@@ -446,3 +446,19 @@ sub,sup{line-height:0}
 #ser-ficha td,#ser-ficha th{white-space:normal;vertical-align:top}#ser-ficha th{width:38%;font-weight:600;color:var(--mut)}
 html[data-layout=mobile] #rf-log th,html[data-layout=mobile] #rf-log td{padding-inline:6px}
 #q1{max-width:560px}
+
+/* ===== v1.9 · compactação ===== */
+details.sec{margin:10px 0;border-top:1px solid var(--line)}details.sec>summary{padding:10px 0;font-family:var(--serif);font-size:18px;font-weight:600;cursor:pointer}
+details.sec[open]>summary{border-bottom:1.5px solid var(--ink);margin-bottom:8px}
+article.est{display:block!important;padding:0;cursor:default}
+article.est summary{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;list-style-position:inside}
+article.est summary b{font-family:var(--serif);font-size:17px}article.est summary small{margin-left:auto}
+article.est details>*:not(summary){margin-inline:12px}article.est details[open]{padding-bottom:10px}
+html[data-layout=mobile] #v-ser .grid2{grid-template-columns:1fr 1fr;gap:8px}
+html[data-layout=mobile] main{padding-top:8px}
+html[data-layout=mobile] .card{padding:10px 12px;margin-bottom:8px}
+html[data-layout=mobile] h2{margin:10px 0 6px}html[data-layout=mobile] h3{margin:14px 0 6px}
+html[data-layout=mobile] #b-csv-g,html[data-layout=mobile] #cap1{display:none}
+html[data-layout=mobile] .kt{padding:6px 9px}html[data-layout=mobile] .kt b{font-size:19px}
+.rodape{margin-top:12px;padding:8px 0}
+article.est .jt{width:calc(100% - 24px)}

@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.9';
+const APP_VER = '1.10';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -384,15 +384,15 @@ function diag() {
   const host = $('#dg-rios'); host.innerHTML = '';
   const rios = [...new Set(R.map((e) => e.rio))];
   rios.forEach((rio, ri) => { const es = R.filter((e) => e.rio === rio); host.insertAdjacentHTML('beforeend', `<h4 class="rio2"><span>${esc(rio)}</span><small>${es.length} ${es.length > 1 ? 'estações' : 'estação'}</small></h4>`);
-    es.forEach((e, si) => { const r = e.r, sf = (v, l) => (v == null ? '—' : k(e, v) + ' <small>[' + k(e, l[0]) + '; ' + k(e, l[1]) + ']</small>'), c15 = D.sipam.var15.find((s) => s.codigo_ana && s.codigo_ana === e.ana), prog = D.sipam.prog.filter((p) => p.estacao === e.nome);
-      const rows = [['Nível em ' + dm(r.data), k(e, r.L0) + ' m'], ['Taxa de 7 d', sg(r.taxa, 1) + ' cm/d'], ['Previsão em ' + dm(r.dataF[0]), sf(r.f7, r.lim7) + ' m'], ['Previsão em ' + dm(r.dataF[2]), sf(r.f30, r.lim30) + ' m'], ['Mínimo previsto', k(e, r.min) + ' m em ' + dm(r.minData) + (r.minBorda ? ' (fim do horizonte)' : '')], ['Cruza o NR', r.cruza ? dm(r.cruza) : 'não prevista']];
+    es.forEach((e, si) => { const r = e.r, sf = (v) => (v == null ? '—' : k(e, v)), c15 = D.sipam.var15.find((s) => s.codigo_ana && s.codigo_ana === e.ana), prog = D.sipam.prog.filter((p) => p.estacao === e.nome);
+      const rows = [['Nível em ' + dm(r.data), k(e, r.L0) + ' m'], ['Taxa de 7 d', sg(r.taxa, 1) + ' cm/d'], ['Previsão em ' + dm(r.dataF[0]), sf(r.f7) + ' m'], ['Previsão em ' + dm(r.dataF[2]), sf(r.f30) + ' m'], ['Mínimo previsto', k(e, r.min) + ' m em ' + dm(r.minData) + (r.minBorda ? ' (fim do horizonte)' : '')], ['Cruza o NR', r.cruza ? dm(r.cruza) : 'não prevista']];
       if (c15) rows.push(['SipamHidro, 15 d', sg(c15.var15_cm, 0) + ' cm <small>(dif. ' + sg(r.d15 - c15.var15_cm, 0) + ')</small>']);
       if (prog.length) rows.push(['SipamHidro, modelo 2', prog.map((p) => MES[+p.mes.slice(5) - 1].toLowerCase() + ' ' + (p.modelo2_cm == null ? '—' : num(p.modelo2_cm / 100 - off(e)))).join(' · ')]);
       const art = document.createElement('article'); art.className = 'est';
-      art.innerHTML = `<header><b>${esc(e.nome)}</b><span class="pill ${r.s.c}">${esc(r.s.t)}</span><small>${e.ana ? 'ANA ' + e.ana : ''}</small></header>
-        <figure class="jf"><div class="mini"></div><figcaption><b>Figura 2.${ri + 1}.${si + 1}.</b> Últimos 15 d e próximos 15 d (${u}). Variação em 15 d: ${sg(r.d15, 0)} cm (${sg(r.d15 / 15, 1)} cm/d).</figcaption></figure>
-        <table class="jt"><tbody>${rows.map(([x, y]) => `<tr><th>${esc(x)}</th><td>${y}</td></tr>`).join('')}</tbody></table>`;
-      $('.mini', art).append(miniFig(e)); art.addEventListener('click', (ev) => { if (!ev.target.closest('a')) sheetEstacao(e.id); }); host.append(art); }); });
+      art.innerHTML = `<details><summary><b>${esc(e.nome)}</b><span class="pill ${r.s.c}">${esc(r.s.t)}</span><small>${k(e, r.L0)} m · ${sg(r.taxa, 1)} cm/d</small></summary>
+        <figure class="jf"><div class="mini"></div><figcaption><b>Figura 2.${ri + 1}.${si + 1}.</b> Últimos e próximos 15 d (${u}).</figcaption></figure>
+        <table class="jt"><tbody>${rows.map(([x, y]) => `<tr><th>${esc(x)}</th><td>${y}</td></tr>`).join('')}</tbody></table><p class="cap"><button class="lk" type="button" data-det>Detalhes de ${esc(e.nome)}</button></p></details>`;
+      const dt = $('details', art); dt.addEventListener('toggle', () => { const m = $('.mini', art); if (dt.open && !m.firstChild) m.append(miniFig(e)); }); $('[data-det]', art).onclick = () => sheetEstacao(e.id); host.append(art); }); });
   $('#dg-h3').textContent = '3. Correlação com o boletim SipamHidro (' + dmy(D.sipam.boletim) + ')';
   $('#dg-cc').textContent = 'Quadro B em ' + u + '; painel = mínima do mês (observado + previsto).';
   const cmp = []; for (const e of R) { const s = D.sipam.var15.find((x) => x.codigo_ana && x.codigo_ana === e.ana); if (s && e.r.d15 != null) cmp.push({ e, p: e.r.d15, s: s.var15_cm }); }
@@ -401,7 +401,7 @@ function diag() {
   $('#dg-r').textContent = cmp.length ? `n = ${cmp.length} estações comuns; r = ${num(rr, 3)}; diferença média ${sg(mean(cmp.map((c) => c.p - c.s)), 1)} cm (painel − boletim).` : '';
   const mes = [];
   for (const p of D.sipam.prog) { const e = R.find((x) => x.nome === p.estacao); if (!e) continue; const [ano, mm2] = p.mes.split('-').map(Number), t0 = e.r.t0, v = []; e.m.forEach((val, f) => { const d = new Date(f * DAY); if (d.getUTCFullYear() === ano && d.getUTCMonth() + 1 === mm2) v.push(val); }); for (let h = 1; h <= 100; h++) { const d = new Date((t0 + h) * DAY); if (d.getUTCFullYear() === ano && d.getUTCMonth() + 1 === mm2 && e.prev.f[h] != null) v.push(e.prev.f[h]); } mes.push({ e, p, mn: v.length ? Math.min(...v) : null }); }
-  $('#t-cm tbody').innerHTML = mes.map(({ e, p, mn }) => `<tr><td>${esc(e.nome)}</td><td>${MES[+p.mes.slice(5) - 1]}/${p.mes.slice(0, 4)}</td><td class="n">${p.modelo1_cm == null ? '—' : num(p.modelo1_cm / 100 - off(e))}</td><td class="n">${p.modelo2_cm == null ? '—' : num(p.modelo2_cm / 100 - off(e))}</td><td class="n">${mn == null ? '—' : num(mn - off(e))}</td></tr>`).join('');
+  $('#t-cm tbody').innerHTML = mes.map(({ e, p, mn }) => `<tr><td>${esc(e.nome)}</td><td>${MES[+p.mes.slice(5) - 1]}/${p.mes.slice(0, 4)}</td><td class="n hm">${p.modelo1_cm == null ? '—' : num(p.modelo1_cm / 100 - off(e))}</td><td class="n">${p.modelo2_cm == null ? '—' : num(p.modelo2_cm / 100 - off(e))}</td><td class="n">${mn == null ? '—' : num(mn - off(e))}</td></tr>`).join('');
   const mont = ['Tabatinga', 'Fonte Boa', 'Beruri', 'Manacapuru / Manaquiri', 'Moura', 'Cucuí', 'Itaituba'].map((n) => { const s = D.sipam.var15.find((x) => x.estacao === n); return s ? n + ' ' + sg(s.var15_cm, 0) + ' cm' : null; }).filter(Boolean);
   $('#dg-mont').textContent = 'Estações a montante no boletim (variação em 15 d): ' + mont.join('; ') + '.';
   const ult = mes.map((x) => x.p.mes).sort().pop(), dif = mes.filter((x) => x.p.mes === ult && x.p.modelo2_cm != null && x.mn != null).map((x) => x.e.nome + ' (' + sg(x.p.modelo2_cm / 100 - x.mn, 1) + ' m)');
@@ -554,7 +554,7 @@ function serBase(e) {
 function emData(e, y, t0, off) { const d = new Date(t0 * DAY), b = Date.UTC(y, d.getUTCMonth(), Math.min(d.getUTCDate(), d.getUTCMonth() === 1 ? 28 : 31)) / DAY + off; let a = 0, n = 0; for (let j = -2; j <= 2; j++) { const v = e.m.get(b + j); if (v !== undefined) { a += v; n++; } } return n >= 2 ? a / n : null; }
 const passoAnos = (span, W) => [1, 2, 5, 10, 20, 25, 50].find((p) => span / p <= Math.max(3, W / 64)) || 50;
 function fig(box, o) {
-  const W = Math.max(300, box.clientWidth), Ht = o.h || Math.round(Math.min(340, Math.max(230, W * 0.4))), mg = { t: 12, r: 14, b: o.xl ? 48 : 30, l: W < 520 ? 44 : 52 };
+  const W = Math.max(300, box.clientWidth), Ht = o.h || Math.round(Math.min(340, Math.max(W < 520 ? 190 : 230, W * 0.4))), mg = { t: 12, r: 14, b: o.xl ? 48 : 30, l: W < 520 ? 44 : 52 };
   const tk = ticks(o.lo, o.hi, 6), lo = Math.min(o.lo, tk.t[0]), hi = Math.max(o.hi, tk.t[tk.t.length - 1]), xs = lin(o.x0, o.x1, mg.l, W - mg.r), yl = lin(lo, hi, Ht - mg.b, mg.t), xa = Ht - mg.b;
   const svg = sv('svg', { width: '100%', viewBox: `0 0 ${W} ${Ht}`, height: Ht, role: 'img', 'aria-label': o.aria });
   for (const v of tk.t) { svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(v), y2: yl(v), stroke: 'var(--grid)', 'stroke-width': 0.8 }), sv('line', { x1: mg.l - 4, x2: mg.l, y1: yl(v), y2: yl(v), stroke: 'var(--ink)', 'stroke-width': 0.9 }), sv('text', { x: mg.l - 7, y: yl(v) + 4, 'text-anchor': 'end' }, num(v, tk.s < 1 ? 1 : 0))); }
@@ -621,15 +621,14 @@ function serie() {
   const an = ys.map((z) => ({ ...z, d: Math.abs(z.v - L0), a15: emData(e, z.y, t0, 15), a30: emData(e, z.y, t0, 30) })).filter((z) => z.a30 != null).sort((a, b) => a.d - b.d).slice(0, 6);
   $('#ser-ana tbody').innerHTML = an.map((z) => `<tr><td>${z.y}</td><td class="n">${c(z.v)}</td><td class="n">${z.a15 == null ? '—' : sg(z.a15 - z.v)}</td><td class="n">${sg(z.a30 - z.v)}</td><td class="n">${c(z.a30)}</td></tr>`).join('') + (an.length ? `<tr class="ms"><td>Mediana</td><td class="n"></td><td class="n">${sg(med(an.filter((z) => z.a15 != null).map((z) => z.a15 - z.v)))}</td><td class="n">${sg(med(an.map((z) => z.a30 - z.v)))}</td><td class="n"></td></tr>` : '<tr><td colspan="5">Sem anos comparáveis.</td></tr>');
   // extremos anuais
-  const comp = ya.filter(([, a]) => full(a)), lin5 = (arr, k) => arr.map(([y, a]) => `<tr><td>${y}</td><td class="n">${num(a[k] - off(e))}</td><td>${dmy(ISO(k === 'max' ? a.fmax : a.fmin))}</td></tr>`).join('');
+  const comp = ya.filter(([, a]) => full(a)), lin5 = (arr, k) => arr.map(([y, a]) => `<tr><td>${y}</td><td class="n">${num(a[k] - off(e))}</td><td class="hm">${dmy(ISO(k === 'max' ? a.fmax : a.fmin))}</td></tr>`).join('');
   $('#ser-min tbody').innerHTML = lin5([...comp].sort((a, b) => a[1].min - b[1].min).slice(0, 5), 'min'); $('#ser-max tbody').innerHTML = lin5([...comp].sort((a, b) => b[1].max - a[1].max).slice(0, 5), 'max');
   // consulta rápida
   $('#q-u').textContent = u; serQ();
   // ficha da série
   const fo = (D.fontes || {})[e.nome] || {}, per = f1 - f0 + 1, fa = per - B.all.length;
-  $('#ser-ficha tbody').innerHTML = [['Código ANA', e.ana || '—'], ['Rio · UF', esc(e.rio) + ' · ' + esc(e.uf)], ['Carta · RN', esc((e.carta || '—') + ' · ' + (e.rn || '—'))], ['NR (nível de redução)', num(e.nr) + ' m na régua · ' + esc(e.fonte_nr || '')], ['Critério do NR', esc(e.criterio || '—')],
-    ['Período', dmy(ISO(f0)) + ' a ' + dmy(ISO(f1))], ['Dias com dado · falhas', B.all.length.toLocaleString('pt-BR') + ' · ' + fa.toLocaleString('pt-BR') + ' (' + num((fa / per) * 100, 1) + '% do período; NaN)'], ['Fonte', esc(fo.fonte || 'Planilha de réguas (Setor de Hidrografia)')],
-    ['Consistência (Hidroweb)', fo.pct_consistido == null ? 'não se aplica' : num(fo.pct_consistido, 1) + '% consistido · ' + num(fo.pct_bruto, 1) + '% bruto'], ['Trecho excluído', fo.excluido ? esc(fo.excluido) : 'nenhum'], ['Descartes (controle de qualidade)', D.qc.filter((q) => q.estacao === e.nome).length + ' leituras']].map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
+  $('#ser-ficha tbody').innerHTML = [['Estação', esc(e.rio) + ' · ' + esc(e.uf) + (e.ana ? ' · ANA ' + e.ana : '')], ['NR', num(e.nr) + ' m na régua · ' + esc(e.fonte_nr || '')],
+    ['Período', dmy(ISO(f0)) + ' a ' + dmy(ISO(f1))], ['Dias com dado', B.all.length.toLocaleString('pt-BR') + ' (falhas: ' + num((fa / per) * 100, 1) + '%, NaN)'], ['Fonte', esc(fo.fonte || 'Planilha de réguas (Setor de Hidrografia)') + (fo.pct_consistido == null ? '' : ' · ' + num(fo.pct_consistido, 0) + '% consistido')]].concat(fo.excluido ? [['Trecho excluído', esc(fo.excluido)]] : []).map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
 }
 const med = (a) => { if (!a.length) return null; const b = [...a].sort((x, y) => x - y), n = b.length; return n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2; };
 function serQ() {
