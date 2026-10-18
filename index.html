@@ -24,8 +24,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem('zp1-tema');if(t)document.documentElement.dataset.theme=JSON.parse(t);var p=localStorage.getItem('zp1-paleta');if(p)document.documentElement.dataset.paleta=JSON.parse(p)}catch(e){}</script>
-<link rel="stylesheet" href="styles.css?v=20261018142049">
-<script defer src="app.js?v=20261018142049"></script>
+<link rel="stylesheet" href="styles.css?v=20261018223030">
+<script defer src="app.js?v=20261018223030"></script>
 </head>
 <body>
 <a class="skip" href="#main">Ir ao conteúdo</a>
@@ -52,6 +52,7 @@
 <nav class="tabs" id="tabs" aria-label="Seções">
   <button data-v="prev" type="button" aria-current="page">Previsão</button>
   <button data-v="diag" type="button">Diagnóstico</button>
+  <button data-v="ser" type="button">Séries</button>
   <button data-v="ref" type="button">Calcular FAQ</button>
   <button data-v="cie" type="button">Info</button>
 </nav>
@@ -78,7 +79,7 @@
     </div>
     <div class="seg full" id="seg-sub" role="tablist" aria-label="Tabelas"><button data-s="prev" type="button">Previsão</button><button data-s="sip" type="button">SipamHidro</button><button data-s="all" type="button">Estações</button></div>
     <div id="sb-prev" class="sb"><p class="cap" id="q1-c"></p>
-    <div class="tw"><table id="q1"><thead><tr><th>Horizonte</th><th class="hm">Data</th><th class="n" id="q1-n">Nível (m)</th><th class="n">Emp. 95%</th><th class="n">Nom. 95%</th></tr></thead><tbody></tbody></table></div>
+    <div class="tw"><table id="q1"><thead><tr><th>Horizonte</th><th class="hm">Data</th><th class="n" id="q1-n">Nível (m)</th></tr></thead><tbody></tbody></table></div>
     <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p></div>
     <div id="sb-sip" class="sb" hidden><div class="card" id="cmp-sip"><p class="cap" id="cs-t"></p><div class="tw"><table id="cs-tab"><thead><tr><th>Item</th><th class="n">Painel</th><th class="n">SipamHidro</th><th class="n">Dif.</th></tr></thead><tbody></tbody></table></div><p class="cap" id="cs-n" style="margin:6px 0 0"></p></div>
     </div>
@@ -100,6 +101,29 @@
     </div>
     <p class="cap" id="dg-mont" style="margin-top:8px"></p>
     <h3>4. Considerações</h3><ul class="lim" id="dg-cons"></ul>
+  </section>
+
+  <section class="view" id="v-ser" hidden>
+    <header class="ph"><h2>Séries históricas</h2><p class="cap" id="ser-c"></p></header>
+    <div class="card">
+      <div class="row serbar"><label class="fq-e">Estação<select id="ser-est"></select></label></div>
+      <div class="kts" id="ser-kts"></div>
+    </div>
+    <div class="card">
+      <div class="row"><span class="t">Período</span><div class="seg" id="seg-ser" role="group" aria-label="Período do gráfico"><button data-j="2" type="button">2 a</button><button data-j="5" type="button">5 a</button><button data-j="10" type="button">10 a</button><button data-j="30" type="button">30 a</button><button data-j="all" type="button">Tudo</button></div></div>
+      <div class="chart sf" id="ser-f1" aria-label="Série diária completa"></div>
+      <p class="cap" id="ser-c1"></p>
+    </div>
+    <div class="card"><div class="chart sf" id="ser-f2" aria-label="Máximas e mínimas anuais"></div><p class="cap" id="ser-c2"></p></div>
+    <div class="card"><div class="chart sf" id="ser-f3" aria-label="Curva de permanência"></div><p class="cap" id="ser-c3"></p></div>
+    <h3>Anos análogos</h3><p class="cap" id="ser-ca"></p>
+    <div class="tw"><table id="ser-ana"><thead><tr><th>Ano</th><th class="n" id="ser-a0">Nível</th><th class="n">Δ 15 d</th><th class="n">Δ 30 d</th><th class="n" id="ser-a1">Em +30 d</th></tr></thead><tbody></tbody></table></div>
+    <h3>Extremos anuais</h3>
+    <div class="grid2"><div><p class="cap"><b>Menores mínimas anuais</b></p><div class="tw"><table id="ser-min"><thead><tr><th>Ano</th><th class="n">Nível</th><th>Data</th></tr></thead><tbody></tbody></table></div></div>
+    <div><p class="cap"><b>Maiores máximas anuais</b></p><div class="tw"><table id="ser-max"><thead><tr><th>Ano</th><th class="n">Nível</th><th>Data</th></tr></thead><tbody></tbody></table></div></div></div>
+    <h3>Consulta rápida</h3>
+    <div class="card"><div class="qrow"><span>O nível esteve</span><select id="q-dir"><option value="abaixo">igual ou abaixo de</option><option value="acima">igual ou acima de</option></select><input id="q-val" type="number" step="0.01" inputmode="decimal" aria-label="Nível em metros"><span id="q-u">m</span></div><p class="qres" id="q-res" aria-live="polite"></p></div>
+    <h3>Ficha da série</h3><div class="tw"><table class="jt" id="ser-ficha"><tbody></tbody></table></div>
   </section>
 
   <section class="view" id="v-ref" hidden>
@@ -139,7 +163,8 @@
     <ul class="lim guia">
       <li><b>Estação:</b> toque no esquema do rio (ou use ← → no computador). A cor mostra a situação e a seta, a tendência.</li>
       <li><b>Gráfico:</b> escolha a janela (dias) e a referência: <i>Acima do NR</i> ou <i>Régua</i>. Toque no gráfico para ler os valores. Em Camadas e Anos, ligue e desligue as curvas.</li>
-      <li><b>Detalhes:</b> tabela completa da estação, com faixa de incerteza da previsão.</li>
+      <li><b>Detalhes:</b> tabela completa da estação e figura dos últimos 15 dias.</li>
+      <li><b>Séries:</b> série completa, máximas e mínimas anuais, curva de permanência, anos análogos e consulta rápida (“quando o nível esteve abaixo de X?”).</li>
       <li><b>FAQ:</b> informe leitura, sondagem, calado e squat para obter a folga abaixo da quilha.</li>
       <li><b>Tabelas:</b> Previsão da estação, comparação com o SipamHidro e todas as estações.</li>
     </ul>
@@ -148,7 +173,7 @@
       <dt>Objetivos</dt><dd>Acompanhar a variação, antecipar tendências e apoiar gestores e práticos da ZP-1, preservando evidências para publicação científica.</dd>
       <dt>Entregas</dt><dd>Painel por rio, série em referência explícita, camadas de análise, taxas, alertas, exportações e base de aplicativo instalável.</dd>
       <dt>Público</dt><dd>Práticos, hidrógrafos, hidrólogos, oceanógrafos, gestores navais e desenvolvedores.</dd>
-      <dt>Camadas</dt><dd>Observação, histórico, tendência, incerteza, referência vertical, qualidade e memória científica.</dd>
+      <dt>Camadas</dt><dd>Observação, anomalia, tendência, previsão, referência vertical (NR) e controle de qualidade.</dd>
     </dl>
     <h2>Dados</h2>
     <p class="cap" id="cie-d"></p>
@@ -163,19 +188,19 @@
     <h2>Métodos</h2>
     <ol class="met">
       <li><b>Série diária:</b> última leitura do dia; lacunas de até 7 dias interpoladas só para o cálculo.</li>
-      <li><b>Qualidade:</b> descarta leitura a mais de 0,8 m da mediana de ±5 dias.</li>
+      <li><b>Qualidade:</b> (1) descarta leitura a mais de 0,8 m da mediana de ±5 dias; (2) descarta leitura a 3 desvios-padrão ou mais da média da série quando forma sequência de até 5 dias (erro isolado). Sequências longas além de 3 σ são cheias e vazantes reais e permanecem. Trechos de séries antigas em outro zero de régua viram NaN.</li>
       <li><b>Redução:</b> <code>h<sub>NR</sub> = leitura − NR<sub>régua</sub></code>.</li>
       <li><b>Taxa:</b> regressão linear dos últimos 8 dias (cm/d).</li>
-      <li><b>Previsão (100 d):</b> <code>F(h) = L<sub>0</sub> + w·r·h + (1 − w)·C(h)</code>, <code>w = e<sup>−h/7</sup></code>; <code>C(h)</code> é a mediana de <code>L(t+h) − L(t)</code> nos outros anos, na mesma data ±10 d.</li>
-      <li><b>Incerteza:</b> retroprevisão deixando um ano de fora. Empírica: quantis 2,5–97,5% e 25–75% do erro. Nominal: ±1,96 × raiz do erro quadrático médio.</li>
-      <li><b>Anomalia (σ):</b> desvio do nível em relação à média do mesmo dia nos anos anteriores (janela de ±5 d), em desvios-padrão, com as classes do boletim SipamHidro (leve 1–1,5; moderada 1,5–2; severa 2–3; extrema &gt; 3; positiva = acima da média, negativa = abaixo). No gráfico, as faixas coloridas mostram essas classes (azul acima, marrom abaixo) e o tracejado é a média do dia; o NR e a previsão continuam sobre as faixas. A base é curta (desde 2020), então as faixas são indicativas; o boletim usa série histórica longa.</li>
+      <li><b>Previsão (100 d):</b> <code>F(h) = L<sub>0</sub> + w·r·h + (1 − w)·C(h)</code>, <code>w = e<sup>−h/7</sup></code>; <code>C(h)</code> é a mediana de <code>L(t+h) − L(t)</code> nos outros anos, na mesma data ±10 d, usando até os 20 anos anteriores.</li>
+      <li><b>Validação:</b> retroprevisão deixando um ano de fora; a tabela abaixo mostra o erro quadrático médio por horizonte.</li>
+      <li><b>Anomalia (σ):</b> desvio do nível em relação à média do mesmo dia (janela de ±5 d) nos 30 anos mais recentes com dado (mínimo de 8), em desvios-padrão, com as classes do boletim SipamHidro (leve 1–1,5; moderada 1,5–2; severa 2–3; extrema &gt; 3; positiva = acima da média, negativa = abaixo). No gráfico, as faixas coloridas mostram essas classes (azul acima, marrom abaixo) e o tracejado é a média do dia; o NR e a previsão continuam sobre as faixas. Estações com série curta ou com lacunas têm base menor; confira o número de anos na tabela de dados.</li>
     </ol>
     <h2>Validação da previsão</h2>
     <p class="cap">Erro quadrático médio da retroprevisão (m): método (persistência entre parênteses).</p>
     <div class="tw"><table id="t-val"><thead><tr><th>Estação</th><th class="n">Origens</th><th class="n">+7 d</th><th class="n">+15 d</th><th class="n">+30 d</th><th class="n">+60 d</th><th class="n">+90 d</th></tr></thead><tbody></tbody></table></div>
     <h2>Limitações</h2>
     <ul class="lim">
-      <li>Base de <span id="lim-anos">4 a 6</span> anos, com as estiagens de 2023 e 2024: a previsão e o z refletem esse período.</li>
+      <li>Séries com lacunas (NaN) ou curtas, como Juruti e Porto Trombetas (desde 2020), dão previsão e anomalia menos estáveis.</li>
       <li>Método local: não usa chuva nem cotas a montante.</li>
       <li>Complementar: não substitui a carta nem os avisos oficiais.</li>
     </ul>
@@ -185,7 +210,7 @@
     <h2>Atualização e instalação</h2>
     <p class="cap" id="cie-u"></p>
     <div class="row"><button class="btn" id="b-instalar" type="button">Como instalar o app</button><button class="lk" id="b-recarregar" type="button">Verificar atualização agora</button></div>
-    <details><summary id="qc-sum">Leituras descartadas</summary><div class="tw" style="max-height:340px"><table id="t-qc"><thead><tr><th>Estação</th><th>Data</th><th class="n">Leitura (m)</th><th class="n">Mediana local (m)</th><th class="n">Desvio (m)</th></tr></thead><tbody></tbody></table></div></details>
+    <details><summary id="qc-sum">Leituras descartadas</summary><div class="tw" style="max-height:340px"><table id="t-qc"><thead><tr><th>Estação</th><th>Data</th><th class="n">Leitura (m)</th><th class="n">Referência (m)</th><th class="n">Desvio (m)</th><th>Critério</th></tr></thead><tbody></tbody></table></div></details>
   </section>
   <p class="foot">Fontes: leituras de régua (UNIPILOT), fichas F-43 (DHN), boletim SipamHidro (Censipam).</p>
   <footer class="rodape" id="rodape"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 14c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M12 3v6M9.5 6.5 12 9l2.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Rios ZP-1</b><span id="rod-v"></span><span>Desenvolvido pelo Setor de Hidrografia da UNIPILOT</span><span id="rod-c" hidden></span></footer>
@@ -194,6 +219,7 @@
 <nav class="bnav" id="bnav" aria-label="Seções">
   <button data-v="prev" type="button" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-8M3 21h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Previsão</button>
   <button data-v="diag" type="button"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7M9 8h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Diagnóstico</button>
+  <button data-v="ser" type="button"><svg viewBox="0 0 24 24"><path d="M3 20V4M3 20h18M6 15l3-4 3 2 4-6 4 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Séries</button>
   <button data-v="ref" type="button"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 6h4M8 10h4M8 14h4M8 18h4M14 13c2 0 2-1.5 4-1.5s2 1.5 4 1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>FAQ</button>
   <button data-v="cie" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Info</button>
 </nav>

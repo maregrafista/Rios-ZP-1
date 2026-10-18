@@ -429,3 +429,24 @@ body.ap .anm{font-size:clamp(13px,1.3vw,18px)}body.ap .anm .az{height:14px}
   body.ap #v-prev>.chips{grid-column:1!important;grid-row:2!important}
   body.ap #v-prev>.card{grid-column:2!important;grid-row:1/span 2!important}
 }
+
+/* ===== v1.8 · aba Séries ===== */
+.serbar{margin-bottom:6px}.serbar .fq-e{flex:1;min-width:0}
+.sf{min-height:230px}
+.qrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.qrow select{width:auto;min-width:0;flex:0 1 190px}.qrow input{width:110px}
+.qres{margin:10px 0 0;font-size:14px;line-height:1.5}
+tr.ms td{font-weight:600;border-top:1px solid var(--ink)}
+
+/* ===== v1.8 · normalização tipográfica (mínimo de 12 px em qualquer texto) ===== */
+#v-ref span,.fq-main span,.chips .rn,.chips .nn,.chips .nl,.mleg,.mleg span,.chart text,.mini svg text,th,small,sub,sup,.bnav button,.hero .hg i,.hero .hg span,.hero .hg small,.hero .al,.hero .pill,.hero .av,.rodape span,#rod-c,label,legend,.fq-e,.leg em,.zleg em,.kt small,.pill{font-size:12px!important}
+sub,sup{line-height:0}
+.chips .nn{fill:var(--ink);font-weight:600}.chips .nd.on .nn{font-weight:700}
+.mleg{white-space:normal;overflow:visible;gap:2px 10px}
+.hero .hg{grid-template-columns:auto repeat(3,minmax(0,1fr))}
+.outras .tg{min-height:30px;padding:3px 9px;font-size:12px}.outras .tg .dot{margin-right:5px}
+.outras>span:first-child{flex-basis:100%;font-size:12px}
+.ot{display:inline-flex;align-items:center;min-height:30px;padding:3px 9px;font:inherit;font-size:12px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;cursor:pointer}
+.ot .dot{margin-right:5px}.ot[aria-pressed=true]{background:var(--sel);border-color:var(--sel);color:#fff}
+#chips svg{max-width:480px;margin-inline:auto;display:block}
+.kts{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(min-width:900px){html[data-layout=desktop] #ser-kts{grid-template-columns:repeat(3,minmax(0,1fr))}}

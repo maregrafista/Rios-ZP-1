@@ -2,7 +2,7 @@
 
 F(h) = L0 + w·r·h + (1 − w)·C(h),  w = exp(−h/7)
   L0  último nível; r taxa (m/d) da regressão dos últimos 8 dias;
-  C(h) mediana de L(t+h) − L(t) nos outros anos, origens t na mesma data ±10 dias.
+  C(h) mediana de L(t+h) − L(t) nos outros anos (até 20 anos anteriores), origens t na mesma data ±10 dias.
 Incerteza: retroprevisão deixando um ano de fora (origens a cada 3 dias em ±21 dias).
 Mesma lógica do painel em JavaScript (calc "previsao"); teste de paridade em tools/teste_paridade.py.
 """
@@ -10,6 +10,7 @@ import math
 import datetime as dt
 
 H, K, J, STEP, GAP, TAU, NMIN = 100, 10, 21, 3, 7, 7, 6
+NANOS = 20  # anos anteriores usados como análogos e na retroprevisão
 NAN = float("nan")
 
 
@@ -62,7 +63,7 @@ def prever_estacao(pontos):
         return dt.date(y, M, min(D0, 28) if M == 2 else D0).toordinal() + j
 
     anos = []
-    for y in range(cur - 8, cur):
+    for y in range(cur - NANOS, cur):
         ok = sum(1 for k in range(-K, K + 1, 5) if get(org(y, k)) == get(org(y, k)))
         if ok >= 3:
             anos.append(y)
@@ -115,7 +116,7 @@ def prever_estacao(pontos):
     EC = [[] for _ in range(H + 1)]
     EP = [[] for _ in range(H + 1)]
     norig = 0
-    for ys in range(cur - 8, cur + 1):
+    for ys in range(cur - NANOS, cur + 1):
         for j in range(-J, J + 1, STEP):
             o = org(ys, j)
             l0 = get(o)

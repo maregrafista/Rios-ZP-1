@@ -56,3 +56,11 @@ Também vale escrever uma linha por leitura em `dados/lancamentos.txt` (pode ser
 - Faixas de anomalia (σ, escala do SipamHidro) no gráfico principal, régua de anomalia no cartão da estação e coluna "Anom. σ" na tabela de estações. Camada ligável em Camadas → "Faixas de anomalia".
 - Modo apresentação (botão de tela no topo): tela cheia, rotação automática a cada 15 s; setas ←/→, espaço pausa, Esc sai.
 - Nova estação: `python3 tools/nova_estacao.py "Nome" --rio "Rio X" --uf PA --nr 2,10` e depois lançar as leituras. Estações fora do esquema fluvial aparecem em "Outras estações". A previsão exige histórico (≥ 1 ano de leituras diárias).
+
+## v1.8 — base histórica ampliada e aba Séries
+- `python3 tools/importar_ana.py` lê `dados/ana/*_Cotas.txt` (ANA/Hidroweb) e `dados/fontes/Santarem_regua_longa.xlsx` e grava `dados/base/historico.json` (+ `historico_meta.json`, `historico_relatorio.txt`). Regras: cotas em cm → m; mês consistido (2) prevalece sobre bruto (1); só status 1 e 2; dias sem dado = NaN; trechos em outro zero de régua ou com valores impossíveis ficam em `EXCLUIR` (Itacoatiara até fev/2008, Oriximiná até 1970, Porto Trombetas até 2019).
+- `tools/atualizar.py`: série = histórico + leituras (planilha e lançamentos prevalecem). Controle de qualidade: (1) pico local > 0,8 m da mediana de ±5 d; (2) ≥ 3 σ da série quando a sequência tem ≤ 5 dias. Sequências longas além de 3 σ são eventos reais (ex.: vazante de Manaus em out/2024) e não são removidas.
+- Previsão usa até os 20 anos anteriores; anomalia (σ) usa os 30 anos mais recentes com dado (mínimo de 8).
+- Novas estações: Tabatinga, Novo Airão e Almeirim (NR das fichas F-43/F-41 em `dados/fontes/`). Sem leitura recente (> 45 d) aparecem como "Sem leitura recente" e ficam fora das sínteses.
+- Removidas as camadas de incerteza empírica e faixa nominal 95%. Nova aba **Séries** (série completa, máximas/mínimas anuais, curva de permanência, anos análogos, consulta rápida e ficha da série).
+- Ao editar `app.js` ou `styles.css` à mão, rode `python3 tools/atualizar.py --regenerar` para renovar o `?v=` e o cache do navegador.

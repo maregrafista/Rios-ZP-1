@@ -1,0 +1,82 @@
+{
+ "Almeirim": {
+  "fonte": "ANA Hidroweb 18390000",
+  "dias": 3867,
+  "pct_consistido": 85.0,
+  "pct_bruto": 15.0,
+  "descartados_status": 271,
+  "excluido": null
+ },
+ "Itacoatiara": {
+  "fonte": "ANA Hidroweb 16030000",
+  "dias": 12907,
+  "pct_consistido": 92.6,
+  "pct_bruto": 7.4,
+  "descartados_status": 797,
+  "excluido": "até 29/02/2008: outro zero de régua: salto de ~7 m em fev/2008 (1998–2008 em cotas ~7 m mais altas; antes de 1998 ~6 m mais baixas)"
+ },
+ "Manaus": {
+  "fonte": "ANA Hidroweb 14990000",
+  "dias": 41009,
+  "pct_consistido": 100.0,
+  "pct_bruto": 0.0,
+  "descartados_status": 35,
+  "excluido": null
+ },
+ "Novo Airão": {
+  "fonte": "ANA Hidroweb 14900050",
+  "dias": 4001,
+  "pct_consistido": 82.2,
+  "pct_bruto": 17.8,
+  "descartados_status": 107,
+  "excluido": null
+ },
+ "Óbidos": {
+  "fonte": "ANA Hidroweb 17050000",
+  "dias": 17987,
+  "pct_consistido": 100.0,
+  "pct_bruto": 0.0,
+  "descartados_status": 62,
+  "excluido": null
+ },
+ "Oriximiná": {
+  "fonte": "ANA Hidroweb 16900000",
+  "dias": 19812,
+  "pct_consistido": 71.9,
+  "pct_bruto": 28.1,
+  "descartados_status": 247,
+  "excluido": "até 31/12/1970: valores impossíveis em 1968–1970 (de −97 a +86 m e bloco de ~+20 m em ago–dez/1969)"
+ },
+ "Parintins": {
+  "fonte": "ANA Hidroweb 16350002",
+  "dias": 19621,
+  "pct_consistido": 97.7,
+  "pct_bruto": 2.3,
+  "descartados_status": 421,
+  "excluido": null
+ },
+ "Porto Trombetas": {
+  "fonte": "ANA Hidroweb 16600000",
+  "dias": 698,
+  "pct_consistido": 0.0,
+  "pct_bruto": 100.0,
+  "descartados_status": 2,
+  "excluido": "até 31/12/2019: 1987–1988 em outro zero de régua (cotas ~4 m abaixo das atuais)"
+ },
+ "Tabatinga": {
+  "fonte": "ANA Hidroweb 10100000",
+  "dias": 15622,
+  "pct_consistido": 94.4,
+  "pct_bruto": 5.6,
+  "descartados_status": 549,
+  "excluido": null
+ },
+ "Santarém": {
+  "fonte": "Régua (xlsx do Setor de Hidrografia, 2010–2026)",
+  "dias": 5259,
+  "pct_consistido": null,
+  "pct_bruto": null,
+  "descartados_status": 0,
+  "excluido": null
+ }
+}

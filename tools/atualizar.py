@@ -81,20 +81,48 @@ def ler_planilha(caminho, estacoes):
 
 
 def qc(serie):
-    datas, desc = sorted(serie), []
+    """Controle de qualidade em dois filtros.
+    1) Pico local: descarta leitura a mais de LIMITE_QC_M da mediana dos vizinhos em ±JANELA_QC dias (≥ 3 vizinhos; 3 passadas).
+    2) Série: descarta leitura com |valor − média| ≥ 3 desvios-padrão da série quando forma sequência de até 5 dias (isolada)."""
+    import bisect
+    desc = []
+    ords = {k: dt.date.fromisoformat(k).toordinal() for k in serie}
+    atual = dict(serie)
     for _ in range(PASSADAS_QC):
+        ks = sorted(atual, key=lambda k: ords[k])
+        o = [ords[k] for k in ks]
         ruins = []
-        for i, k in enumerate(datas):
-            viz = [serie[datas[j]] for j in range(max(0, i - JANELA_QC), min(len(datas), i + JANELA_QC + 1)) if j != i]
-            if viz and abs(serie[k] - st.median(viz)) > LIMITE_QC_M:
+        for i, k in enumerate(ks):
+            a, b = bisect.bisect_left(o, o[i] - JANELA_QC), bisect.bisect_right(o, o[i] + JANELA_QC)
+            viz = [atual[ks[j]] for j in range(a, b) if j != i]
+            if len(viz) >= 3 and abs(atual[k] - st.median(viz)) > LIMITE_QC_M:
                 ruins.append((k, st.median(viz)))
         if not ruins:
             break
         for k, med in ruins:
-            desc.append({"data": k, "regua": serie[k], "mediana_local": round(med, 2), "desvio_m": round(serie[k] - med, 2)})
-        rm = {k for k, _ in ruins}
-        datas = [k for k in datas if k not in rm]
-    return {k: serie[k] for k in datas}, desc
+            desc.append({"data": k, "regua": atual[k], "mediana_local": round(med, 2), "desvio_m": round(atual[k] - med, 2), "criterio": "pico local"})
+        for k, _ in ruins:
+            del atual[k]
+    if len(atual) > 30:
+        # 3 σ da série: candidatos são as leituras com |valor − média| ≥ 3 desvios-padrão. Só são descartadas as que formam
+        # sequências curtas (≤ 5 dias): erro de digitação ou de transmissão. Sequências longas são cheias/vazantes reais
+        # (ex.: vazante recorde de Manaus em out/2024, ~12,3 m, fica a ~3 σ da média geral) e permanecem na série.
+        v = list(atual.values())
+        mu, sd = st.fmean(v), st.pstdev(v)
+        cand = sorted(k for k in atual if sd > 0 and abs(atual[k] - mu) >= 3 * sd)
+        runs, cur = [], []
+        for k in cand:
+            if cur and ords[k] - ords[cur[-1]] > 3:
+                runs.append(cur); cur = []
+            cur.append(k)
+        if cur:
+            runs.append(cur)
+        for r in runs:
+            if ords[r[-1]] - ords[r[0]] + 1 <= 5:
+                for k in r:
+                    desc.append({"data": k, "regua": atual[k], "mediana_local": round(mu, 2), "desvio_m": round(atual[k] - mu, 2), "criterio": "≥ 3 σ da série (isolada)"})
+                    del atual[k]
+    return atual, desc
 
 
 def mesclar(mestre, dia, estacoes, revisar):
@@ -151,10 +179,14 @@ def main():
         sys.exit("Coloque a planilha .xlsx em dados/ ou informe o caminho.")
     sipam = json.load(open(BASE / "sipam.json", encoding="utf-8"))
     prog = json.load(open(BASE / "sipam_prog.json", encoding="utf-8"))
+    hp = BASE / "historico.json"
+    historico = json.load(open(hp, encoding="utf-8")) if hp.exists() else {}
     saida, descartes = [], []
     for e in estacoes:
         n = e["estacao"]
-        bom, desc = qc({k: v[0] for k, v in mestre.get(n, {}).items()})
+        bruto = dict(historico.get(n, {}))
+        bruto.update({k: v[0] for k, v in mestre.get(n, {}).items()})  # planilha e lançamentos prevalecem sobre o histórico
+        bom, desc = qc(bruto)
         descartes += [{"estacao": n, **d} for d in desc]
         ks = sorted(bom)
         ini = dt.date.fromisoformat(ks[0]).toordinal(); fim = dt.date.fromisoformat(ks[-1]).toordinal()
@@ -171,6 +203,7 @@ def main():
            "hoje": max(s["prev"]["origem"] for s in saida),
            "planilha": {"nome": xlsx.name if xlsx and xlsx.name else None, "sha256": h},
            "estacoes": saida, "qc": descartes,
+           "fontes": json.load(open(BASE / "historico_meta.json", encoding="utf-8")) if (BASE / "historico_meta.json").exists() else {},
            "sipam": {"boletim": sipam[0]["boletim"], "var15": sipam, "prog": prog}}
     json.dump(out, open(data_p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     # versão do cache do app (para os celulares baixarem a atualização)

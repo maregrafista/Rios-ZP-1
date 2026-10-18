@@ -1,0 +1,28 @@
+Almeirim         ANA 18390000: 2015-01-01 a 2026-03-31; 3867 dias válidos; 0 sem valor; 271 descartados por status (branco/duvidoso/régua seca)
+Itacoatiara      ANA 16030000: 1927-11-01 a 2026-02-28; 12907 dias válidos; 334 sem valor; 463 descartados por status (branco/duvidoso/régua seca)
+Manaus           ANA 14990000: 1902-09-15 a 2014-12-30; 41009 dias válidos; 35 sem valor; 0 descartados por status (branco/duvidoso/régua seca)
+Novo Airão       ANA 14900050: 2014-12-01 a 2026-01-31; 4001 dias válidos; 48 sem valor; 59 descartados por status (branco/duvidoso/régua seca)
+Óbidos           ANA 17050000: 1927-12-11 a 1998-04-30; 17987 dias válidos; 62 sem valor; 0 descartados por status (branco/duvidoso/régua seca)
+Oriximiná        ANA 16900000: 1968-07-28 a 2026-05-31; 19812 dias válidos; 85 sem valor; 162 descartados por status (branco/duvidoso/régua seca)
+Parintins        ANA 16350002: 1967-08-20 a 2026-02-28; 19621 dias válidos; 88 sem valor; 333 descartados por status (branco/duvidoso/régua seca)
+Porto Trombetas  ANA 16600000: 1987-01-01 a 1988-12-31; 698 dias válidos; 2 sem valor; 0 descartados por status (branco/duvidoso/régua seca)
+Tabatinga        ANA 10100000: 1982-07-05 a 2026-05-31; 15622 dias válidos; 489 sem valor; 60 descartados por status (branco/duvidoso/régua seca)
+Itacoatiara      excluídos 6634 dias até 2008-02-29: outro zero de régua: salto de ~7 m em fev/2008 (1998–2008 em cotas ~7 m mais altas; antes de 1998 ~6 m mais baixas)
+Oriximiná        excluídos 604 dias até 1970-12-31: valores impossíveis em 1968–1970 (de −97 a +86 m e bloco de ~+20 m em ago–dez/1969)
+Porto Trombetas  excluídos 698 dias até 2019-12-31: 1987–1988 em outro zero de régua (cotas ~4 m abaixo das atuais)
+Santarém         xlsx régua: 2010-01-01 a 2026-10-18; 5259 dias (última leitura do dia)
+
+Alertas de possível mudança de zero (média anual > 3,5 m distante dos 2 anos vizinhos de cada lado; confira nas fichas F-43):
+  Manaus: 1926 (média 19.1 m × vizinhos 23.5 m)
+
+Concordância histórico × leituras existentes (dias em comum):
+  Almeirim         sem dias em comum
+  Itacoatiara       1934 dias; diferença mediana +0.000 m; |dif| máx. 4.84 m; 206 dias com |dif| > 5 cm
+  Manaus           sem dias em comum
+  Novo Airão       sem dias em comum
+  Óbidos           sem dias em comum
+  Oriximiná         2176 dias; diferença mediana +0.000 m; |dif| máx. 1.02 m; 321 dias com |dif| > 5 cm
+  Parintins         1788 dias; diferença mediana +0.000 m; |dif| máx. 156.41 m; 269 dias com |dif| > 5 cm
+  Porto Trombetas  sem dias em comum
+  Tabatinga        sem dias em comum
+  Santarém          2459 dias; diferença mediana +0.000 m; |dif| máx. 0.08 m; 3 dias com |dif| > 5 cm

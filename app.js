@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.7';
+const APP_VER = '1.8';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -55,25 +55,25 @@ function derivar() {
     e.m = m; X.E.set(e.id, e);
   }
   X.HOJE = X.hojeN; X.cur = new Date(X.HOJE * DAY).getUTCFullYear();
-  const y0 = Math.min(...D.estacoes.map((e) => +e.ini.slice(0, 4)));
-  X.anos = []; for (let y = y0; y <= X.cur; y++) X.anos.push(y);
+  X.anos = []; for (let y = X.cur - 7; y <= X.cur; y++) X.anos.push(y);
   if (!st.anos) st.anos = new Set(X.anos);
   if (!X.E.has(st.est)) st.est = D.estacoes[0].id;
   for (const e of D.estacoes) e.r = resumir(e);
   X.list = [...D.estacoes].sort((a, b) => a.ordem - b.ordem);
+  X.ativas = X.list.filter((e) => e.r.atraso <= 45);  // estações com leitura recente: só elas entram em sínteses e rotação
 }
 // ---------- climatologia do dia e anomalia (escala do SipamHidro: desvio-padrão em relação à média do dia) ----------
-const CL = new Map(), ZK = (z) => { const a = Math.abs(z); return (z < 0 ? -1 : 1) * (a < 1 ? 0 : a < 1.5 ? 1 : a < 2 ? 2 : a < 3 ? 3 : 4); };
+const ANOS_CLIM = 30, CL = new Map(), ZK = (z) => { const a = Math.abs(z); return (z < 0 ? -1 : 1) * (a < 1 ? 0 : a < 1.5 ? 1 : a < 2 ? 2 : a < 3 ? 3 : 4); };
 const ZN = ['Normalidade', 'leve', 'moderada', 'severa', 'extrema'], zcond = (z) => { if (z == null) return 'Sem base'; const k = ZK(z); return k === 0 ? 'Normalidade' : 'Anomalia ' + (k < 0 ? 'negativa ' : 'positiva ') + ZN[Math.abs(k)]; };
 const zcor = (k) => (k === 0 ? 'var(--z0)' : k > 0 ? 'var(--zp' + k + ')' : 'var(--zn' + -k + ')');
 function clima(e) {
   const key = e.id + D.gerado; if (CL.has(key)) return CL.get(key);
-  const m = e.m, cur = X.cur, tab = new Map();
+  const m = e.m, cur = X.cur, tab = new Map(), y0 = +e.ini.slice(0, 4);
   for (let mo = 0; mo < 12; mo++) for (let dd = 1; dd <= 31; dd++) {
     if (new Date(Date.UTC(2021, mo, dd)).getUTCMonth() !== mo) continue;
-    const ys = [];
-    for (let y = cur - 8; y < cur; y++) { const b = Date.UTC(y, mo, dd) / DAY; let a = 0, n = 0; for (let j = -5; j <= 5; j++) { const v = m.get(b + j); if (v !== undefined) { a += v; n++; } } if (n >= 6) ys.push(a / n); }
-    if (ys.length >= 3) { const mu = mean(ys); tab.set(mo * 32 + dd, [mu, Math.sqrt(ys.reduce((a, b) => a + (b - mu) ** 2, 0) / (ys.length - 1)) || 0.01]); }
+    const ys = [];  // média de ±5 d em cada um dos 30 anos mais recentes com dado nesta data
+    for (let y = cur - 1; y >= y0 && ys.length < ANOS_CLIM; y--) { const b = Date.UTC(y, mo, dd) / DAY; let a = 0, n = 0; for (let j = -5; j <= 5; j++) { const v = m.get(b + j); if (v !== undefined) { a += v; n++; } } if (n >= 6) ys.push(a / n); }
+    if (ys.length >= 8) { const mu = mean(ys); tab.set(mo * 32 + dd, [mu, Math.sqrt(ys.reduce((a, b) => a + (b - mu) ** 2, 0) / (ys.length - 1)) || 0.01, ys.length]); }
   }
   CL.set(key, tab); return tab;
 }
@@ -85,15 +85,14 @@ function resumir(e) {
   const q0 = climAt(e, t0), mu = q0 ? q0[0] : null, sd = q0 ? q0[1] : null, z = q0 ? (p.L0 - mu) / sd : null, cond = zcond(z), zk = z == null ? 0 : ZK(z);
   const qf = climAt(e, X.HOJE + 30), z30 = qf && p.f[30 + atraso] != null ? (p.f[30 + atraso] - qf[0]) / qf[1] : null;
   const at = (h) => { const i = h + atraso; return i <= 100 && p.f[i] != null ? p.f[i] : null; };
-  const lim = (h) => { const i = h + atraso; return i <= 100 && p.eh[i] != null ? [p.f[i] - p.el[i], p.f[i] + p.eh[i]] : [null, null]; };
   let mn = null, mi = null, last = 0; for (let i = 0; i <= 100; i++) if (p.f[i] != null) { last = i; if (mn == null || p.f[i] < mn) { mn = p.f[i]; mi = i; } }
   let cruza = null; for (let i = 1; i <= 100; i++) if (p.f[i] != null && p.f[i] - nr <= 0) { cruza = i; break; }
   const dias = cruza == null ? null : Math.max(0, cruza - atraso), n0 = p.L0 - nr;
   let s = { t: 'Normal', c: 'ok' };
   if (n0 < 0) s = { t: 'Abaixo do NR', c: 'bad' }; else if (dias != null && dias <= 7) s = { t: 'Cruza o NR em ' + dias + ' d', c: 'bad' }; else if (dias != null && dias <= 15) s = { t: 'Cruza o NR em ' + dias + ' d', c: 'warn' }; else if (n0 < 1) s = { t: 'Menos de 1 m do NR', c: 'warn' };
-  if (p.f.every((v) => v == null)) s = { t: 'Sem previsão (histórico curto)', c: 'warn' };
+  if (atraso > 45) s = { t: 'Sem leitura recente', c: 'warn' }; else if (p.f.every((v) => v == null)) s = { t: 'Sem previsão (histórico curto)', c: 'warn' };
   const o = { data: p.origem, t0, atraso, nr, taxa: Math.round(p.taxa_cm_dia * 10) / 10, d1: dif(1), d7: dif(7), d15: dif(15), mu, sd, z: z == null ? null : Math.round(z * 100) / 100, zk, z30, cond, s, L0: p.L0,
-    f7: at(7), f15: at(15), f30: at(30), lim7: lim(7), lim15: lim(15), lim30: lim(30), min: mn, minData: mi == null ? null : ISO(t0 + mi), minBorda: mi === last, cruza: cruza == null ? null : ISO(t0 + cruza) };
+    f7: at(7), f15: at(15), f30: at(30), min: mn, minData: mi == null ? null : ISO(t0 + mi), minBorda: mi === last, cruza: cruza == null ? null : ISO(t0 + cruza) };
   o.dataF = [7, 15, 30].map((h) => ISO(X.HOJE + h)); return o;
 }
 const E = () => X.E.get(st.est), ref = () => st.ref === 'nr', off = (e) => (ref() ? e.nr : 0), uni = () => (ref() ? 'm acima do NR' : 'm na régua');
@@ -140,19 +139,19 @@ function fecharSheet() { $('#ovl').hidden = true; document.body.style.overflow =
 $('#sh-x').addEventListener('click', fecharSheet); $('#ovl').addEventListener('click', (e) => { if (e.target.id === 'ovl') fecharSheet(); });
 (() => { let y0 = null; const sh = $('#sheet'); sh.addEventListener('touchstart', (e) => { y0 = sh.scrollTop === 0 ? e.touches[0].clientY : null; }, { passive: true }); sh.addEventListener('touchmove', (e) => { if (y0 != null && e.touches[0].clientY - y0 > 90) { y0 = null; fecharSheet(); } }, { passive: true }); })();
 function sheetEstacao(id) {
-  const e = X.E.get(id), r = e.r, c = (v) => num(vv(e, v)), lm = (v, l) => (v == null ? '—' : c(v) + ' <small>[' + c(l[0]) + '; ' + c(l[1]) + ']</small>');
+  const e = X.E.get(id), r = e.r, c = (v) => num(vv(e, v)), lm = (v) => (v == null ? '—' : c(v) + ' m');
   const html = `<p class="jk">${esc(e.rio)}${e.ana ? ' · ANA ' + e.ana : ''} · NR ${num(e.nr)} m na régua</p>
     <p class="jp"><span class="pill ${r.s.c}">${esc(r.s.t)}</span><span>${esc(r.cond)}, z = ${num(r.z, 2)}</span></p>
-    <table class="jt"><caption>Tabela. Situação em ${dm(r.data)} (${uni()}); previsão com faixa empírica de 95%.</caption><tbody>
+    <table class="jt"><caption>Tabela. Situação em ${dm(r.data)} (${uni()}).</caption><tbody>
       <tr><th>Nível</th><td>${c(r.L0)} m</td></tr>
       <tr><th>Variação em 24 h · 7 d</th><td>${sg(r.d1, 0)} · ${sg(r.d7, 0)} cm</td></tr>
       <tr><th>Taxa de 7 d</th><td>${sg(r.taxa, 1)} cm/d</td></tr>
-      <tr><th>Previsão em +7 d</th><td>${lm(r.f7, r.lim7)}</td></tr>
-      <tr><th>Previsão em +15 d</th><td>${lm(r.f15, r.lim15)}</td></tr>
-      <tr><th>Previsão em +30 d</th><td>${lm(r.f30, r.lim30)}</td></tr>
+      <tr><th>Previsão em +7 d</th><td>${lm(r.f7)}</td></tr>
+      <tr><th>Previsão em +15 d</th><td>${lm(r.f15)}</td></tr>
+      <tr><th>Previsão em +30 d</th><td>${lm(r.f30)}</td></tr>
       <tr><th>Mínimo previsto</th><td>${c(r.min)} m em ${dm(r.minData)}</td></tr>
       <tr><th>Cruzamento do NR</th><td>${r.cruza ? dm(r.cruza) : 'não prevista'}</td></tr></tbody></table>
-    <figure class="jf"><div class="mini" id="sh-mini"></div><figcaption><b>Figura.</b> Observado (preto), previsão (laranja tracejada) e incerteza empírica; barras: variação diária.</figcaption></figure>
+    <figure class="jf"><div class="mini" id="sh-mini"></div><figcaption><b>Figura.</b> Observado (preto) e previsão (laranja tracejada); barras: variação diária.</figcaption></figure>
     <div class="jb"><button class="btn pri" id="sh-abrir" type="button">Abrir no principal</button><button class="btn" id="sh-conv" type="button">Calcular FAQ</button><button class="btn" id="sh-comp" type="button">Compartilhar</button></div>`;
   const b = abrirSheet(e.nome, html); $('#sh-mini', b).append(miniFig(e, 380, 210));
   $('#sh-abrir', b).onclick = () => { fecharSheet(); st.est = id; LS.set('est', id); show('prev'); };
@@ -167,10 +166,10 @@ function compartilhar(id) {
 
 // ---------- gráfico ----------
 const colAno = (y) => (y === X.cur ? 'var(--ink)' : (st.hc ? PAL.hc : dark() ? PAL.dk : PAL.soft)[(y - X.anos[0]) % 8]);
-const CAM = [['anom', 'Faixas de anomalia', 'f', 'var(--zp2)'], ['prev', 'Previsão', 'd', 'var(--fc)'], ['tend', 'Tendência +7 d', 'd', 'var(--trend)'], ['nom', 'Faixa nominal 95%', 'd', 'var(--band2)'], ['emp', 'Incerteza empírica', 'f', 'var(--band)'], ['med', 'Mediana', 'd', 'var(--mut)'], ['ref', 'NR', '', 'var(--bad)'], ['sip', 'Prev. SipamHidro', '', 'var(--sip)']];
+const CAM = [['anom', 'Faixas de anomalia', 'f', 'var(--zp2)'], ['prev', 'Previsão', 'd', 'var(--fc)'], ['tend', 'Tendência +7 d', 'd', 'var(--trend)'], ['ref', 'NR', '', 'var(--bad)'], ['sip', 'Prev. SipamHidro', '', 'var(--sip)']];
 function controles() {
   const r = $('#row-cam'); $$('.tg', r).forEach((x) => x.remove());
-  for (const [k, t0, cl, c] of CAM) { const t = k === 'med' ? 'Mediana ' + X.anos[0] + '-' + String(X.cur).slice(2) : t0; const b = document.createElement('button'); b.type = 'button'; b.className = 'tg'; b.style.setProperty('--c', c); b.setAttribute('aria-pressed', String(st.cam[k])); b.innerHTML = `<i class="${cl}"></i>${t}`; b.onclick = () => { st.cam[k] = !st.cam[k]; LS.set('cam', st.cam); redraw(); }; r.append(b); }
+  for (const [k, t0, cl, c] of CAM) { const t = t0; const b = document.createElement('button'); b.type = 'button'; b.className = 'tg'; b.style.setProperty('--c', c); b.setAttribute('aria-pressed', String(st.cam[k])); b.innerHTML = `<i class="${cl}"></i>${t}`; b.onclick = () => { st.cam[k] = !st.cam[k]; LS.set('cam', st.cam); redraw(); }; r.append(b); }
   const a = $('#row-anos'); $$('.tg,.lk', a).forEach((x) => x.remove());
   for (const y of X.anos) { const b = document.createElement('button'); b.type = 'button'; b.className = 'tg'; b.style.setProperty('--c', colAno(y)); b.setAttribute('aria-pressed', String(st.anos.has(y))); b.innerHTML = `<i></i>${y}`; b.onclick = (ev) => { if (ev.shiftKey || ev.altKey) st.anos = new Set([y]); else st.anos.has(y) ? st.anos.delete(y) : st.anos.add(y); redraw(); }; a.append(b); }
   const mk = (t, f) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'lk'; b.textContent = t; b.onclick = f; a.append(b); };
@@ -185,12 +184,11 @@ function grafico() {
   const val = (y, f) => { const d = new Date(f * DAY), mo = d.getUTCMonth(), dd = d.getUTCDate(); if (mo === 1 && dd === 29) return null; const ty = d.getUTCFullYear() - (cur - y), v = m.get(Date.UTC(ty, mo, dd) / DAY); return v === undefined ? null : v - o; };
   const lines = [];
   for (const y of X.anos) { if (!st.anos.has(y)) continue; const pts = []; for (let f = Math.floor(x0); f <= x1; f++) { if (y === cur) { if (f > orig) continue; const v = m.get(f); pts.push({ f, v: v === undefined ? null : v - o }); } else pts.push({ f, v: val(y, f) }); } lines.push({ y, pts, c: colAno(y), w: y === cur ? (st.hc ? 3.2 : 2.8) : (st.hc ? 2.2 : 1.4) }); }
-  const fc = []; for (let h = 0; h <= 100; h++) { const f = orig + h; if (f < x0 || f > x1 || P.f[h] == null) continue; const v = P.f[h] - o, g = (a, s) => (a[h] == null ? null : v + s * a[h]); fc.push({ f, h, v, nl: g(P.nom, -1), nh: g(P.nom, 1), el: g(P.el, -1), eh: g(P.eh, 1), ql: g(P.ql, -1), qh: g(P.qh, 1) }); }
+  const fc = []; for (let h = 0; h <= 100; h++) { const f = orig + h; if (f < x0 || f > x1 || P.f[h] == null) continue; fc.push({ f, h, v: P.f[h] - o }); }
   const r7 = P.taxa_cm_dia / 100, trend = [{ f: orig, v: P.L0 - o }, { f: orig + 7, v: P.L0 + r7 * 7 - o }];
-  const med = []; if (c.med) for (let f = Math.floor(x0); f <= x1; f++) { const v = []; for (const y of X.anos) { const q = y < cur ? val(y, f) : (f <= orig ? (m.has(f) ? m.get(f) - o : null) : (P.f[f - orig] == null ? null : P.f[f - orig] - o)); if (q != null) v.push(q); } if (v.length >= 3) { v.sort((a, b) => a - b); med.push({ f, v: v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2 }); } }
   const sip = []; if (c.sip) for (const r of D.sipam.prog) if (r.estacao === e.nome) { const f = Date.UTC(+r.mes.slice(0, 4), +r.mes.slice(5, 7) - 1, 15) / DAY; if (f >= x0 && f <= x1) { if (r.modelo1_cm != null) sip.push({ f, v: r.modelo1_cm / 100 - o, k: 1 }); if (r.modelo2_cm != null) sip.push({ f, v: r.modelo2_cm / 100 - o, k: 2 }); } }
   const ys = []; for (const l of lines) for (const p of l.pts) if (p.v != null) ys.push(p.v);
-  for (const p of fc) { if (c.prev || st.anos.has(cur)) ys.push(p.v); if (c.emp && p.el != null) ys.push(p.el, p.eh); if (c.nom && p.nl != null) ys.push(p.nl, p.nh); } for (const p of med) ys.push(p.v); for (const p of sip) ys.push(p.v); if (c.ref) ys.push(ref() ? 0 : e.nr); if (c.anom) for (let f = Math.floor(x0); f <= x1; f += 5) { const q = climAt(e, f); if (q) ys.push(q[0] - o - 1.5 * q[1], q[0] - o + 1.5 * q[1]); }
+  for (const p of fc) { if (c.prev || st.anos.has(cur)) ys.push(p.v); } for (const p of sip) ys.push(p.v); if (c.ref) ys.push(ref() ? 0 : e.nr); if (c.anom) for (let f = Math.floor(x0); f <= x1; f += 5) { const q = climAt(e, f); if (q) ys.push(q[0] - o - 1.5 * q[1], q[0] - o + 1.5 * q[1]); }
   let lo = Math.min(...(ys.length ? ys : [0])), hi = Math.max(...(ys.length ? ys : [1])); if (hi - lo < 0.5) { hi += 0.25; lo -= 0.25; } const pd = (hi - lo) * 0.04; lo -= pd; hi += pd;
   const tk = ticks(lo, hi, 7); lo = Math.min(lo, tk.t[0]); hi = Math.max(hi, tk.t[tk.t.length - 1]);
   const xs = lin(x0, x1, mg.l, W - mg.r), yl = lin(lo, hi, Ht - mg.b, mg.t), xa = Ht - mg.b;
@@ -215,10 +213,7 @@ function grafico() {
     for (let k = -Math.floor((HOJE - x0) / step); HOJE + k * step <= x1; k++) { const f = HOJE + k * step; if (f < x0) continue; svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: mg.t, y2: xa, stroke: 'var(--grid)', 'stroke-dasharray': '1 3' })); svg.append(sv('line', { x1: xs(f), x2: xs(f), y1: xa, y2: xa + 4, stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('text', { x: xs(f), y: xa + 17, 'text-anchor': 'middle' }, lab(f))); }
   }
   svg.append(sv('text', { transform: `translate(11 ${(mg.t + xa) / 2}) rotate(-90)`, 'text-anchor': 'middle' }, ref() ? 'Nível acima do NR (m)' : 'Leitura da régua (m)'));
-  if (c.ref) { const yr = ref() ? 0 : e.nr; svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(yr), y2: yl(yr), stroke: 'var(--bad)', 'stroke-width': 1.4 })); svg.append(sv('text', { x: mg.l + 4, y: yl(yr) - 4, fill: 'var(--bad)', style: 'fill:var(--bad)' }, 'NR (datum da carta)' + (ref() ? '' : ' = ' + num(e.nr) + ' m'))); }
-  if (c.emp && fc.length) { svg.append(sv('path', { d: band(fc, 'el', 'eh', xs, yl), fill: 'var(--band)', opacity: st.hc ? 0.26 : 0.16 })); svg.append(sv('path', { d: band(fc, 'ql', 'qh', xs, yl), fill: 'var(--band)', opacity: st.hc ? 0.42 : 0.30 })); }
-  if (c.nom && fc.length) { for (const k of ['nl', 'nh']) { const q = fc.map((p) => ({ f: p.f, v: p[k] })); svg.append(sv('path', { d: pth(q, xs, yl), fill: 'none', stroke: 'var(--band2)', 'stroke-dasharray': '4 3', 'stroke-width': 1.1 })); } }
-  if (med.length) svg.append(sv('path', { d: pth(med, xs, yl), fill: 'none', stroke: 'var(--mut)', 'stroke-dasharray': '1 4', 'stroke-linecap': 'round', 'stroke-width': 2.2 }));
+  if (c.ref) { const yr = ref() ? 0 : e.nr; svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(yr), y2: yl(yr), stroke: 'var(--bad)', 'stroke-width': 1.4 })); svg.append(sv('text', { x: mg.l + 4, y: yl(yr) - 4, fill: 'var(--bad)', style: 'fill:var(--bad)' }, 'NR' + (ref() ? '' : ' ' + num(e.nr) + ' m'))); }
   for (const l of [...lines].sort((a, b) => (a.y === cur) - (b.y === cur))) { const d = pth(l.pts, xs, yl); if (l.y === cur) svg.append(sv('path', { d, fill: 'none', stroke: 'var(--panel)', 'stroke-width': l.w + 3, opacity: 0.85, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' })); svg.append(sv('path', { d, fill: 'none', stroke: l.c, 'stroke-width': l.w, opacity: l.y === cur ? 1 : 0.92, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' })); }
   if (c.prev && fc.length > 1) { const d = pth(fc, xs, yl); svg.append(sv('path', { d, fill: 'none', stroke: 'var(--panel)', 'stroke-width': 6, opacity: 0.85 })); svg.append(sv('path', { d, fill: 'none', stroke: 'var(--fc)', 'stroke-width': st.hc ? 3.2 : 2.8, 'stroke-dasharray': '6 3.5' })); }
   if (c.tend) { svg.append(sv('path', { d: pth(trend, xs, yl), fill: 'none', stroke: 'var(--trend)', 'stroke-width': 2, 'stroke-dasharray': '2 3', 'stroke-linecap': 'round' })); if (orig + 7 <= x1) svg.append(sv('circle', { cx: xs(orig + 7), cy: yl(trend[1].v), r: 3.5, fill: 'var(--trend)' })); }
@@ -240,16 +235,16 @@ function grafico() {
     const q = fcm.get(f); if (q && f > orig && c.prev) { rows.unshift({ c: 'var(--fc)', t: cur + ' (prev.)', v: q.v }); dd.push({ c: 'var(--fc)', v: q.v }); }
     dots.replaceChildren(...dd.map((p) => sv('circle', { cx: xs(f), cy: yl(p.v), r: 3.5, fill: p.c, stroke: 'var(--panel)' })));
     const pc = lines.find((l) => l.y === cur), vo = q && f > orig && c.prev ? q.v : (pc && f <= orig ? (pc.pts.find((u) => u.f === f) || {}).v : null), qz = c.anom ? climAt(e, f) : null, zt = qz && vo != null ? (vo + o - qz[0]) / qz[1] : null;
-    tip.innerHTML = `<div class="h">${lab(f)}${f > HOJE ? ' · +' + (f - HOJE) + ' d' : ''}</div>` + rows.map((r) => `<div class="r"><span><i style="--c:${r.c}"></i>${r.t}</span><b>${num(r.v)}</b></div>`).join('') + (q && f > orig && c.emp && q.el != null ? `<div class="n">Empírica 95%: ${num(q.el)} a ${num(q.eh)}</div>` : '') + (q && f > orig && c.nom && q.nl != null ? `<div class="n">Nominal 95%: ${num(q.nl)} a ${num(q.nh)}</div>` : '') + (zt != null ? `<div class="n"><i class="zs" style="background:${zcor(ZK(zt))}"></i>${sg(zt, 1)} σ · ${zcond(zt)}<br>Média do dia: ${num(qz[0] - o)} (±1 σ: ${num(qz[1])})</div>` : '');
+    tip.innerHTML = `<div class="h">${lab(f)}${f > HOJE ? ' · +' + (f - HOJE) + ' d' : ''}</div>` + rows.map((r) => `<div class="r"><span><i style="--c:${r.c}"></i>${r.t}</span><b>${num(r.v)}</b></div>`).join('') + (zt != null ? `<div class="n"><i class="zs" style="background:${zcor(ZK(zt))}"></i>${sg(zt, 1)} σ · ${zcond(zt)}<br>Média do dia: ${num(qz[0] - o)} (±1 σ: ${num(qz[1])})</div>` : '');
     tip.style.opacity = 1; const tw = tip.offsetWidth; tip.style.left = Math.max(4, Math.min(W - tw - 4, px + 14 + tw > W ? px - tw - 14 : px + 14)) + 'px'; tip.style.top = Math.max(4, Math.min(Ht - tip.offsetHeight - 4, py - 20)) + 'px';
   };
   ov.addEventListener('pointermove', mover); ov.addEventListener('pointerdown', mover); ov.addEventListener('pointerleave', () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); dots.replaceChildren(); });
   svg.append(ov); box.replaceChildren(svg, tip);
-  const lg = []; if (st.anos.has(cur)) lg.push(['', 'var(--ink)', 'Observado ' + cur]); if (c.prev) lg.push(['d', 'var(--fc)', 'Previsão']); if (c.emp) lg.push(['f', 'var(--band)', 'Incerteza empírica 50 e 95%']); if (c.tend) lg.push(['t', 'var(--trend)', 'Tendência 7 d']); if (c.sip) lg.push(['s', 'var(--sip)', 'Prev. SipamHidro']);
+  const lg = []; if (st.anos.has(cur)) lg.push(['', 'var(--ink)', 'Observado ' + cur]); if (c.prev) lg.push(['d', 'var(--fc)', 'Previsão']); if (c.tend) lg.push(['t', 'var(--trend)', 'Tendência 7 d']); if (c.sip) lg.push(['s', 'var(--sip)', 'Prev. SipamHidro']);
   const zl = c.anom ? '<span class="zleg"><b>Anomalia (σ)</b><span class="zb">' + [-4, -3, -2, -1, 0, 1, 2, 3, 4].map((k) => `<i style="background:${zcor(k)}"></i>`).join('') + '</span><em>−3 σ ◂ normal ▸ +3 σ; tracejado = média do dia</em></span>' : '';
   $('#leg').innerHTML = lg.map(([k, col, t]) => `<span><i class="${k}" style="--c:${col}"></i>${t}</span>`).join('') + zl;
-  const head = ['data', ...lines.map((l) => l.y), 'previsao', 'emp_inf', 'emp_sup', 'nom_inf', 'nom_sup'], csv = [head.join(';')];
-  for (let f = Math.floor(x0); f <= x1; f++) { const q = fcm.get(f); csv.push([ISO(f), ...lines.map((l) => { const p = l.pts.find((z) => z.f === f); return p && p.v != null ? num(p.v) : ''; }), q ? num(q.v) : '', q && q.el != null ? num(q.el) : '', q && q.eh != null ? num(q.eh) : '', q && q.nl != null ? num(q.nl) : '', q && q.nh != null ? num(q.nh) : ''].join(';')); }
+  const head = ['data', ...lines.map((l) => l.y), 'previsao'], csv = [head.join(';')];
+  for (let f = Math.floor(x0); f <= x1; f++) { const q = fcm.get(f); csv.push([ISO(f), ...lines.map((l) => { const p = l.pts.find((z) => z.f === f); return p && p.v != null ? num(p.v) : ''; }), q ? num(q.v) : ''].join(';')); }
   csvG = '# ' + e.nome + ' · ' + uni() + '\n' + csv.join('\n');
 }
 $('#b-csv-g').addEventListener('click', () => baixar('grafico_' + st.est + '.csv', csvG));
@@ -258,7 +253,7 @@ $('#hero').addEventListener('click', (ev) => { const b = ev.target.closest('[dat
 
 // ---------- modo apresentação (telão: tela cheia, rotação automática das estações) ----------
 const AP_S = 15; let apT = null, apN = 0, apPausa = false, apFS = false;
-function apBarra() { const e = E(), i = X.list.findIndex((z) => z.id === e.id) + 1; $('#ap-t').textContent = e.nome + ' · ' + i + '/' + X.list.length; $('#ap-p').textContent = apPausa ? '▶' : '❚❚'; $('#ap-p').setAttribute('aria-label', apPausa ? 'Continuar rotação' : 'Pausar rotação'); }
+function apBarra() { const e = E(), i = X.ativas.findIndex((z) => z.id === e.id) + 1; $('#ap-t').textContent = e.nome + ' · ' + i + '/' + X.ativas.length; $('#ap-p').textContent = apPausa ? '▶' : '❚❚'; $('#ap-p').setAttribute('aria-label', apPausa ? 'Continuar rotação' : 'Pausar rotação'); }
 function apresentar(on) {
   document.body.classList.toggle('ap', on); $('#ap-bar').hidden = !on; clearInterval(apT); apN = 0; apPausa = false;
   if (on) {
@@ -277,16 +272,15 @@ addEventListener('keydown', (ev) => { if (!document.body.classList.contains('ap'
 function miniFig(e, W = 380, Ht = 230) {
   const r = e.r, P = e.prev, o = off(e), orig = dnum(P.origem), x0 = orig - 15, x1 = orig + 15, nr = ref() ? 0 : e.nr, pts = [], fc = [];
   for (let f = x0; f <= orig; f++) if (e.m.has(f)) pts.push({ f, v: e.m.get(f) - o });
-  for (let h = 0; h <= 15; h++) if (P.f[h] != null) { const v = P.f[h] - o; fc.push({ f: orig + h, v, el: P.el[h] == null ? null : v - P.el[h], eh: P.eh[h] == null ? null : v + P.eh[h] }); }
+  for (let h = 0; h <= 15; h++) if (P.f[h] != null) { const v = P.f[h] - o; fc.push({ f: orig + h, v }); }
   const svg = sv('svg', { width: '100%', viewBox: `0 0 ${W} ${Ht}`, height: Ht, role: 'img', 'aria-label': 'Últimos 15 dias e previsão de 15 dias, ' + e.nome }); if (pts.length < 3) return svg;
-  const L = 40, Rr = W - 46, top = 14, yb = 142, ys = [...pts.map((p) => p.v), ...fc.flatMap((p) => [p.v, p.el, p.eh].filter((v) => v != null))];
+  const L = 40, Rr = W - 46, top = 14, yb = 142, ys = [...pts.map((p) => p.v), ...fc.map((p) => p.v)];
   let lo = Math.min(...ys), hi = Math.max(...ys); if (nr >= lo - 0.6 && nr <= hi + 0.6) { lo = Math.min(lo, nr); hi = Math.max(hi, nr); } if (hi - lo < 0.4) { hi += 0.2; lo -= 0.2; }
   const tk = ticks(lo, hi, 4); lo = Math.min(lo, tk.t[0]); hi = Math.max(hi, tk.t[tk.t.length - 1]); const xs = lin(x0, x1, L, Rr), yl = lin(lo, hi, yb, top);
   svg.append(sv('rect', { x: xs(orig), y: top, width: Rr - xs(orig), height: yb - top, fill: 'var(--fc)', opacity: 0.05 }));
   for (const v of tk.t) { svg.append(sv('line', { x1: L, x2: Rr, y1: yl(v), y2: yl(v), stroke: 'var(--grid)', 'stroke-width': 0.8 })); svg.append(sv('text', { x: L - 5, y: yl(v) + 3.5, 'text-anchor': 'end' }, num(v, tk.s < 1 ? 1 : 0))); }
   svg.append(sv('line', { x1: L, x2: L, y1: top, y2: yb, stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('line', { x1: L, x2: Rr, y1: yb, y2: yb, stroke: 'var(--ink)', 'stroke-width': 0.9 }));
   if (nr >= lo && nr <= hi) { svg.append(sv('line', { x1: L, x2: Rr, y1: yl(nr), y2: yl(nr), stroke: 'var(--bad)', 'stroke-width': 1.2 })); svg.append(sv('text', { x: L + 3, y: yl(nr) - 3, style: 'fill:var(--bad)' }, 'NR')); }
-  svg.append(sv('path', { d: band(fc, 'el', 'eh', xs, yl), fill: 'var(--band)', opacity: 0.18 }));
   svg.append(sv('path', { d: pth(pts, xs, yl), fill: 'none', stroke: 'var(--ink)', 'stroke-width': 2.4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
   svg.append(sv('path', { d: pth(fc, xs, yl), fill: 'none', stroke: 'var(--fc)', 'stroke-width': 2.4, 'stroke-dasharray': '5 3' }));
   const a = pts[pts.length - 1], b = fc[fc.length - 1];
@@ -303,24 +297,24 @@ function miniFig(e, W = 380, Ht = 230) {
   return svg;
 }
 // ---------- esquema do sistema fluvial (seleção de estação) ----------
-const POS = { manaus: [34, 100, 'b'], itacoatiara: [96, 100, 'b'], parintins: [158, 100, 'b'], juruti: [220, 100, 'b'], obidos: [282, 100, 'b'], santarem: [344, 100, 'b'], oriximina: [282, 62, 'r'], 'porto-trombetas': [224, 26, 'l'] };
+const POS = { manaus: [30, 'b'], itacoatiara: [90, 'a'], parintins: [150, 'b'], juruti: [205, 'a'], obidos: [255, 'b'], santarem: [308, 'b'], oriximina: [255, 'r', 56], 'porto-trombetas': [196, 'l', 22] };
 function mapa() {
-  const host = $('#chips'), svg = sv('svg', { viewBox: '0 0 380 146', width: '100%', role: 'group', 'aria-label': 'Estações no sistema fluvial' }), seta = (v) => (v <= -1 ? '↓' : v >= 1 ? '↑' : '→');
-  svg.append(sv('path', { d: 'M12 100H372', class: 'rv' }), sv('path', { d: 'M282 100V62L224 26', class: 'rv' }), sv('path', { d: 'M366 94l8 6-8 6', class: 'rv', fill: 'none' }));
-  for (const [t, x, y] of [['Rio Negro', 34, 82], ['Amazonas', 158, 82], ['Trombetas', 246, 58]]) svg.append(sv('text', { x, y, class: 'rn', 'text-anchor': 'middle' }, t));
+  const host = $('#chips'), YL = 104, svg = sv('svg', { viewBox: '0 0 340 152', width: '100%', role: 'group', 'aria-label': 'Estações no sistema fluvial' }), seta = (v) => (v <= -1 ? '↓' : v >= 1 ? '↑' : '→');
+  svg.append(sv('path', { d: `M8 ${YL}H320`, class: 'rv' }), sv('path', { d: `M255 ${YL}V56L196 22`, class: 'rv' }), sv('path', { d: `M316 ${YL - 6}l8 6-8 6`, class: 'rv', fill: 'none' }));
+  svg.append(sv('text', { x: 232, y: 36, class: 'rn', 'text-anchor': 'middle' }, 'Rio Trombetas'));
   for (const e of X.list) {
-    const p = POS[e.id]; if (!p) continue; const [x, y, pos] = p, on = e.id === st.est, r = e.r, lvl = ref() ? sg(vv(e, r.L0)) : num(r.L0), nome = e.nome.replace('Porto Trombetas', 'P. Trombetas');
+    const p = POS[e.id]; if (!p) continue; const [x, pos, y0] = p, y = y0 || YL, on = e.id === st.est, r = e.r, lvl = ref() ? sg(vv(e, r.L0)) : num(r.L0), nome = e.nome.replace('Porto Trombetas', 'P. Trombetas');
     const g = sv('g', { class: 'nd' + (on ? ' on' : ''), tabindex: 0, role: 'button', 'aria-label': e.nome + ', ' + lvl + ' ' + uni() + ', ' + r.s.t, 'aria-pressed': String(on) });
-    g.append(sv('circle', { cx: x, cy: y, r: 22, fill: 'transparent' }), sv('circle', { cx: x, cy: y, r: on ? 11 : 8, class: 'dt', fill: CORES[r.s.c] }));
-    const tx = pos === 'b' || pos === 'e' ? [x, y + 24, y + 38, 'middle'] : pos === 'r' ? [x + 14, y - 2, y + 12, 'start'] : [x - 14, y - 2, y + 12, 'end'];
-    g.append(sv('text', { x: tx[0] + (pos === 'e' ? 14 : 0), y: tx[1], 'text-anchor': tx[3], class: 'nn' }, nome), sv('text', { x: tx[0] + (pos === 'e' ? 14 : 0), y: tx[2], 'text-anchor': tx[3], class: 'nl' }, lvl + ' ' + seta(r.taxa)));
+    g.append(sv('circle', { cx: x, cy: y, r: 22, fill: 'transparent' }), sv('circle', { cx: x, cy: y, r: on ? 10 : 7.5, class: 'dt', fill: CORES[r.s.c] }));
+    const tx = pos === 'b' ? [x, y + 25, y + 39, 'middle'] : pos === 'a' ? [x, y - 29, y - 15, 'middle'] : pos === 'r' ? [x + 14, y - 1, y + 13, 'start'] : [x - 14, y - 1, y + 13, 'end'];
+    g.append(sv('text', { x: tx[0], y: tx[1], 'text-anchor': tx[3], class: 'nn' }, nome), sv('text', { x: tx[0], y: tx[2], 'text-anchor': tx[3], class: 'nl' }, lvl + ' ' + seta(r.taxa)));
     const go = () => { st.est = e.id; LS.set('est', e.id); redraw(); }; g.addEventListener('click', go); g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } }); svg.append(g);
   }
-  const leg = document.createElement('div'); leg.className = 'mleg'; leg.innerHTML = '<span><i class="dot bad"></i>abaixo do NR / ≤ 7 d</span><span><i class="dot warn"></i>atenção</span><span><i class="dot ok"></i>normal</span><span>↓ vazante ↑ cheia</span>';
+  const leg = document.createElement('div'); leg.className = 'mleg'; leg.innerHTML = '<span><i class="dot bad"></i>abaixo do NR ou ≤ 7 d</span><span><i class="dot warn"></i>atenção</span><span><i class="dot ok"></i>normal</span><span>↓ vazante · ↑ cheia</span>';
   const outras = X.list.filter((e) => !POS[e.id]);
-  if (outras.length) { const o = document.createElement('div'); o.className = 'outras'; o.innerHTML = '<span>Outras estações</span>'; for (const e of outras) { const b = document.createElement('button'); b.type = 'button'; b.className = 'tg'; b.setAttribute('aria-pressed', String(e.id === st.est)); b.innerHTML = `<i class="dot ${e.r.s.c}"></i>${esc(e.nome)} · ${ref() ? sg(vv(e, e.r.L0)) : num(e.r.L0)}`; b.onclick = () => { st.est = e.id; LS.set('est', e.id); redraw(); }; o.append(b); } host.replaceChildren(svg, o, leg); } else host.replaceChildren(svg, leg);
+  if (outras.length) { const o = document.createElement('div'); o.className = 'outras'; o.innerHTML = '<span>Outras estações</span>'; for (const e of outras) { const b = document.createElement('button'); b.type = 'button'; b.className = 'ot'; b.setAttribute('aria-pressed', String(e.id === st.est)); b.innerHTML = `<span class="dot ${e.r.s.c}"></span>${esc(e.nome)} · ${ref() ? sg(vv(e, e.r.L0)) : num(e.r.L0)}`; b.onclick = () => { st.est = e.id; LS.set('est', e.id); redraw(); }; o.append(b); } host.replaceChildren(svg, o, leg); } else host.replaceChildren(svg, leg);
 }
-function trocaEst(d) { const i = X.list.findIndex((e) => e.id === st.est), n = X.list[(i + d + X.list.length) % X.list.length]; st.est = n.id; LS.set('est', n.id); redraw(); }
+function trocaEst(d) { const L = document.body.classList.contains('ap') ? X.ativas : X.list, i = L.findIndex((e) => e.id === st.est), n = L[(i + d + L.length) % L.length]; st.est = n.id; LS.set('est', n.id); redraw(); }
 function subtab(set) { if (set) { st.sub = set; LS.set('sub', set); } if (!['prev', 'sip', 'all'].includes(st.sub)) st.sub = 'prev'; $$('#seg-sub button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === st.sub))); $$('.sb').forEach((d) => { d.hidden = d.id !== 'sb-' + st.sub; }); }
 $$('#seg-sub button').forEach((b) => b.addEventListener('click', () => subtab(b.dataset.s)));
 function anomHtml(r) {
@@ -337,13 +331,13 @@ function prever() {
     <div class="hg"><i>Observado</i><div><span>Taxa 7 d</span><b>${sg(r.taxa, 1)} cm/d</b></div><div><span>Var. 24 h</span><b>${sg(r.d1, 0)} cm</b></div><div><span>Var. 7 d</span><b>${sg(r.d7, 0)} cm</b></div>
     <i>Previsto</i><div><span>+7 d · ${dm(r.dataF[0])}</span><b>${c(r.f7)} m</b></div><div><span>+30 d · ${dm(r.dataF[2])}</span><b>${c(r.f30)} m</b></div><div><span>Mínimo · ${dm(r.minData)}</span><b>${c(r.min)} m</b></div></div>`;
   mapa();
-  $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Toque ou passe o dedo no gráfico para ler os valores. Tracejadas finas: faixa nominal 95%. Triângulo/círculo: modelos 2/1 do SipamHidro. No computador, Shift+clique isola um ano.`;
-  $('#q1-c').textContent = 'A partir da última leitura (' + dmy(ISO(X.HOJE)) + '). Emp. = faixa empírica de 95%; Nom. = faixa nominal de 95%.';
-  $('#q1 tbody').innerHTML = [0, 7, 15, 30, 60, 90].map((h) => { const i = h + atr; if (i > 100 || e.prev.f[i] == null) return ''; const v = vv(e, e.prev.f[i]), P = e.prev, rg = (a, b) => (a == null ? '—' : num(v - a) + '<span class="hm"> a </span><span class="hs">…</span>' + num(v + b)); return `<tr><td>${h ? '+' + h + ' d' : 'atual'}<small class="hs"> ${dm(ISO(X.HOJE + h))}</small></td><td class="hm">${dmy(ISO(X.HOJE + h))}</td><td class="n${ref() && v < 0 ? ' neg' : ''}">${num(v)}</td><td class="n">${rg(P.el[i], P.eh[i])}</td><td class="n">${rg(P.nom[i], P.nom[i])}</td></tr>`; }).join('');
+  $('#cap1').innerHTML = `<b>Figura 1.</b> Nível diário de ${esc(e.nome)} (${ref() ? 'm acima do NR' : 'régua, m'}). Toque no gráfico para ler os valores. Círculo e triângulo: modelos 1 e 2 do SipamHidro.`;
+  $('#q1-c').textContent = 'A partir da última leitura (' + dmy(ISO(X.HOJE)) + ').';
+  $('#q1 tbody').innerHTML = [0, 7, 15, 30, 60, 90].map((h) => { const i = h + atr; if (i > 100 || e.prev.f[i] == null) return ''; const v = vv(e, e.prev.f[i]), P = e.prev;  return `<tr><td>${h ? '+' + h + ' d' : 'atual'}<small class="hs"> ${dm(ISO(X.HOJE + h))}</small></td><td class="hm">${dmy(ISO(X.HOJE + h))}</td><td class="n${ref() && v < 0 ? ' neg' : ''}">${num(v)}</td></tr>`; }).join('');
   ['q1-n'].forEach((i) => { $('#' + i).textContent = 'Nível (' + uni() + ')'; });
   $('#q2-c').textContent = 'Toque na linha para o resumo. Ponto: vermelho, abaixo do NR ou cruzando em até 7 d; âmbar, atenção; verde, normal.';
   const ord = { bad: 0, warn: 1, ok: 2 };
-  $('#q2 tbody').innerHTML = [...X.list].sort((a, b) => ord[a.r.s.c] - ord[b.r.s.c] || (a.r.L0 - a.nr) - (b.r.L0 - b.nr)).map((s) => { const q = s.r, n = (v) => `<td class="n${ref() && vv(s, v) < 0 ? ' neg' : ''}">${num(vv(s, v))}</td>`; return `<tr data-id="${s.id}" class="${s.id === st.est ? 'sel' : ''}"><td><i class="dot ${q.s.c}" title="${esc(q.s.t)}"></i>${esc(s.nome)}</td><td class="hm"><span class="pill ${q.s.c}">${esc(q.s.t)}</span></td>${n(q.L0)}<td class="n">${q.z == null ? '—' : `<span class="zc" style="background:${zcor(q.zk)}" title="${esc(q.cond)}">${sg(q.z, 1)}</span>`}</td><td class="n hm">${sg(q.d1, 0)}</td><td class="n">${sg(q.d7, 0)}</td><td class="n hm">${sg(q.taxa, 1)}</td>${n(q.f7)}${n(q.f15)}${n(q.f30)}${n(q.min)}</tr>`; }).join('');
+  $('#q2 tbody').innerHTML = [...X.list].sort((a, b) => (a.r.atraso > 45) - (b.r.atraso > 45) || ord[a.r.s.c] - ord[b.r.s.c] || (a.r.L0 - a.nr) - (b.r.L0 - b.nr)).map((s) => { const q = s.r, n = (v) => `<td class="n${ref() && vv(s, v) < 0 ? ' neg' : ''}">${num(vv(s, v))}</td>`; return `<tr data-id="${s.id}" class="${s.id === st.est ? 'sel' : ''}"><td><i class="dot ${q.s.c}" title="${esc(q.s.t)}"></i>${esc(s.nome)}</td><td class="hm"><span class="pill ${q.s.c}">${esc(q.s.t)}</span></td>${n(q.L0)}<td class="n">${q.z == null ? '—' : `<span class="zc" style="background:${zcor(q.zk)}" title="${esc(q.cond)}">${sg(q.z, 1)}</span>`}</td><td class="n hm">${sg(q.d1, 0)}</td><td class="n">${sg(q.d7, 0)}</td><td class="n hm">${sg(q.taxa, 1)}</td>${n(q.f7)}${n(q.f15)}${n(q.f30)}${n(q.min)}</tr>`; }).join('');
   $$('#q2 tbody tr').forEach((tr) => tr.addEventListener('click', () => sheetEstacao(tr.dataset.id)));
   subtab(); cmpSip(); controles(); if (st.tab === 'prev') grafico(); if (document.body.classList.contains('ap')) apBarra();
 }
@@ -353,7 +347,7 @@ function cmpSip() {
   const e = E(), r = e.r, o = off(e), u = uni(), h = st.jan === '365' ? null : (st.jan === '180' ? 91 : +st.jan / 2), HOJE = X.HOJE;
   const fim = h == null ? Date.UTC(X.cur, 11, 31) / DAY : HOJE + h, rows = [], tx = [];
   const s15 = D.sipam.var15.find((s) => s.codigo_ana && s.codigo_ana === e.ana);
-  const cmp = []; for (const z of X.list) { const s = D.sipam.var15.find((q) => q.codigo_ana && q.codigo_ana === z.ana); if (s && z.r.d15 != null) cmp.push([z.r.d15, s.var15_cm]); }
+  const cmp = []; for (const z of X.ativas) { const s = D.sipam.var15.find((q) => q.codigo_ana && q.codigo_ana === z.ana); if (s && z.r.d15 != null) cmp.push([z.r.d15, s.var15_cm]); }
   let rr = null; if (cmp.length > 2) { const mx = mean(cmp.map((c) => c[0])), my = mean(cmp.map((c) => c[1])); rr = cmp.reduce((a, c) => a + (c[0] - mx) * (c[1] - my), 0) / Math.sqrt(cmp.reduce((a, c) => a + (c[0] - mx) ** 2, 0) * cmp.reduce((a, c) => a + (c[1] - my) ** 2, 0)); }
   if (s15 && r.d15 != null) {
     if (h != null && h <= 3.5) { const a = r.taxa, b = s15.var15_cm / 15; rows.push(['Taxa, cm/d (SipamHidro: 15 d)', sg(a, 1), sg(b, 1), sg(a - b, 1)]); tx.push(`Taxa de ${sg(a, 1)} cm/d no painel contra ${sg(b, 1)} cm/d no boletim (média de 15 d)`); }
@@ -378,7 +372,7 @@ function cmpSip() {
 
 // ---------- diagnóstico ----------
 function diag() {
-  const R = X.list, u = uni(), k = (e, v) => num(vv(e, v));
+  const R = X.ativas, u = uni(), k = (e, v) => num(vv(e, v));
   $('#dg-t').textContent = 'Diagnóstico e prognóstico de nível · ' + dmy(D.hoje);
   $('#dg-c').textContent = 'Níveis em ' + u + '; cm/d = taxa de 7 d; Mín. = menor nível previsto em 100 d.';
   const neg = R.filter((e) => e.r.L0 - e.nr < 0), baixo = R.filter((e) => e.r.L0 - e.nr >= 0 && e.r.L0 - e.nr < 1), vaz = R.filter((e) => e.r.taxa < 0), mm = [...R].sort((a, b) => (a.r.min - a.nr) - (b.r.min - b.nr))[0];
@@ -411,7 +405,7 @@ function diag() {
   const mont = ['Tabatinga', 'Fonte Boa', 'Beruri', 'Manacapuru / Manaquiri', 'Moura', 'Cucuí', 'Itaituba'].map((n) => { const s = D.sipam.var15.find((x) => x.estacao === n); return s ? n + ' ' + sg(s.var15_cm, 0) + ' cm' : null; }).filter(Boolean);
   $('#dg-mont').textContent = 'Estações a montante no boletim (variação em 15 d): ' + mont.join('; ') + '.';
   const ult = mes.map((x) => x.p.mes).sort().pop(), dif = mes.filter((x) => x.p.mes === ult && x.p.modelo2_cm != null && x.mn != null).map((x) => x.e.nome + ' (' + sg(x.p.modelo2_cm / 100 - x.mn, 1) + ' m)');
-  $('#dg-cons').innerHTML = `<li>Em ${ult ? MES[+ult.slice(5) - 1].toLowerCase() : '—'}, modelo 2 − painel (mínima): ${esc(dif.join('; '))}. O painel não usa dados de montante; o boletim sim.</li><li>O z usa só 2020–2025 (inclui 2023 e 2024); o boletim usa a média histórica longa.</li>`;
+  $('#dg-cons').innerHTML = `<li>Em ${ult ? MES[+ult.slice(5) - 1].toLowerCase() : '—'}, modelo 2 − painel (mínima): ${esc(dif.join('; '))}. O painel não usa dados de montante; o boletim sim.</li><li>A anomalia (σ) usa a média do dia nos 30 anos mais recentes com dado; o boletim usa série histórica própria, então as classes podem diferir.</li>`;
 }
 
 // ---------- referência vertical ----------
@@ -444,15 +438,15 @@ function csvSerie() {
 }
 $('#b-csv-s').addEventListener('click', () => baixar('serie_integrada_ZP1.csv', csvSerie()));
 function cie() {
-  $('#cie-d').textContent = 'Fonte: planilha de leituras de régua. Dados até ' + dmy(D.hoje) + '.';
+  $('#cie-d').textContent = 'Fontes: leituras de régua do Setor de Hidrografia (desde 2020) e séries históricas de cotas do ANA Hidroweb, no mesmo zero de régua. Dias sem dado ficam como NaN e não entram nas estatísticas. Dados até ' + dmy(D.hoje) + '.';
   $('#t-dados tbody').innerHTML = X.list.map((e) => { const ks = [...e.m.keys()], a = Math.min(...ks), b = Math.max(...ks); return `<tr><td>${esc(e.nome)}</td><td>${dmy(ISO(a))}</td><td>${dmy(ISO(b))}</td><td class="n">${ks.length}</td><td class="n">${num((ks.length / (b - a + 1)) * 100, 1)}%</td><td class="n">${D.qc.filter((q) => q.estacao === e.nome).length}</td><td class="n">${e.prev.anos_clim}</td></tr>`; }).join('');
   $('#t-val tbody').innerHTML = X.list.map((e) => { const c = (h) => { const s = e.prev.skill.find((x) => x.h === h); return `<td class="n">${s && s.metodo != null ? num(s.metodo) + ' (' + num(s.persistencia) + ')' : '—'}</td>`; }; return `<tr><td>${esc(e.nome)}</td><td class="n">${e.prev.n_origens}</td>${c(7)}${c(15)}${c(30)}${c(60)}${c(90)}</tr>`; }).join('');
   $('#qc-sum').textContent = 'Leituras descartadas pelo controle de qualidade (' + D.qc.length + ')';
-  $('#t-qc tbody').innerHTML = [...D.qc].sort((a, b) => a.estacao.localeCompare(b.estacao) || a.data.localeCompare(b.data)).map((r) => `<tr><td>${esc(r.estacao)}</td><td>${r.data}</td><td class="n">${num(r.regua)}</td><td class="n">${num(r.mediana_local)}</td><td class="n">${sg(r.desvio_m)}</td></tr>`).join('');
+  $('#t-qc tbody').innerHTML = [...D.qc].sort((a, b) => a.estacao.localeCompare(b.estacao) || a.data.localeCompare(b.data)).map((r) => `<tr><td>${esc(r.estacao)}</td><td>${r.data}</td><td class="n">${num(r.regua)}</td><td class="n">${num(r.mediana_local)}</td><td class="n">${sg(r.desvio_m)}</td><td>${esc(r.criterio || 'pico local')}</td></tr>`).join('');
   const ds = $('#dl-est'); if (!ds.options.length) { ds.innerHTML = X.list.map((e) => `<option value="${e.id}">${esc(e.nome)}</option>`).join(''); ds.value = st.est; ds.onchange = leit; $('#dl-det').ontoggle = leit; $('#dl-copy').onclick = () => { const e = X.list.find((z) => z.id === ds.value), ks = [...e.m.keys()].sort((x, y) => x - y); copiar(['data;regua_m;acima_nr_m', ...ks.map((f) => ISO(f) + ';' + e.m.get(f).toFixed(2) + ';' + (e.m.get(f) - e.nr).toFixed(2))].join('\n'), 'Leituras de ' + e.nome + ' copiadas (CSV).'); }; }
   function leit() { if (!$('#dl-det').open) return; const e = X.list.find((z) => z.id === ds.value), ks = [...e.m.keys()].sort((x, y) => y - x); $('#dl-n').textContent = ks.length + ' dias · ' + dmy(ISO(ks[ks.length - 1])) + ' a ' + dmy(ISO(ks[0])); $('#dl-tab tbody').innerHTML = ks.map((f) => `<tr><td>${dmy(ISO(f))}</td><td class="n">${num(e.m.get(f))}</td><td class="n">${num(e.m.get(f) - e.nr)}</td></tr>`).join(''); }
   leit();
-  { const n = X.list.map((e) => e.prev.anos_clim).filter((v) => v != null); if (n.length) $('#lim-anos').textContent = Math.min(...n) === Math.max(...n) ? String(Math.min(...n)) : Math.min(...n) + ' a ' + Math.max(...n); }
+  
   if (ART) { $('#b-instalar').hidden = true; $('#b-csv-s').textContent = 'Copiar série integrada (CSV)'; $('#b-csv-g').textContent = 'Copiar dados do gráfico (CSV)'; }
   $('#b-app').onclick = () => { if (navigator.share) navigator.share({ title: 'Rios ZP-1', text: TEXTO_APP }).catch(() => {}); else copiar(TEXTO_APP, 'Texto e link copiados.'); }; $('#b-app-c').onclick = () => copiar(TEXTO_APP, 'Texto e link copiados.'); $('#b-app-w').href = 'https://wa.me/?text=' + encodeURIComponent(TEXTO_APP); $('#app-txt').textContent = TEXTO_APP;
   const g = new Date(D.gerado); $('#cie-u').textContent = 'Dados gerados em ' + g.toLocaleString('pt-BR') + '. O app confere se há versão nova ao abrir e ao voltar para ele.';
@@ -462,7 +456,7 @@ $('#b-recarregar').addEventListener('click', async () => { try { const m = await
 // ---------- resumo do dia (histórias) ----------
 let sIdx = 0, sT = null, cards = [];
 function montarCards() {
-  const R = X.list, u = ref() ? 'm acima do NR' : 'm na régua', c = (e, v) => num(vv(e, v)), raso = [...R].sort((a, b) => (a.r.L0 - a.nr) - (b.r.L0 - b.nr))[0], vaz = [...R].sort((a, b) => a.r.taxa - b.r.taxa)[0];
+  const R = X.ativas, u = ref() ? 'm acima do NR' : 'm na régua', c = (e, v) => num(vv(e, v)), raso = [...R].sort((a, b) => (a.r.L0 - a.nr) - (b.r.L0 - b.nr))[0], vaz = [...R].sort((a, b) => a.r.taxa - b.r.taxa)[0];
   const neg = R.filter((e) => e.r.L0 - e.nr < 0), cruz = R.filter((e) => e.r.cruza).sort((a, b) => a.r.cruza.localeCompare(b.r.cruza)), mm = [...R].sort((a, b) => (a.r.min - a.nr) - (b.r.min - b.nr))[0];
   const rosto = (arr, f) => '<ul>' + arr.map((e) => `<li><span>${esc(e.nome)}</span><b>${f(e)}</b></li>`).join('') + '</ul>';
   const cmp = []; for (const e of R) { const s = D.sipam.var15.find((x) => x.codigo_ana && x.codigo_ana === e.ana); if (s && e.r.d15 != null) cmp.push(Math.abs(e.r.d15 - s.var15_cm)); }
@@ -472,7 +466,7 @@ function montarCards() {
     { k: 'Maior vazante', big: sg(vaz.r.taxa, 1), t: 'cm/dia em ' + vaz.nome, s: 'Δ em 15 dias: ' + sg(vaz.r.d15, 0) + ' cm.' },
     { k: 'Previsão em ' + dm(R[0].r.dataF[0]), big: '', t: 'Estações mais rasas em +7 dias (' + u + ')', list: rosto([...R].sort((a, b) => (a.r.f7 - a.nr) - (b.r.f7 - b.nr)).slice(0, 4), (e) => c(e, e.r.f7) + ' m') },
     { k: 'Cruzamento do NR previsto', big: cruz.length ? String(cruz.length) : '0', t: cruz.length ? 'estações cruzam o NR em 100 dias' : 'Nenhuma cruza o NR', list: cruz.length ? rosto(cruz.slice(0, 5), (e) => dm(e.r.cruza)) : '' },
-    { k: 'Mínimo previsto', big: sg(mm.r.min - mm.nr) + ' m', t: mm.nome + ' em ' + dm(mm.r.minData), s: 'Faixa empírica 95% em +30 d: ' + c(mm, mm.r.lim30[0]) + ' a ' + c(mm, mm.r.lim30[1]) + ' m (' + u + ').' },
+    { k: 'Mínimo previsto', big: sg(mm.r.min - mm.nr) + ' m', t: mm.nome + ' em ' + dm(mm.r.minData), s: 'Previsão em +30 d: ' + c(mm, mm.r.f30) + ' m (' + u + ').' },
     { k: 'SipamHidro · ' + dm(D.sipam.boletim), big: cmp.length ? '±' + num(mean(cmp), 0) + ' cm' : '—', t: 'diferença média da variação em 15 dias', s: 'Painel × boletim, ' + cmp.length + ' estações comuns.' },
   ];
 }
@@ -537,10 +531,10 @@ function redraw() {
   $$('#seg-ref button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.r === st.ref)));
   $$('.view').forEach((s) => { s.hidden = s.id !== 'v-' + st.tab; });
   $$('#tabs button,#bnav button').forEach((b) => { if (b.dataset.v === st.tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-  safe(prever); if (st.tab === 'diag') safe(diag); if (st.tab === 'ref') safe(refPag); if (st.tab === 'cie') safe(cie);
+  safe(prever); if (st.tab === 'ser') safe(serie); if (st.tab === 'diag') safe(diag); if (st.tab === 'ref') safe(refPag); if (st.tab === 'cie') safe(cie);
 }
 let lastW = 0; if ('ResizeObserver' in window) new ResizeObserver(([en]) => { const w = Math.round(en.contentRect.width); if (w && w !== lastW) { lastW = w; if (X && st.tab === 'prev') safe2(grafico); } }).observe($('#chart'));
-let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (X && st.tab === 'prev') safe2(grafico); }, 150); });
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (X && st.tab === 'prev') safe2(grafico); if (X && st.tab === 'ser') safe2(serie); }, 150); });
 const safe2 = (f) => { try { f(); } catch (e) { console.error(e); } };
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && D && Date.now() - lastCheck > 30 * 60 * 1000) { lastCheck = Date.now(); carregar(true).then((m) => m && redraw()).catch(() => {}); } });
 let lastCheck = Date.now();
@@ -558,6 +552,114 @@ function contador() {
   const ping = async () => { if (!dono && document.visibilityState === 'visible') { const k = 'on-' + min(0); if (k !== ultimo) { ultimo = k; await hit(k); } } mostrar(); };
   (async () => { if (!dono) { let novo = false; try { novo = !sessionStorage.getItem('zp1-sv'); sessionStorage.setItem('zp1-sv', '1'); } catch (e) { novo = true; } if (novo) await hit('visitas'); } ping(); setInterval(ping, 60000); })();
 }
+// ---------- séries históricas (respostas rápidas sobre a série completa) ----------
+const SER = { jan: LS.get('ser-jan', 'all') };
+const yOf = (f) => new Date(f * DAY).getUTCFullYear();
+function serBase(e) {
+  const key = e.id + D.gerado; if (serBase.k === key) return serBase.v;
+  const an = new Map(), all = []; let mx = null, mn = null;
+  for (const [f, v] of e.m) {
+    const y = yOf(f); let a = an.get(y); if (!a) an.set(y, (a = { n: 0, max: -1e9, min: 1e9, fmax: 0, fmin: 0 }));
+    a.n++; if (v > a.max) { a.max = v; a.fmax = f; } if (v < a.min) { a.min = v; a.fmin = f; } all.push(v);
+    if (!mx || v > mx.v) mx = { v, f }; if (!mn || v < mn.v) mn = { v, f };
+  }
+  all.sort((p, q) => p - q);
+  serBase.k = key; return (serBase.v = { an, all, mx, mn });
+}
+// valor do ano y na mesma data de t0 (+ off dias): média de ±2 d
+function emData(e, y, t0, off) { const d = new Date(t0 * DAY), b = Date.UTC(y, d.getUTCMonth(), Math.min(d.getUTCDate(), d.getUTCMonth() === 1 ? 28 : 31)) / DAY + off; let a = 0, n = 0; for (let j = -2; j <= 2; j++) { const v = e.m.get(b + j); if (v !== undefined) { a += v; n++; } } return n >= 2 ? a / n : null; }
+const passoAnos = (span, W) => [1, 2, 5, 10, 20, 25, 50].find((p) => span / p <= Math.max(3, W / 64)) || 50;
+function fig(box, o) {
+  const W = Math.max(300, box.clientWidth), Ht = o.h || Math.round(Math.min(340, Math.max(230, W * 0.4))), mg = { t: 12, r: 14, b: o.xl ? 48 : 30, l: W < 520 ? 44 : 52 };
+  const tk = ticks(o.lo, o.hi, 6), lo = Math.min(o.lo, tk.t[0]), hi = Math.max(o.hi, tk.t[tk.t.length - 1]), xs = lin(o.x0, o.x1, mg.l, W - mg.r), yl = lin(lo, hi, Ht - mg.b, mg.t), xa = Ht - mg.b;
+  const svg = sv('svg', { width: '100%', viewBox: `0 0 ${W} ${Ht}`, height: Ht, role: 'img', 'aria-label': o.aria });
+  for (const v of tk.t) { svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(v), y2: yl(v), stroke: 'var(--grid)', 'stroke-width': 0.8 }), sv('line', { x1: mg.l - 4, x2: mg.l, y1: yl(v), y2: yl(v), stroke: 'var(--ink)', 'stroke-width': 0.9 }), sv('text', { x: mg.l - 7, y: yl(v) + 4, 'text-anchor': 'end' }, num(v, tk.s < 1 ? 1 : 0))); }
+  svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: xa, y2: xa, stroke: 'var(--ink)', 'stroke-width': 0.9 }), sv('line', { x1: mg.l, x2: mg.l, y1: mg.t, y2: xa, stroke: 'var(--ink)', 'stroke-width': 0.9 }));
+  for (const t of o.xt) if (t.v >= o.x0 && t.v <= o.x1) svg.append(sv('line', { x1: xs(t.v), x2: xs(t.v), y1: xa, y2: xa + 4, stroke: 'var(--ink)', 'stroke-width': 0.9 }), sv('text', { x: xs(t.v), y: xa + 17, 'text-anchor': 'middle' }, t.t));
+  svg.append(sv('text', { transform: `translate(11 ${(mg.t + xa) / 2}) rotate(-90)`, 'text-anchor': 'middle' }, o.yl));
+  if (o.xl) svg.append(sv('text', { x: (mg.l + W - mg.r) / 2, y: Ht - 3, 'text-anchor': 'middle' }, o.xl));
+  o.draw(svg, xs, yl, { mg, W, Ht, xa });
+  const tip = document.createElement('div'); tip.className = 'tip'; const cross = sv('line', { y1: mg.t, y2: xa, stroke: 'var(--mut)', opacity: 0 }), dot = sv('circle', { r: 3.6, fill: 'var(--ink)', stroke: 'var(--panel)', opacity: 0 });
+  svg.append(cross, dot);
+  const ov = sv('rect', { x: mg.l, y: mg.t, width: W - mg.l - mg.r, height: xa - mg.t, fill: 'transparent', style: 'cursor:crosshair' });
+  const mover = (ev) => { const rc = svg.getBoundingClientRect(), px = (ev.clientX - rc.left) * (W / rc.width), q = o.tip(xs.inv(px)); if (!q) return; const x = xs(q.f); cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.setAttribute('opacity', 1); if (q.v != null) { dot.setAttribute('cx', x); dot.setAttribute('cy', yl(q.v)); dot.setAttribute('opacity', 1); } else dot.setAttribute('opacity', 0); tip.innerHTML = q.html; tip.style.opacity = 1; const tw = tip.offsetWidth; tip.style.left = Math.max(4, Math.min(W - tw - 4, x + 12 + tw > W ? x - tw - 12 : x + 12)) + 'px'; tip.style.top = (mg.t + 6) + 'px'; };
+  ov.addEventListener('pointermove', mover); ov.addEventListener('pointerdown', mover); ov.addEventListener('pointerleave', () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); dot.setAttribute('opacity', 0); });
+  svg.append(ov); box.replaceChildren(svg, tip);
+}
+function serie() {
+  const e = E(), B = serBase(e), P = e.prev, r = e.r, t0 = dnum(P.origem), cur = yOf(t0), u = ref() ? 'm acima do NR' : 'm na régua', c = (v) => num(vv(e, v)), cs = (v) => sg(vv(e, v));
+  const sel = $('#ser-est'); if (!sel.options.length || sel.dataset.n !== String(X.list.length)) { sel.innerHTML = X.list.map((z) => `<option value="${z.id}">${esc(z.nome)} · ${esc(z.rio)}</option>`).join(''); sel.dataset.n = String(X.list.length); } sel.value = e.id;
+  $('#ser-c').textContent = e.nome + ' (' + e.rio + '): série diária de ' + dmy(ISO(Math.min(...e.m.keys()))) + ' a ' + dmy(ISO(Math.max(...e.m.keys()))) + '. Níveis em ' + u + '. Lacunas são NaN e não entram nas estatísticas.';
+  $$('#seg-ser button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.j === SER.jan)));
+  // mesma data nos anos anteriores
+  const ys = []; for (const y of B.an.keys()) if (y < cur) { const v = emData(e, y, t0, 0); if (v != null) ys.push({ y, v }); }
+  const L0 = P.L0, n = ys.length, menor = ys.filter((z) => z.v < L0).length, pct = n ? Math.round(((menor + 0.5 * ys.filter((z) => z.v === L0).length) / n) * 100) : null;
+  const dmin = n ? ys.reduce((a, b) => (b.v < a.v ? b : a)) : null, dmax = n ? ys.reduce((a, b) => (b.v > a.v ? b : a)) : null;
+  $('#ser-kts').innerHTML = [
+    { k: 'Posição em ' + dm(P.origem), big: pct == null ? '—' : 'P' + pct, t: n ? (menor + 1) + 'º menor em ' + (n + 1) + ' anos' : 'sem base', s: 'Percentil entre os anos com dado na mesma data (±2 d).' },
+    { k: 'Mesma data: mínimo', big: dmin ? c(dmin.v) + ' m' : '—', t: dmin ? 'em ' + dmin.y : '', s: 'Hoje: ' + c(L0) + ' m (' + uni() + ').' },
+    { k: 'Mesma data: máximo', big: dmax ? c(dmax.v) + ' m' : '—', t: dmax ? 'em ' + dmax.y : '', s: 'Amplitude: ' + (dmax ? num(dmax.v - dmin.v) + ' m' : '—') + '.' },
+    { k: 'Anomalia', big: r.z == null ? '—' : sg(r.z, 1) + ' σ', t: r.cond, s: 'Média do dia: ' + (r.mu == null ? '—' : c(r.mu) + ' m') + '.' },
+    { k: 'Máximo da série', big: c(B.mx.v) + ' m', t: dmy(ISO(B.mx.f)), s: 'Série de ' + B.an.size + ' anos, ' + B.all.length.toLocaleString('pt-BR') + ' dias com dado.' },
+    { k: 'Mínimo da série', big: c(B.mn.v) + ' m', t: dmy(ISO(B.mn.f)), s: 'Anos completos (≥ 330 d): ' + [...B.an.values()].filter((a) => a.n >= 330).length + '.' },
+  ].map((k) => `<div class="kt" title="${esc(k.s)}"><small>${esc(k.k)}</small><b>${esc(k.big)}</b><span>${esc(k.t)}</span></div>`).join('');
+  const nrv = ref() ? 0 : e.nr, nrDraw = (svg, xs, yl, g) => { if (nrv >= 0) { svg.append(sv('line', { x1: g.mg.l, x2: g.W - g.mg.r, y1: yl(nrv), y2: yl(nrv), stroke: 'var(--bad)', 'stroke-width': 1.2 }), sv('text', { x: g.mg.l + 4, y: yl(nrv) - 4, style: 'fill:var(--bad)' }, 'NR')); } };
+  // Figura 1: série diária
+  const f0 = Math.min(...e.m.keys()), f1 = Math.max(...e.m.keys()), yrs = SER.jan === 'all' ? 1e3 : +SER.jan, x0 = Math.max(f0, f1 - yrs * 365.25), x1 = f1;
+  const pts = []; for (let f = Math.ceil(x0); f <= x1; f++) { const v = e.m.get(f); pts.push({ f, v: v === undefined ? null : v - off(e) }); }
+  const W1 = Math.max(300, $('#ser-f1').clientWidth), bk = Math.max(1, Math.floor(pts.length / (W1 * 1.1))), dec = [];
+  for (let i = 0; i < pts.length; i += bk) { let mi = null, ma = null; for (let j = i; j < Math.min(pts.length, i + bk); j++) { const p = pts[j]; if (p.v == null) continue; if (!mi || p.v < mi.v) mi = p; if (!ma || p.v > ma.v) ma = p; } if (!mi) { dec.push({ f: pts[i].f, v: null }); continue; } if (bk === 1) dec.push(mi); else if (mi.f <= ma.f) dec.push(mi, ma); else dec.push(ma, mi); }
+  const seg = []; let prev = null; for (const p of dec) { if (p.v != null && prev != null && p.f - prev > 6 * Math.max(1, bk)) seg.push({ f: p.f, v: null }); seg.push(p); if (p.v != null) prev = p.f; }
+  const vs = pts.filter((p) => p.v != null).map((p) => p.v), span = (x1 - x0) / 365.25, step = passoAnos(span, W1), xt1 = []; for (let y = Math.ceil(yOf(x0) / step) * step; y <= yOf(x1); y += step) xt1.push({ v: Date.UTC(y, 0, 1) / DAY, t: String(y) });
+  if (span <= 3) { xt1.length = 0; for (let d = new Date(x0 * DAY), q = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); q / DAY <= x1; ) { const dd = new Date(q); xt1.push({ v: q / DAY, t: MES[dd.getUTCMonth()] + (dd.getUTCMonth() === 0 ? ' ' + dd.getUTCFullYear() : '') }); q = Date.UTC(dd.getUTCFullYear(), dd.getUTCMonth() + (span > 1.5 ? 3 : 1), 1); } }
+  fig($('#ser-f1'), { x0, x1, lo: Math.min(...vs, nrv), hi: Math.max(...vs), xt: xt1, yl: ref() ? 'Nível acima do NR (m)' : 'Leitura da régua (m)', aria: 'Série diária de ' + e.nome,
+    draw: (svg, xs, yl, g) => { nrDraw(svg, xs, yl, g); svg.append(sv('path', { d: pth(seg, xs, yl), fill: 'none', stroke: 'var(--ink)', 'stroke-width': 1, 'stroke-linejoin': 'round' })); const lp = pts.filter((p) => p.v != null).pop(); if (lp) svg.append(sv('circle', { cx: xs(lp.f), cy: yl(lp.v), r: 3.6, fill: 'var(--fc)', stroke: 'var(--panel)', 'stroke-width': 1.5 })); },
+    tip: (xv) => { const f = Math.round(xv); let q = e.m.get(f), g = f; for (let k = 1; k <= 3 && q === undefined; k++) { q = e.m.get(f - k); g = f - k; if (q === undefined) { q = e.m.get(f + k); g = f + k; } } if (q === undefined) return { f, v: null, html: `<div class="h">${dmy(ISO(f))}</div><div class="n">sem dado (NaN)</div>` }; const cz = climAt(e, g), z = cz ? (q - cz[0]) / cz[1] : null; return { f: g, v: q - off(e), html: `<div class="h">${dmy(ISO(g))}</div><div class="r"><span>Nível</span><b>${num(q - off(e))}</b></div>` + (z != null ? `<div class="n"><i class="zs" style="background:${zcor(ZK(z))}"></i>${sg(z, 1)} σ · ${zcond(z)}</div>` : '') }; } });
+  $('#ser-c1').innerHTML = '<b>Figura 1.</b> Nível diário (' + u + '). Vazio = sem dado. Passe o dedo ou o cursor para ler a data, o nível e a anomalia. Linha vermelha: NR.';
+  // Figura 2: máximas e mínimas anuais
+  const ya = [...B.an.entries()].sort((a, b) => a[0] - b[0]), full = (a) => a.n >= 330, yv = ya.flatMap(([, a]) => [a.max - off(e), a.min - off(e)]);
+  const byY = new Map(ya); const y0 = ya[0][0], y1 = ya[ya.length - 1][0], sp2 = y1 - y0, st2 = passoAnos(sp2, Math.max(300, $('#ser-f2').clientWidth)), xt2 = []; for (let y = Math.ceil(y0 / st2) * st2; y <= y1; y += st2) xt2.push({ v: y, t: String(y) });
+  fig($('#ser-f2'), { x0: y0 - 0.5, x1: y1 + 0.5, lo: Math.min(...yv, nrv), hi: Math.max(...yv), xt: xt2, yl: ref() ? 'Nível acima do NR (m)' : 'Leitura da régua (m)', aria: 'Máximas e mínimas anuais de ' + e.nome,
+    draw: (svg, xs, yl, g) => { nrDraw(svg, xs, yl, g); for (const k of ['max', 'min']) { const q = ya.filter(([, a]) => full(a)).map(([y, a]) => ({ f: y, v: a[k] - off(e) })); svg.append(sv('path', { d: pth(q, xs, yl), fill: 'none', stroke: k === 'max' ? 'var(--trend)' : 'var(--fc)', 'stroke-width': 1.2 })); for (const [y, a] of ya) svg.append(sv('circle', { cx: xs(y), cy: yl(a[k] - off(e)), r: y === cur ? 3.6 : 2.4, fill: full(a) ? (k === 'max' ? 'var(--trend)' : 'var(--fc)') : 'var(--panel)', stroke: k === 'max' ? 'var(--trend)' : 'var(--fc)', 'stroke-width': 1.2 })); } },
+    tip: (xv) => { const y = Math.round(xv), a = byY.get(y); if (!a) return null; return { f: y, v: null, html: `<div class="h">${y}${full(a) ? '' : ' (incompleto, ' + a.n + ' d)'}</div><div class="r"><span><i style="--c:var(--trend)"></i>Máxima</span><b>${num(a.max - off(e))}</b></div><div class="n">${dmy(ISO(a.fmax))}</div><div class="r"><span><i style="--c:var(--fc)"></i>Mínima</span><b>${num(a.min - off(e))}</b></div><div class="n">${dmy(ISO(a.fmin))}</div>` }; } });
+  $('#ser-c2').innerHTML = '<b>Figura 2.</b> Cota máxima (azul) e mínima (laranja) de cada ano (' + u + '). Círculo vazio: ano com menos de 330 dias de dado.';
+  // Figura 3: curva de permanência
+  const pm = new Date(t0 * DAY).getUTCMonth(), mes = []; for (const [f, v] of e.m) if (new Date(f * DAY).getUTCMonth() === pm) mes.push(v); mes.sort((a, b) => a - b);
+  const curv = (arr) => { const N = arr.length, o2 = []; const st3 = Math.max(1, Math.floor(N / 400)); for (let i = N - 1; i >= 0; i -= st3) o2.push({ f: ((N - 1 - i) / (N - 1)) * 100, v: arr[i] - off(e) }); o2.push({ f: 100, v: arr[0] - off(e) }); return o2; };
+  const ca = curv(B.all), cm = curv(mes), exc = (arr) => (arr.filter((v) => v >= L0).length / arr.length) * 100;
+  fig($('#ser-f3'), { x0: 0, x1: 100, lo: Math.min(B.all[0] - off(e), nrv), hi: B.all[B.all.length - 1] - off(e), xt: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((v) => ({ v, t: String(v) })), xl: 'Tempo em que o nível é igualado ou superado (%)', yl: ref() ? 'Nível acima do NR (m)' : 'Leitura da régua (m)', aria: 'Curva de permanência de ' + e.nome,
+    draw: (svg, xs, yl, g) => { nrDraw(svg, xs, yl, g); svg.append(sv('path', { d: pth(ca, xs, yl), fill: 'none', stroke: 'var(--ink)', 'stroke-width': 1.6 }), sv('path', { d: pth(cm, xs, yl), fill: 'none', stroke: 'var(--fc)', 'stroke-width': 1.4, 'stroke-dasharray': '5 3' })); svg.append(sv('line', { x1: xs(exc(B.all)), x2: xs(exc(B.all)), y1: yl(L0 - off(e)), y2: g.xa, stroke: 'var(--mut)', 'stroke-dasharray': '2 3' }), sv('circle', { cx: xs(exc(B.all)), cy: yl(L0 - off(e)), r: 4, fill: 'var(--ink)', stroke: 'var(--panel)', 'stroke-width': 1.5 })); },
+    tip: (xv) => { const p = Math.max(0, Math.min(100, xv)), q = (arr) => arr[Math.min(arr.length - 1, Math.max(0, Math.round((1 - p / 100) * (arr.length - 1))))] - off(e); return { f: p, v: q(B.all), html: `<div class="h">Excedido em ${num(p, 0)}% do tempo</div><div class="r"><span><i style="--c:var(--ink)"></i>Série</span><b>${num(q(B.all))}</b></div><div class="r"><span><i style="--c:var(--fc)"></i>${MES[pm]}</span><b>${num(q(mes))}</b></div>` }; } });
+  $('#ser-c3').innerHTML = '<b>Figura 3.</b> Curva de permanência (' + u + '): série completa (preta) e só os dias de ' + MES[pm].toLowerCase() + ' (laranja tracejada). Ponto: nível atual, ' + c(L0) + ' m, igualado ou superado em ' + num(exc(B.all), 0) + '% de todos os dias e em ' + num(exc(mes), 0) + '% dos dias de ' + MES[pm].toLowerCase() + '.';
+  // anos análogos
+  $('#ser-ca').textContent = 'Anos em que o nível, em ' + dm(P.origem) + ', mais se aproximou de ' + c(L0) + ' m, e como evoluiu depois. Informativo; não é previsão.';
+  $('#ser-a0').textContent = 'Em ' + dm(P.origem); $('#ser-a1').textContent = 'Em ' + dm(ISO(t0 + 30));
+  const an = ys.map((z) => ({ ...z, d: Math.abs(z.v - L0), a15: emData(e, z.y, t0, 15), a30: emData(e, z.y, t0, 30) })).filter((z) => z.a30 != null).sort((a, b) => a.d - b.d).slice(0, 6);
+  $('#ser-ana tbody').innerHTML = an.map((z) => `<tr><td>${z.y}</td><td class="n">${c(z.v)}</td><td class="n">${z.a15 == null ? '—' : sg(z.a15 - z.v)}</td><td class="n">${sg(z.a30 - z.v)}</td><td class="n">${c(z.a30)}</td></tr>`).join('') + (an.length ? `<tr class="ms"><td>Mediana</td><td class="n"></td><td class="n">${sg(med(an.filter((z) => z.a15 != null).map((z) => z.a15 - z.v)))}</td><td class="n">${sg(med(an.map((z) => z.a30 - z.v)))}</td><td class="n"></td></tr>` : '<tr><td colspan="5">Sem anos comparáveis.</td></tr>');
+  // extremos anuais
+  const comp = ya.filter(([, a]) => full(a)), lin5 = (arr, k) => arr.map(([y, a]) => `<tr><td>${y}</td><td class="n">${num(a[k] - off(e))}</td><td>${dmy(ISO(k === 'max' ? a.fmax : a.fmin))}</td></tr>`).join('');
+  $('#ser-min tbody').innerHTML = lin5([...comp].sort((a, b) => a[1].min - b[1].min).slice(0, 5), 'min'); $('#ser-max tbody').innerHTML = lin5([...comp].sort((a, b) => b[1].max - a[1].max).slice(0, 5), 'max');
+  // consulta rápida
+  $('#q-u').textContent = u; serQ();
+  // ficha da série
+  const fo = (D.fontes || {})[e.nome] || {}, per = f1 - f0 + 1, fa = per - B.all.length;
+  $('#ser-ficha tbody').innerHTML = [['Código ANA', e.ana || '—'], ['Rio · UF', esc(e.rio) + ' · ' + esc(e.uf)], ['Carta · RN', esc((e.carta || '—') + ' · ' + (e.rn || '—'))], ['NR (nível de redução)', num(e.nr) + ' m na régua · ' + esc(e.fonte_nr || '')], ['Critério do NR', esc(e.criterio || '—')],
+    ['Período', dmy(ISO(f0)) + ' a ' + dmy(ISO(f1))], ['Dias com dado · falhas', B.all.length.toLocaleString('pt-BR') + ' · ' + fa.toLocaleString('pt-BR') + ' (' + num((fa / per) * 100, 1) + '% do período; NaN)'], ['Fonte', esc(fo.fonte || 'Planilha de réguas (Setor de Hidrografia)')],
+    ['Consistência (Hidroweb)', fo.pct_consistido == null ? 'não se aplica' : num(fo.pct_consistido, 1) + '% consistido · ' + num(fo.pct_bruto, 1) + '% bruto'], ['Trecho excluído', fo.excluido ? esc(fo.excluido) : 'nenhum'], ['Descartes (controle de qualidade)', D.qc.filter((q) => q.estacao === e.nome).length + ' leituras']].map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
+}
+const med = (a) => { if (!a.length) return null; const b = [...a].sort((x, y) => x - y), n = b.length; return n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2; };
+function serQ() {
+  const e = E(), B = serBase(e), inp = $('#q-val'), res = $('#q-res'); if (!inp.value) { res.textContent = 'Digite um nível para ver quantos dias e quando isso ocorreu.'; return; }
+  const x = parseFloat(String(inp.value).replace(',', '.')); if (!isFinite(x)) { res.textContent = ''; return; }
+  const lim = x + off(e), abaixo = $('#q-dir').value === 'abaixo', ok = (v) => (abaixo ? v <= lim : v >= lim); let n = 0, ult = null; const anos = new Set();
+  for (const [f, v] of e.m) if (ok(v)) { n++; anos.add(yOf(f)); if (ult == null || f > ult) ult = f; }
+  if (!n) { res.innerHTML = `Nenhum dia da série (${B.all.length.toLocaleString('pt-BR')} dias com dado) esteve ${abaixo ? 'igual ou abaixo' : 'igual ou acima'} de <b>${num(x)} m</b>.`; return; }
+  const ar = [...anos].sort((a, b) => a - b); res.innerHTML = `<b>${n.toLocaleString('pt-BR')} dias</b> (${num((n / B.all.length) * 100, 1)}% da série) ${abaixo ? 'igual ou abaixo' : 'igual ou acima'} de <b>${num(x)} m</b>. Última vez: <b>${dmy(ISO(ult))}</b>. Anos com ocorrência (${ar.length}): ${ar.length > 14 ? ar.slice(0, 6).join(', ') + ' … ' + ar.slice(-6).join(', ') : ar.join(', ')}.`;
+}
+$('#ser-est').addEventListener('change', (ev) => { st.est = ev.target.value; LS.set('est', st.est); serie(); });
+$$('#seg-ser button').forEach((b) => b.addEventListener('click', () => { SER.jan = b.dataset.j; LS.set('ser-jan', SER.jan); serie(); }));
+$('#q-val').addEventListener('input', serQ); $('#q-dir').addEventListener('change', serQ);
+
 async function iniciar() {
   contador();
   $('#rod-v').textContent = 'versão ' + APP_VER + ' · © ' + new Date().getFullYear();
