@@ -392,3 +392,40 @@ html[data-layout=desktop] .chips svg{max-height:none}
 details.ctrl>summary::after{content:" ▾";font-size:10px;color:var(--mut)}details.ctrl[open]>summary::after{content:" ▴";color:#fff}
 .guia li{margin:5px 0}
 #rod-c{margin-top:4px;font-size:11.5px;font-variant-numeric:tabular-nums}
+
+/* ===== v1.7 · escala de anomalia (desvios-padrão da média do dia, como no SipamHidro) ===== */
+:root{--z0:rgba(110,130,120,.13);--zp1:rgba(66,146,198,.24);--zp2:rgba(33,113,181,.38);--zp3:rgba(8,81,156,.52);--zp4:rgba(8,48,107,.68);--zn1:rgba(222,160,70,.28);--zn2:rgba(196,115,30,.42);--zn3:rgba(150,70,15,.55);--zn4:rgba(103,40,8,.70)}
+.anm{display:grid;grid-template-columns:auto minmax(80px,1fr);gap:4px 10px;align-items:center;font-size:12px;color:var(--ink)}
+.anm .al{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+.anm .az{position:relative;display:flex;height:10px;border-radius:3px;background:var(--panel);overflow:visible;box-shadow:0 0 0 1px var(--line)}
+.anm .az i{display:block;height:100%}.anm .az i:first-child{border-radius:3px 0 0 3px}.anm .az i:last-of-type{border-radius:0 3px 3px 0}
+.anm .mk{position:absolute;top:-4px;width:4px;height:18px;margin-left:-2px;background:var(--ink);border:1.5px solid var(--panel);border-radius:2px;transition:left .35s}
+.anm .av{grid-column:1/-1}.anm .av b{font-weight:700}
+.zc{display:inline-block;min-width:44px;text-align:center;padding:1px 6px;border-radius:4px;font-weight:600;color:var(--ink)}
+.zs{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;border:1px solid var(--line)}
+.zleg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;flex-basis:100%}
+.zleg b{font-weight:600;color:var(--ink)}.zleg em{font-style:normal;font-size:11px}
+.zb{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--panel)}
+.zb i{display:block;width:18px;height:10px;border:0;margin:0}
+.leg .zb i{border-top:0}
+.outras{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0 0;font-size:12px;color:var(--mut)}
+.outras .tg{margin:0}
+
+/* ===== modo apresentação (telão) ===== */
+.apbar{position:fixed;inset:0 0 auto 0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;background:var(--bar,#0b1f4d);color:#fff;font-weight:600}
+.apbar[hidden]{display:none}
+.apbar .apg{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.2)}.apbar .apg i{display:block;height:100%;width:0;background:#fff;transition:width .25s linear}
+.apb{display:flex;gap:6px}.apb button{min-width:40px;height:34px;border:1px solid rgba(255,255,255,.55);border-radius:6px;background:transparent;color:#fff;font-size:16px;cursor:pointer}.apb button:hover{background:rgba(255,255,255,.16)}
+body.ap{padding-top:52px}
+body.ap header.top,body.ap #tabs,body.ap #bnav,body.ap #rodape,body.ap #seg-sub,body.ap .sb,body.ap #ban,body.ap .ctrls,body.ap #b-csv-g,body.ap #cap1,body.ap .outras,body.ap .skip{display:none!important}
+body.ap main{max-width:none;padding:10px clamp(12px,2vw,28px)}
+body.ap #v-prev{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+body.ap .hero{margin:0}body.ap .hero .big{font-size:clamp(44px,7vw,92px)}body.ap .hero .btn.dt{display:none}
+body.ap #v-prev>.chips{margin:0!important;position:static!important}
+body.ap .anm{font-size:clamp(13px,1.3vw,18px)}body.ap .anm .az{height:14px}
+@media(min-width:1000px) and (min-aspect-ratio:3/2){
+  body.ap #v-prev{grid-template-columns:minmax(320px,.8fr) minmax(0,1.6fr);align-items:start}
+  body.ap .hero{grid-column:1;grid-row:1;grid-template-columns:minmax(0,1fr)!important}
+  body.ap #v-prev>.chips{grid-column:1!important;grid-row:2!important}
+  body.ap #v-prev>.card{grid-column:2!important;grid-row:1/span 2!important}
+}

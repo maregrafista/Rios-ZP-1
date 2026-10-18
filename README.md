@@ -50,3 +50,9 @@ python3 tools/lancar.py "10/12/2025 25,3 Santarém"
 ```
 
 Também vale escrever uma linha por leitura em `dados/lancamentos.txt` (pode ser editado no GitHub pelo celular). A rotina agendada lê o arquivo, lança no app, move as linhas para `dados/base/lancamentos_log.txt` e publica. Use `--simular` para só conferir como a linha foi entendida.
+
+
+## v1.7
+- Faixas de anomalia (σ, escala do SipamHidro) no gráfico principal, régua de anomalia no cartão da estação e coluna "Anom. σ" na tabela de estações. Camada ligável em Camadas → "Faixas de anomalia".
+- Modo apresentação (botão de tela no topo): tela cheia, rotação automática a cada 15 s; setas ←/→, espaço pausa, Esc sai.
+- Nova estação: `python3 tools/nova_estacao.py "Nome" --rio "Rio X" --uf PA --nr 2,10` e depois lançar as leituras. Estações fora do esquema fluvial aparecem em "Outras estações". A previsão exige histórico (≥ 1 ano de leituras diárias).

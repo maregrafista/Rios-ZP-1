@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.6';
+const APP_VER = '1.7';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -33,7 +33,7 @@ Previsões empíricas, de caráter informativo.
 ${APP_URL}`;
 const PAL = { soft: ['#332288', '#88CCEE', '#117733', '#DDCC77', '#AA4499', '#888888', '#44AA99', '#CC6677'], dk: ['#9C93E8', '#88CCEE', '#4DB88A', '#DDCC77', '#D68AC4', '#AEAEAE', '#44AA99', '#CC6677'], hc: ['#33BBEE', '#009988', '#EE7733', '#CC3311', '#EE3377', '#0077BB', '#BBBBBB', '#555555'] };
 const CORES = { bad: 'var(--bad)', warn: 'var(--warn)', ok: 'var(--ok)' };
-const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '45', '60', '90', '120', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), sub: LS.get('sub', 'prev'), pal: LS.get('paleta', 'marinho'), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
+const st = { est: LS.get('est', 'manaus'), ref: LS.get('ref', 'nr'), jan: ['7', '15', '30', '45', '60', '90', '120', '180', '365'].includes(LS.get('jan', '365')) ? LS.get('jan', '365') : '30', hc: LS.get('hc', false), sub: LS.get('sub', 'prev'), pal: LS.get('paleta', 'marinho'), tab: LS.get('tab', 'prev'), anos: null, cam: Object.assign({ anom: true, prev: true, tend: true, nom: true, emp: true, med: false, ref: true, sip: true }, LS.get('cam', {})) };
 let D = null, X = null;
 
 // ---------- dados ----------
@@ -62,14 +62,28 @@ function derivar() {
   for (const e of D.estacoes) e.r = resumir(e);
   X.list = [...D.estacoes].sort((a, b) => a.ordem - b.ordem);
 }
+// ---------- climatologia do dia e anomalia (escala do SipamHidro: desvio-padrão em relação à média do dia) ----------
+const CL = new Map(), ZK = (z) => { const a = Math.abs(z); return (z < 0 ? -1 : 1) * (a < 1 ? 0 : a < 1.5 ? 1 : a < 2 ? 2 : a < 3 ? 3 : 4); };
+const ZN = ['Normalidade', 'leve', 'moderada', 'severa', 'extrema'], zcond = (z) => { if (z == null) return 'Sem base'; const k = ZK(z); return k === 0 ? 'Normalidade' : 'Anomalia ' + (k < 0 ? 'negativa ' : 'positiva ') + ZN[Math.abs(k)]; };
+const zcor = (k) => (k === 0 ? 'var(--z0)' : k > 0 ? 'var(--zp' + k + ')' : 'var(--zn' + -k + ')');
+function clima(e) {
+  const key = e.id + D.gerado; if (CL.has(key)) return CL.get(key);
+  const m = e.m, cur = X.cur, tab = new Map();
+  for (let mo = 0; mo < 12; mo++) for (let dd = 1; dd <= 31; dd++) {
+    if (new Date(Date.UTC(2021, mo, dd)).getUTCMonth() !== mo) continue;
+    const ys = [];
+    for (let y = cur - 8; y < cur; y++) { const b = Date.UTC(y, mo, dd) / DAY; let a = 0, n = 0; for (let j = -5; j <= 5; j++) { const v = m.get(b + j); if (v !== undefined) { a += v; n++; } } if (n >= 6) ys.push(a / n); }
+    if (ys.length >= 3) { const mu = mean(ys); tab.set(mo * 32 + dd, [mu, Math.sqrt(ys.reduce((a, b) => a + (b - mu) ** 2, 0) / (ys.length - 1)) || 0.01]); }
+  }
+  CL.set(key, tab); return tab;
+}
+function climAt(e, f) { const d = new Date(f * DAY), mo = d.getUTCMonth(), dd = d.getUTCDate(); return clima(e).get(mo * 32 + (mo === 1 && dd === 29 ? 28 : dd)) || null; }
 function resumir(e) {
   const p = e.prev, t0 = dnum(p.origem), nr = e.nr, m = e.m, atraso = X.hojeN - t0;
   const ant = (d) => { for (let k = 0; k <= 3; k++) { const v = m.get(t0 - d - k); if (v !== undefined) return v; } return null; };
   const dif = (d) => { const v = ant(d); return v == null ? null : Math.round((p.L0 - v) * 100); };
-  const d0 = new Date(t0 * DAY), cur = d0.getUTCFullYear(), vals = [];
-  for (let y = cur - 8; y < cur; y++) { const s = []; for (let k = -3; k <= 3; k++) { const v = m.get(Date.UTC(y, d0.getUTCMonth(), Math.min(d0.getUTCDate(), d0.getUTCMonth() === 1 ? 28 : 31)) / DAY + k); if (v !== undefined) s.push(v); } if (s.length >= 4) vals.push(mean(s)); }
-  const mu = vals.length ? mean(vals) : null, sd = vals.length > 2 ? Math.sqrt(vals.reduce((a, b) => a + (b - mu) ** 2, 0) / (vals.length - 1)) : null, z = sd ? (p.L0 - mu) / sd : null;
-  const a = Math.abs(z || 0), cond = z == null ? 'Sem base' : a < 1 ? 'Normalidade' : 'Anomalia ' + (z < 0 ? 'negativa' : 'positiva') + (a < 1.5 ? ' leve' : a < 2 ? ' moderada' : a < 3 ? ' severa' : ' extrema');
+  const q0 = climAt(e, t0), mu = q0 ? q0[0] : null, sd = q0 ? q0[1] : null, z = q0 ? (p.L0 - mu) / sd : null, cond = zcond(z), zk = z == null ? 0 : ZK(z);
+  const qf = climAt(e, X.HOJE + 30), z30 = qf && p.f[30 + atraso] != null ? (p.f[30 + atraso] - qf[0]) / qf[1] : null;
   const at = (h) => { const i = h + atraso; return i <= 100 && p.f[i] != null ? p.f[i] : null; };
   const lim = (h) => { const i = h + atraso; return i <= 100 && p.eh[i] != null ? [p.f[i] - p.el[i], p.f[i] + p.eh[i]] : [null, null]; };
   let mn = null, mi = null, last = 0; for (let i = 0; i <= 100; i++) if (p.f[i] != null) { last = i; if (mn == null || p.f[i] < mn) { mn = p.f[i]; mi = i; } }
@@ -77,7 +91,8 @@ function resumir(e) {
   const dias = cruza == null ? null : Math.max(0, cruza - atraso), n0 = p.L0 - nr;
   let s = { t: 'Normal', c: 'ok' };
   if (n0 < 0) s = { t: 'Abaixo do NR', c: 'bad' }; else if (dias != null && dias <= 7) s = { t: 'Cruza o NR em ' + dias + ' d', c: 'bad' }; else if (dias != null && dias <= 15) s = { t: 'Cruza o NR em ' + dias + ' d', c: 'warn' }; else if (n0 < 1) s = { t: 'Menos de 1 m do NR', c: 'warn' };
-  const o = { data: p.origem, t0, atraso, nr, taxa: Math.round(p.taxa_cm_dia * 10) / 10, d1: dif(1), d7: dif(7), d15: dif(15), mu, sd, z: z == null ? null : Math.round(z * 100) / 100, cond, s, L0: p.L0,
+  if (p.f.every((v) => v == null)) s = { t: 'Sem previsão (histórico curto)', c: 'warn' };
+  const o = { data: p.origem, t0, atraso, nr, taxa: Math.round(p.taxa_cm_dia * 10) / 10, d1: dif(1), d7: dif(7), d15: dif(15), mu, sd, z: z == null ? null : Math.round(z * 100) / 100, zk, z30, cond, s, L0: p.L0,
     f7: at(7), f15: at(15), f30: at(30), lim7: lim(7), lim15: lim(15), lim30: lim(30), min: mn, minData: mi == null ? null : ISO(t0 + mi), minBorda: mi === last, cruza: cruza == null ? null : ISO(t0 + cruza) };
   o.dataF = [7, 15, 30].map((h) => ISO(X.HOJE + h)); return o;
 }
@@ -152,7 +167,7 @@ function compartilhar(id) {
 
 // ---------- gráfico ----------
 const colAno = (y) => (y === X.cur ? 'var(--ink)' : (st.hc ? PAL.hc : dark() ? PAL.dk : PAL.soft)[(y - X.anos[0]) % 8]);
-const CAM = [['prev', 'Previsão', 'd', 'var(--fc)'], ['tend', 'Tendência +7 d', 'd', 'var(--trend)'], ['nom', 'Faixa nominal 95%', 'd', 'var(--band2)'], ['emp', 'Incerteza empírica', 'f', 'var(--band)'], ['med', 'Mediana', 'd', 'var(--mut)'], ['ref', 'NR', '', 'var(--bad)'], ['sip', 'Prev. SipamHidro', '', 'var(--sip)']];
+const CAM = [['anom', 'Faixas de anomalia', 'f', 'var(--zp2)'], ['prev', 'Previsão', 'd', 'var(--fc)'], ['tend', 'Tendência +7 d', 'd', 'var(--trend)'], ['nom', 'Faixa nominal 95%', 'd', 'var(--band2)'], ['emp', 'Incerteza empírica', 'f', 'var(--band)'], ['med', 'Mediana', 'd', 'var(--mut)'], ['ref', 'NR', '', 'var(--bad)'], ['sip', 'Prev. SipamHidro', '', 'var(--sip)']];
 function controles() {
   const r = $('#row-cam'); $$('.tg', r).forEach((x) => x.remove());
   for (const [k, t0, cl, c] of CAM) { const t = k === 'med' ? 'Mediana ' + X.anos[0] + '-' + String(X.cur).slice(2) : t0; const b = document.createElement('button'); b.type = 'button'; b.className = 'tg'; b.style.setProperty('--c', c); b.setAttribute('aria-pressed', String(st.cam[k])); b.innerHTML = `<i class="${cl}"></i>${t}`; b.onclick = () => { st.cam[k] = !st.cam[k]; LS.set('cam', st.cam); redraw(); }; r.append(b); }
@@ -166,7 +181,7 @@ let csvG = '';
 function grafico() {
   const box = $('#chart'), e = E(), P = e.prev, o = off(e), m = e.m, orig = dnum(P.origem), cur = X.cur, HOJE = X.HOJE, c = st.cam;
   let x0, x1; if (st.jan === '365') { x0 = Date.UTC(cur, 0, 1) / DAY; x1 = Date.UTC(cur, 11, 31) / DAY; } else { const h = st.jan === '180' ? 91 : +st.jan / 2; x0 = HOJE - h; x1 = HOJE + h; }
-  const W = Math.max(300, box.clientWidth), Ht = Math.round(Math.min(520, Math.max(340, W * 0.55))), mg = { t: 14, r: W < 520 ? 42 : 54, b: 32, l: W < 520 ? 42 : 52 };
+  const W = Math.max(300, box.clientWidth), Ht = Math.round(Math.min(document.body.classList.contains('ap') ? Math.max(420, innerHeight - 250) : 520, Math.max(340, W * 0.55))), mg = { t: 14, r: W < 520 ? 42 : 54, b: 32, l: W < 520 ? 42 : 52 };
   const val = (y, f) => { const d = new Date(f * DAY), mo = d.getUTCMonth(), dd = d.getUTCDate(); if (mo === 1 && dd === 29) return null; const ty = d.getUTCFullYear() - (cur - y), v = m.get(Date.UTC(ty, mo, dd) / DAY); return v === undefined ? null : v - o; };
   const lines = [];
   for (const y of X.anos) { if (!st.anos.has(y)) continue; const pts = []; for (let f = Math.floor(x0); f <= x1; f++) { if (y === cur) { if (f > orig) continue; const v = m.get(f); pts.push({ f, v: v === undefined ? null : v - o }); } else pts.push({ f, v: val(y, f) }); } lines.push({ y, pts, c: colAno(y), w: y === cur ? (st.hc ? 3.2 : 2.8) : (st.hc ? 2.2 : 1.4) }); }
@@ -175,12 +190,19 @@ function grafico() {
   const med = []; if (c.med) for (let f = Math.floor(x0); f <= x1; f++) { const v = []; for (const y of X.anos) { const q = y < cur ? val(y, f) : (f <= orig ? (m.has(f) ? m.get(f) - o : null) : (P.f[f - orig] == null ? null : P.f[f - orig] - o)); if (q != null) v.push(q); } if (v.length >= 3) { v.sort((a, b) => a - b); med.push({ f, v: v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2 }); } }
   const sip = []; if (c.sip) for (const r of D.sipam.prog) if (r.estacao === e.nome) { const f = Date.UTC(+r.mes.slice(0, 4), +r.mes.slice(5, 7) - 1, 15) / DAY; if (f >= x0 && f <= x1) { if (r.modelo1_cm != null) sip.push({ f, v: r.modelo1_cm / 100 - o, k: 1 }); if (r.modelo2_cm != null) sip.push({ f, v: r.modelo2_cm / 100 - o, k: 2 }); } }
   const ys = []; for (const l of lines) for (const p of l.pts) if (p.v != null) ys.push(p.v);
-  for (const p of fc) { if (c.prev || st.anos.has(cur)) ys.push(p.v); if (c.emp && p.el != null) ys.push(p.el, p.eh); if (c.nom && p.nl != null) ys.push(p.nl, p.nh); } for (const p of med) ys.push(p.v); for (const p of sip) ys.push(p.v); if (c.ref) ys.push(ref() ? 0 : e.nr);
+  for (const p of fc) { if (c.prev || st.anos.has(cur)) ys.push(p.v); if (c.emp && p.el != null) ys.push(p.el, p.eh); if (c.nom && p.nl != null) ys.push(p.nl, p.nh); } for (const p of med) ys.push(p.v); for (const p of sip) ys.push(p.v); if (c.ref) ys.push(ref() ? 0 : e.nr); if (c.anom) for (let f = Math.floor(x0); f <= x1; f += 5) { const q = climAt(e, f); if (q) ys.push(q[0] - o - 1.5 * q[1], q[0] - o + 1.5 * q[1]); }
   let lo = Math.min(...(ys.length ? ys : [0])), hi = Math.max(...(ys.length ? ys : [1])); if (hi - lo < 0.5) { hi += 0.25; lo -= 0.25; } const pd = (hi - lo) * 0.04; lo -= pd; hi += pd;
   const tk = ticks(lo, hi, 7); lo = Math.min(lo, tk.t[0]); hi = Math.max(hi, tk.t[tk.t.length - 1]);
   const xs = lin(x0, x1, mg.l, W - mg.r), yl = lin(lo, hi, Ht - mg.b, mg.t), xa = Ht - mg.b;
   const svg = sv('svg', { width: '100%', viewBox: `0 0 ${W} ${Ht}`, height: Ht, role: 'img', 'aria-label': 'Hidrograma de ' + e.nome });
   if (orig < x1) svg.append(sv('rect', { x: xs(Math.max(orig, x0)), y: mg.t, width: xs(x1) - xs(Math.max(orig, x0)), height: xa - mg.t, fill: 'var(--fc)', opacity: 0.045 })); if (orig < x1 && xs(x1) - xs(Math.max(orig, x0)) > 60) svg.append(sv('text', { x: xs(x1) - 4, y: xa - 6, 'text-anchor': 'end', style: 'fill:var(--fc);font-style:italic' }, 'previsão'));
+  if (c.anom) {
+    const pz = (f, k) => { const q = climAt(e, f); return q ? [xs(f), yl(Math.max(lo, Math.min(hi, q[0] - o + k * q[1])))] : null; }, A = [];
+    const poly = (a, b) => { const up = [], dn = []; for (let f = Math.floor(x0); f <= x1; f++) { const u = pz(f, b), l = pz(f, a); if (u) { up.push(u); dn.push(l); } } return up.length < 2 ? '' : 'M' + up.map((q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('L') + 'L' + dn.reverse().map((q) => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join('L') + 'Z'; };
+    for (const [a, b, k] of [[-1, 1, 0], [1, 1.5, 1], [1.5, 2, 2], [2, 3, 3], [3, 999, 4], [-1.5, -1, -1], [-2, -1.5, -2], [-3, -2, -3], [-999, -3, -4]]) { const d = poly(a, b); if (d) svg.append(sv('path', { d, fill: zcor(k), stroke: 'none' })); }
+    const mm = []; for (let f = Math.floor(x0); f <= x1; f++) { const q = climAt(e, f); if (q) mm.push({ f, v: q[0] - o }); }
+    if (mm.length > 1) svg.append(sv('path', { d: pth(mm, xs, yl), fill: 'none', stroke: 'var(--mut)', 'stroke-width': 1.2, 'stroke-dasharray': '5 3', opacity: 0.9 }));
+  }
   const fmtY = (v) => num(v, tk.s < 1 ? 1 : 0);
   for (const v of tk.t) { svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(v), y2: yl(v), stroke: 'var(--grid)', 'stroke-width': 0.8 })); svg.append(sv('line', { x1: mg.l - 4, x2: mg.l, y1: yl(v), y2: yl(v), stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('text', { x: mg.l - 7, y: yl(v) + 3.5, 'text-anchor': 'end' }, fmtY(v))); }
   svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: xa, y2: xa, stroke: 'var(--ink)', 'stroke-width': 0.9 })); svg.append(sv('line', { x1: mg.l, x2: mg.l, y1: mg.t, y2: xa, stroke: 'var(--ink)', 'stroke-width': 0.9 }));
@@ -217,13 +239,15 @@ function grafico() {
     const rows = [], dd = []; for (const l of [...lines].reverse()) { const p = l.pts.find((q) => q.f === f); if (p && p.v != null) { rows.push({ c: l.c, t: l.y + (l.y === cur ? ' (obs.)' : ''), v: p.v }); dd.push({ c: l.c, v: p.v }); } }
     const q = fcm.get(f); if (q && f > orig && c.prev) { rows.unshift({ c: 'var(--fc)', t: cur + ' (prev.)', v: q.v }); dd.push({ c: 'var(--fc)', v: q.v }); }
     dots.replaceChildren(...dd.map((p) => sv('circle', { cx: xs(f), cy: yl(p.v), r: 3.5, fill: p.c, stroke: 'var(--panel)' })));
-    tip.innerHTML = `<div class="h">${lab(f)}${f > HOJE ? ' · +' + (f - HOJE) + ' d' : ''}</div>` + rows.map((r) => `<div class="r"><span><i style="--c:${r.c}"></i>${r.t}</span><b>${num(r.v)}</b></div>`).join('') + (q && f > orig && c.emp && q.el != null ? `<div class="n">Empírica 95%: ${num(q.el)} a ${num(q.eh)}</div>` : '') + (q && f > orig && c.nom && q.nl != null ? `<div class="n">Nominal 95%: ${num(q.nl)} a ${num(q.nh)}</div>` : '');
+    const pc = lines.find((l) => l.y === cur), vo = q && f > orig && c.prev ? q.v : (pc && f <= orig ? (pc.pts.find((u) => u.f === f) || {}).v : null), qz = c.anom ? climAt(e, f) : null, zt = qz && vo != null ? (vo + o - qz[0]) / qz[1] : null;
+    tip.innerHTML = `<div class="h">${lab(f)}${f > HOJE ? ' · +' + (f - HOJE) + ' d' : ''}</div>` + rows.map((r) => `<div class="r"><span><i style="--c:${r.c}"></i>${r.t}</span><b>${num(r.v)}</b></div>`).join('') + (q && f > orig && c.emp && q.el != null ? `<div class="n">Empírica 95%: ${num(q.el)} a ${num(q.eh)}</div>` : '') + (q && f > orig && c.nom && q.nl != null ? `<div class="n">Nominal 95%: ${num(q.nl)} a ${num(q.nh)}</div>` : '') + (zt != null ? `<div class="n"><i class="zs" style="background:${zcor(ZK(zt))}"></i>${sg(zt, 1)} σ · ${zcond(zt)}<br>Média do dia: ${num(qz[0] - o)} (±1 σ: ${num(qz[1])})</div>` : '');
     tip.style.opacity = 1; const tw = tip.offsetWidth; tip.style.left = Math.max(4, Math.min(W - tw - 4, px + 14 + tw > W ? px - tw - 14 : px + 14)) + 'px'; tip.style.top = Math.max(4, Math.min(Ht - tip.offsetHeight - 4, py - 20)) + 'px';
   };
   ov.addEventListener('pointermove', mover); ov.addEventListener('pointerdown', mover); ov.addEventListener('pointerleave', () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); dots.replaceChildren(); });
   svg.append(ov); box.replaceChildren(svg, tip);
   const lg = []; if (st.anos.has(cur)) lg.push(['', 'var(--ink)', 'Observado ' + cur]); if (c.prev) lg.push(['d', 'var(--fc)', 'Previsão']); if (c.emp) lg.push(['f', 'var(--band)', 'Incerteza empírica 50 e 95%']); if (c.tend) lg.push(['t', 'var(--trend)', 'Tendência 7 d']); if (c.sip) lg.push(['s', 'var(--sip)', 'Prev. SipamHidro']);
-  $('#leg').innerHTML = lg.map(([k, col, t]) => `<span><i class="${k}" style="--c:${col}"></i>${t}</span>`).join('');
+  const zl = c.anom ? '<span class="zleg"><b>Anomalia (σ)</b><span class="zb">' + [-4, -3, -2, -1, 0, 1, 2, 3, 4].map((k) => `<i style="background:${zcor(k)}"></i>`).join('') + '</span><em>−3 σ ◂ normal ▸ +3 σ; tracejado = média do dia</em></span>' : '';
+  $('#leg').innerHTML = lg.map(([k, col, t]) => `<span><i class="${k}" style="--c:${col}"></i>${t}</span>`).join('') + zl;
   const head = ['data', ...lines.map((l) => l.y), 'previsao', 'emp_inf', 'emp_sup', 'nom_inf', 'nom_sup'], csv = [head.join(';')];
   for (let f = Math.floor(x0); f <= x1; f++) { const q = fcm.get(f); csv.push([ISO(f), ...lines.map((l) => { const p = l.pts.find((z) => z.f === f); return p && p.v != null ? num(p.v) : ''; }), q ? num(q.v) : '', q && q.el != null ? num(q.el) : '', q && q.eh != null ? num(q.eh) : '', q && q.nl != null ? num(q.nl) : '', q && q.nh != null ? num(q.nh) : ''].join(';')); }
   csvG = '# ' + e.nome + ' · ' + uni() + '\n' + csv.join('\n');
@@ -231,6 +255,23 @@ function grafico() {
 $('#b-csv-g').addEventListener('click', () => baixar('grafico_' + st.est + '.csv', csvG));
 
 $('#hero').addEventListener('click', (ev) => { const b = ev.target.closest('[data-a]'); if (!b) return; ({ resumo: () => abrirStory(), comp: () => compartilhar(), conv: () => { rfReset(); show('ref'); }, ficha: () => sheetEstacao(st.est) })[b.dataset.a](); });
+
+// ---------- modo apresentação (telão: tela cheia, rotação automática das estações) ----------
+const AP_S = 15; let apT = null, apN = 0, apPausa = false, apFS = false;
+function apBarra() { const e = E(), i = X.list.findIndex((z) => z.id === e.id) + 1; $('#ap-t').textContent = e.nome + ' · ' + i + '/' + X.list.length; $('#ap-p').textContent = apPausa ? '▶' : '❚❚'; $('#ap-p').setAttribute('aria-label', apPausa ? 'Continuar rotação' : 'Pausar rotação'); }
+function apresentar(on) {
+  document.body.classList.toggle('ap', on); $('#ap-bar').hidden = !on; clearInterval(apT); apN = 0; apPausa = false;
+  if (on) {
+    st.tab = 'prev'; subtab('prev'); scrollTo(0, 0);
+    try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) { document.documentElement.requestFullscreen().then(() => { apFS = true; }).catch(() => {}); } } catch (e) {}
+    apT = setInterval(() => { if (apPausa) return; apN += 0.25; $('#ap-g').style.width = Math.min(100, (apN / AP_S) * 100) + '%'; if (apN >= AP_S) { apN = 0; trocaEst(1); } }, 250);
+  } else { apFS = false; try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} }
+  redraw(); if (on) apBarra();
+}
+$('#b-ap').addEventListener('click', () => apresentar(true)); $('#ap-x').addEventListener('click', () => apresentar(false));
+$('#ap-p').addEventListener('click', () => { apPausa = !apPausa; apBarra(); }); $('#ap-a').addEventListener('click', () => { apN = 0; trocaEst(-1); }); $('#ap-n').addEventListener('click', () => { apN = 0; trocaEst(1); });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && apFS && document.body.classList.contains('ap')) apresentar(false); });
+addEventListener('keydown', (ev) => { if (!document.body.classList.contains('ap')) return; if (ev.key === 'Escape') apresentar(false); else if (ev.key === ' ') { ev.preventDefault(); apPausa = !apPausa; apBarra(); } else if (ev.key === 'ArrowRight') { apN = 0; trocaEst(1); } else if (ev.key === 'ArrowLeft') { apN = 0; trocaEst(-1); } });
 
 // ---------- previsão ----------
 function miniFig(e, W = 380, Ht = 230) {
@@ -276,16 +317,23 @@ function mapa() {
     const go = () => { st.est = e.id; LS.set('est', e.id); redraw(); }; g.addEventListener('click', go); g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } }); svg.append(g);
   }
   const leg = document.createElement('div'); leg.className = 'mleg'; leg.innerHTML = '<span><i class="dot bad"></i>abaixo do NR / ≤ 7 d</span><span><i class="dot warn"></i>atenção</span><span><i class="dot ok"></i>normal</span><span>↓ vazante ↑ cheia</span>';
-  host.replaceChildren(svg, leg);
+  const outras = X.list.filter((e) => !POS[e.id]);
+  if (outras.length) { const o = document.createElement('div'); o.className = 'outras'; o.innerHTML = '<span>Outras estações</span>'; for (const e of outras) { const b = document.createElement('button'); b.type = 'button'; b.className = 'tg'; b.setAttribute('aria-pressed', String(e.id === st.est)); b.innerHTML = `<i class="dot ${e.r.s.c}"></i>${esc(e.nome)} · ${ref() ? sg(vv(e, e.r.L0)) : num(e.r.L0)}`; b.onclick = () => { st.est = e.id; LS.set('est', e.id); redraw(); }; o.append(b); } host.replaceChildren(svg, o, leg); } else host.replaceChildren(svg, leg);
 }
 function trocaEst(d) { const i = X.list.findIndex((e) => e.id === st.est), n = X.list[(i + d + X.list.length) % X.list.length]; st.est = n.id; LS.set('est', n.id); redraw(); }
 function subtab(set) { if (set) { st.sub = set; LS.set('sub', set); } if (!['prev', 'sip', 'all'].includes(st.sub)) st.sub = 'prev'; $$('#seg-sub button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === st.sub))); $$('.sb').forEach((d) => { d.hidden = d.id !== 'sb-' + st.sub; }); }
 $$('#seg-sub button').forEach((b) => b.addEventListener('click', () => subtab(b.dataset.s)));
+function anomHtml(r) {
+  if (r.z == null) return '';
+  const pc = Math.max(0, Math.min(100, ((r.z + 3.5) / 7) * 100)), w = [0.5, 1, 0.5, 0.5, 2, 0.5, 0.5, 1, 0.5], ks = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
+  return `<div class="anm" role="img" aria-label="${esc(r.cond)}, ${num(r.z, 1)} desvios-padrão em relação à média do dia"><span class="al">Anomalia</span><div class="az">${ks.map((k, i) => `<i style="flex:${w[i]};background:${zcor(k)}"></i>`).join('')}<b class="mk" style="left:${pc}%"></b></div><span class="av"><b>${sg(r.z, 1)} σ</b> · ${esc(r.cond)}${r.z30 != null ? ' · em +30 d: ' + sg(r.z30, 1) + ' σ' : ''}</span></div>`;
+}
 function prever() {
   const e = E(), r = e.r, c = (v) => num(vv(e, v)), atr = r.atraso;
   const atras = Math.floor(Date.now() / DAY - dnum(D.hoje)); $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + (atras >= 3 ? ' (há ' + atras + ' d)' : '') + ' · ' + (ref() ? 'm acima do NR' : 'm na régua');
   $('#hero').innerHTML = `<div class="hh"><div class="nome"><b>${esc(e.nome)}</b> · ${esc(e.rio)} · ${dm(r.data)}${atr ? ' (' + atr + ' d sem leitura)' : ''}</div><button class="btn dt" data-a="ficha" type="button">Detalhes</button></div>
     <div class="hb"><span class="big">${ref() ? sg(vv(e, r.L0)) : num(r.L0)}<small> ${uni()}</small></span><span class="pill ${r.s.c}">${esc(r.s.t)}</span><span class="cap">${ref() ? 'régua ' + num(r.L0) + ' m' : 'NR ' + num(e.nr) + ' m na régua'}</span></div>
+    ${anomHtml(r)}
     <div class="hg"><i>Observado</i><div><span>Taxa 7 d</span><b>${sg(r.taxa, 1)} cm/d</b></div><div><span>Var. 24 h</span><b>${sg(r.d1, 0)} cm</b></div><div><span>Var. 7 d</span><b>${sg(r.d7, 0)} cm</b></div>
     <i>Previsto</i><div><span>+7 d · ${dm(r.dataF[0])}</span><b>${c(r.f7)} m</b></div><div><span>+30 d · ${dm(r.dataF[2])}</span><b>${c(r.f30)} m</b></div><div><span>Mínimo · ${dm(r.minData)}</span><b>${c(r.min)} m</b></div></div>`;
   mapa();
@@ -295,9 +343,9 @@ function prever() {
   ['q1-n'].forEach((i) => { $('#' + i).textContent = 'Nível (' + uni() + ')'; });
   $('#q2-c').textContent = 'Toque na linha para o resumo. Ponto: vermelho, abaixo do NR ou cruzando em até 7 d; âmbar, atenção; verde, normal.';
   const ord = { bad: 0, warn: 1, ok: 2 };
-  $('#q2 tbody').innerHTML = [...X.list].sort((a, b) => ord[a.r.s.c] - ord[b.r.s.c] || (a.r.L0 - a.nr) - (b.r.L0 - b.nr)).map((s) => { const q = s.r, n = (v) => `<td class="n${ref() && vv(s, v) < 0 ? ' neg' : ''}">${num(vv(s, v))}</td>`; return `<tr data-id="${s.id}" class="${s.id === st.est ? 'sel' : ''}"><td><i class="dot ${q.s.c}" title="${esc(q.s.t)}"></i>${esc(s.nome)}</td><td class="hm"><span class="pill ${q.s.c}">${esc(q.s.t)}</span></td>${n(q.L0)}<td class="n hm">${sg(q.d1, 0)}</td><td class="n">${sg(q.d7, 0)}</td><td class="n hm">${sg(q.taxa, 1)}</td>${n(q.f7)}${n(q.f15)}${n(q.f30)}${n(q.min)}</tr>`; }).join('');
+  $('#q2 tbody').innerHTML = [...X.list].sort((a, b) => ord[a.r.s.c] - ord[b.r.s.c] || (a.r.L0 - a.nr) - (b.r.L0 - b.nr)).map((s) => { const q = s.r, n = (v) => `<td class="n${ref() && vv(s, v) < 0 ? ' neg' : ''}">${num(vv(s, v))}</td>`; return `<tr data-id="${s.id}" class="${s.id === st.est ? 'sel' : ''}"><td><i class="dot ${q.s.c}" title="${esc(q.s.t)}"></i>${esc(s.nome)}</td><td class="hm"><span class="pill ${q.s.c}">${esc(q.s.t)}</span></td>${n(q.L0)}<td class="n">${q.z == null ? '—' : `<span class="zc" style="background:${zcor(q.zk)}" title="${esc(q.cond)}">${sg(q.z, 1)}</span>`}</td><td class="n hm">${sg(q.d1, 0)}</td><td class="n">${sg(q.d7, 0)}</td><td class="n hm">${sg(q.taxa, 1)}</td>${n(q.f7)}${n(q.f15)}${n(q.f30)}${n(q.min)}</tr>`; }).join('');
   $$('#q2 tbody tr').forEach((tr) => tr.addEventListener('click', () => sheetEstacao(tr.dataset.id)));
-  subtab(); cmpSip(); controles(); if (st.tab === 'prev') grafico();
+  subtab(); cmpSip(); controles(); if (st.tab === 'prev') grafico(); if (document.body.classList.contains('ap')) apBarra();
 }
 
 // ---------- comparação com SipamHidro (muda com a janela) ----------
