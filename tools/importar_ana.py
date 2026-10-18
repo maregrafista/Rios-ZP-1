@@ -18,14 +18,14 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 ANA, FONTES, BASE = RAIZ / "dados" / "ana", RAIZ / "dados" / "fontes", RAIZ / "dados" / "base"
 CODIGOS = {"14990000": "Manaus", "16030000": "Itacoatiara", "16350002": "Parintins", "17050000": "Óbidos", "16900000": "Oriximiná",
-           "16600000": "Porto Trombetas", "10100000": "Tabatinga", "18390000": "Almeirim", "14900050": "Novo Airão"}
+           "16600000": "Porto Trombetas", "10100000": "Tabatinga", "14900050": "Novo Airão"}
 VALIDOS = {"1", "2"}
 # Trechos do histórico que NÃO são comparáveis com as réguas atuais (outro zero de régua ou valores impossíveis) → NaN.
 # estação: (início, fim, motivo). Revise ao receber dados novos ou fichas F-43 que expliquem a mudança.
 EXCLUIR = {
     "Itacoatiara": ("0000-01-01", "2008-02-29", "outro zero de régua: salto de ~7 m em fev/2008 (1998–2008 em cotas ~7 m mais altas; antes de 1998 ~6 m mais baixas)"),
     "Oriximiná": ("0000-01-01", "1970-12-31", "valores impossíveis em 1968–1970 (de −97 a +86 m e bloco de ~+20 m em ago–dez/1969)"),
-    "Porto Trombetas": ("0000-01-01", "2019-12-31", "1987–1988 em outro zero de régua (cotas ~4 m abaixo das atuais)"),
+    "Porto Trombetas": ("0000-01-01", "1999-12-31", "1987–1988 em outro zero de régua (cotas ~4 m abaixo das atuais)"),
 }
 
 
@@ -93,19 +93,28 @@ def main():
         meta[nome] = {"fonte": f"ANA Hidroweb {cod}", "dias": cont["dias"], "pct_consistido": round(100 * cont["n2"] / max(1, cont["dias"]), 1), "pct_bruto": round(100 * cont["n1"] / max(1, cont["dias"]), 1), "descartados_status": cont["status_descartado"] + cont["sem_valor"], "excluido": None}
         ks = sorted(serie)
         rel.append(f"{nome:<16} ANA {cod}: {ks[0]} a {ks[-1]}; {cont['dias']} dias válidos; {cont['sem_valor']} sem valor; {cont['status_descartado']} descartados por status (branco/duvidoso/régua seca)")
-    for nome, (a, b, motivo) in EXCLUIR.items():
+    nomes = {n.lower(): n for n in ["Manaus", "Itacoatiara", "Parintins", "Juruti", "Óbidos", "Santarém", "Oriximiná", "Porto Trombetas"]}
+    for x in sorted(FONTES.glob("*_regua.xlsx")):
+        import openpyxl, unicodedata
+        norm = lambda t: "".join(c for c in unicodedata.normalize("NFD", t) if unicodedata.category(c) != "Mn").lower()
+        rotulo = next(r[0] for i, r in enumerate(openpyxl.load_workbook(x, read_only=True, data_only=True).worksheets[0].iter_rows(values_only=True)) if i == 1)
+        chave = norm(str(rotulo).split("-")[-1].strip())
+        nome = next((n for n in nomes.values() if norm(n).startswith(chave) or chave.startswith(norm(n).split()[-1])), None)
+        if not nome:
+            rel.append(f"{x.name}: estação '{rotulo}' não cadastrada (ignorado)"); continue
+        s_ = ler_regua_xlsx(x)
+        n_sob = sum(1 for k in s_ if k in hist.get(nome, {}))
+        hist.setdefault(nome, {}).update(s_)  # leituras de régua prevalecem sobre a ANA no mesmo dia
+        ks = sorted(s_)
+        m = meta.setdefault(nome, {"fonte": "", "dias": 0, "pct_consistido": None, "pct_bruto": None, "descartados_status": 0, "excluido": None})
+        m["fonte"] = (m["fonte"] + " + " if m["fonte"] else "") + "régua (xlsx do Setor de Hidrografia)"
+        rel.append(f"{nome:<16} xlsx régua: {ks[0]} a {ks[-1]}; {len(s_)} dias (última leitura do dia); {n_sob} sobrepõem a ANA")
+    for nome, (a_, b_, motivo) in EXCLUIR.items():
         if nome in hist:
             n0 = len(hist[nome])
-            hist[nome] = {k: v for k, v in hist[nome].items() if not (a <= k <= b)}
-            meta.setdefault(nome, {})["excluido"] = f"até {b[8:]}/{b[5:7]}/{b[:4]}: {motivo}"
-            rel.append(f"{nome:<16} excluídos {n0 - len(hist[nome])} dias até {b}: {motivo}")
-    x = FONTES / "Santarem_regua_longa.xlsx"
-    if x.exists():
-        s = ler_regua_xlsx(x)
-        hist["Santarém"] = s
-        meta["Santarém"] = {"fonte": "Régua (xlsx do Setor de Hidrografia, 2010–2026)", "dias": len(s), "pct_consistido": None, "pct_bruto": None, "descartados_status": 0, "excluido": None}
-        ks = sorted(s)
-        rel.append(f"{'Santarém':<16} xlsx régua: {ks[0]} a {ks[-1]}; {len(s)} dias (última leitura do dia)")
+            hist[nome] = {k: v for k, v in hist[nome].items() if not (a_ <= k <= b_)}
+            meta.setdefault(nome, {})["excluido"] = f"até {b_[8:]}/{b_[5:7]}/{b_[:4]}: {motivo}"
+            rel.append(f"{nome:<16} excluídos {n0 - len(hist[nome])} dias até {b_}: {motivo}")
     # alerta: anos cuja média destoa >3,5 m da mediana dos anos vizinhos (possível mudança de zero da régua)
     import collections
     rel.append("")

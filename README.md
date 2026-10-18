@@ -64,3 +64,8 @@ Também vale escrever uma linha por leitura em `dados/lancamentos.txt` (pode ser
 - Novas estações: Tabatinga, Novo Airão e Almeirim (NR das fichas F-43/F-41 em `dados/fontes/`). Sem leitura recente (> 45 d) aparecem como "Sem leitura recente" e ficam fora das sínteses.
 - Removidas as camadas de incerteza empírica e faixa nominal 95%. Nova aba **Séries** (série completa, máximas/mínimas anuais, curva de permanência, anos análogos, consulta rápida e ficha da série).
 - Ao editar `app.js` ou `styles.css` à mão, rode `python3 tools/atualizar.py --regenerar` para renovar o `?v=` e o cache do navegador.
+
+## v1.9
+- Almeirim removida. Fontes de régua em `dados/fontes/<Estação>_regua.xlsx` (formato Estação | Data | Nível, última leitura do dia); `importar_ana.py` lê todas.
+- Reparo de sinal: a planilha perdia o “−” de níveis negativos (Parintins, 2023–24; também Tabatinga/Trombetas em alguns dias). `atualizar.py` usa o valor da ANA do mesmo dia ou, sem ANA, a continuidade da série. Pico local passou para 0,5 m.
+- “Resumo do dia” virou uma folha rolável (sem auto-avanço). Tabelas encolhem no celular (colunas `hm` ocultas); textos de Info e Séries enxugados.

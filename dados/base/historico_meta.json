@@ -1,14 +1,6 @@
 {
- "Almeirim": {
-  "fonte": "ANA Hidroweb 18390000",
-  "dias": 3867,
-  "pct_consistido": 85.0,
-  "pct_bruto": 15.0,
-  "descartados_status": 271,
-  "excluido": null
- },
  "Itacoatiara": {
-  "fonte": "ANA Hidroweb 16030000",
+  "fonte": "ANA Hidroweb 16030000 + régua (xlsx do Setor de Hidrografia)",
   "dias": 12907,
   "pct_consistido": 92.6,
   "pct_bruto": 7.4,
@@ -16,7 +8,7 @@
   "excluido": "até 29/02/2008: outro zero de régua: salto de ~7 m em fev/2008 (1998–2008 em cotas ~7 m mais altas; antes de 1998 ~6 m mais baixas)"
  },
  "Manaus": {
-  "fonte": "ANA Hidroweb 14990000",
+  "fonte": "ANA Hidroweb 14990000 + régua (xlsx do Setor de Hidrografia)",
   "dias": 41009,
   "pct_consistido": 100.0,
   "pct_bruto": 0.0,
@@ -32,7 +24,7 @@
   "excluido": null
  },
  "Óbidos": {
-  "fonte": "ANA Hidroweb 17050000",
+  "fonte": "ANA Hidroweb 17050000 + régua (xlsx do Setor de Hidrografia)",
   "dias": 17987,
   "pct_consistido": 100.0,
   "pct_bruto": 0.0,
@@ -40,7 +32,7 @@
   "excluido": null
  },
  "Oriximiná": {
-  "fonte": "ANA Hidroweb 16900000",
+  "fonte": "ANA Hidroweb 16900000 + régua (xlsx do Setor de Hidrografia)",
   "dias": 19812,
   "pct_consistido": 71.9,
   "pct_bruto": 28.1,
@@ -56,12 +48,12 @@
   "excluido": null
  },
  "Porto Trombetas": {
-  "fonte": "ANA Hidroweb 16600000",
+  "fonte": "ANA Hidroweb 16600000 + régua (xlsx do Setor de Hidrografia)",
   "dias": 698,
   "pct_consistido": 0.0,
   "pct_bruto": 100.0,
   "descartados_status": 2,
-  "excluido": "até 31/12/2019: 1987–1988 em outro zero de régua (cotas ~4 m abaixo das atuais)"
+  "excluido": "até 31/12/1999: 1987–1988 em outro zero de régua (cotas ~4 m abaixo das atuais)"
  },
  "Tabatinga": {
   "fonte": "ANA Hidroweb 10100000",
@@ -71,9 +63,17 @@
   "descartados_status": 549,
   "excluido": null
  },
+ "Juruti": {
+  "fonte": "régua (xlsx do Setor de Hidrografia)",
+  "dias": 0,
+  "pct_consistido": null,
+  "pct_bruto": null,
+  "descartados_status": 0,
+  "excluido": null
+ },
  "Santarém": {
-  "fonte": "Régua (xlsx do Setor de Hidrografia, 2010–2026)",
-  "dias": 5259,
+  "fonte": "régua (xlsx do Setor de Hidrografia)",
+  "dias": 0,
   "pct_consistido": null,
   "pct_bruto": null,
   "descartados_status": 0,

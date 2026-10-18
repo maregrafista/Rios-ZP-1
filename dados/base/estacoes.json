@@ -148,20 +148,5 @@
   "nr_adotado_m": 6.76,
   "fonte_nr": "F-43 v1/2020 (LH 005/2020)",
   "criterio": "Percentil 6 das cotas mínimas, 2014–2019"
- },
- {
-  "estacao": "Almeirim",
-  "rio": "Rio Amazonas",
-  "uf": "PA",
-  "ordem": 11,
-  "codigo_ana": "18390000",
-  "carta": "4102A",
-  "rn": "RN1-DHN",
-  "nr_abaixo_rn_cm": null,
-  "zero_abaixo_rn_cm": null,
-  "nr_f43_m": 1.502,
-  "nr_adotado_m": 1.502,
-  "fonte_nr": "F-41 Almerim II 20558, v1/2024",
-  "criterio": "Análise harmônica de 77 dias de maré (16/09–01/12/2023)"
  }
 ]

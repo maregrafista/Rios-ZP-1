@@ -21,7 +21,7 @@ BASE = RAIZ / "dados" / "base"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from previsao import prever_estacao  # noqa: E402
 
-LIMITE_QC_M, JANELA_QC, PASSADAS_QC = 0.8, 5, 3
+LIMITE_QC_M, JANELA_QC, PASSADAS_QC = 0.5, 5, 3
 RELATORIO = []
 
 
@@ -186,6 +186,26 @@ def main():
         n = e["estacao"]
         bruto = dict(historico.get(n, {}))
         bruto.update({k: v[0] for k, v in mestre.get(n, {}).items()})  # planilha e lançamentos prevalecem sobre o histórico
+        # reparo de sinal: a planilha perdeu o "−" de níveis negativos (ex.: Parintins, 2023–24). Quando o histórico (ANA) do mesmo dia
+        # é negativo e a planilha traz o mesmo valor sem o sinal, vale o histórico.
+        hh, fix = historico.get(n, {}), 0
+        for k, v in mestre.get(n, {}).items():
+            hv = hh.get(k)
+            if hv is not None and v[0] > 0 and hv < -0.05 and abs(v[0] + hv) < 0.15:
+                bruto[k] = hv; fix += 1
+        if fix:
+            log(f"{n:<16} reparo de sinal em {fix} dias (planilha sem o '−'; valor da ANA)")
+        # continuidade: onde não há ANA, o "−" perdido é detectado pela série: leitura positiva cujo oposto fica bem mais perto do dia anterior
+        for k in sorted(bruto):
+            v = bruto.get(k)
+            if v is None or v <= 0:
+                continue
+            o = dt.date.fromisoformat(k).toordinal()
+            ref = next((bruto[x] for x in (dt.date.fromordinal(o - j).isoformat() for j in (1, 2, 3, 4)) if x in bruto), None)
+            if ref is not None and ref < 0.35 and abs(-v - ref) <= 0.15 and abs(v - ref) >= 0.3:
+                bruto[k] = -v; fix += 1
+        if fix:
+            log(f"{n:<16} reparo de sinal em {fix} dias no total (planilha sem o '−')")
         bom, desc = qc(bruto)
         descartes += [{"estacao": n, **d} for d in desc]
         ks = sorted(bom)
