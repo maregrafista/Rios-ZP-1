@@ -36,10 +36,13 @@
     <div><b>Rios ZP-1</b><small id="sub">Carregando…</small></div>
   </div>
   <div class="acts">
+    <button class="icon" id="b-ap" type="button" aria-label="Modo apresentação (tela cheia)" title="Modo apresentação"><svg viewBox="0 0 24 24" width="20" height="20"><rect x="3" y="4" width="18" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <button class="icon" id="b-aj" type="button" aria-label="Ajustes" title="Ajustes"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 7h9M17 7h3M4 17h3M11 17h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="15" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
   </div>
 </header>
 
+
+<div id="ap-bar" class="apbar" hidden><div class="apg"><i id="ap-g"></i></div><span id="ap-t"></span><span class="apb"><button type="button" id="ap-a" aria-label="Estação anterior">‹</button><button type="button" id="ap-p" aria-label="Pausar rotação">❚❚</button><button type="button" id="ap-n" aria-label="Próxima estação">›</button><button type="button" id="ap-x" aria-label="Sair do modo apresentação">✕</button></span></div>
 
 <div id="ban" class="ban" hidden>
   <span id="ban-t"></span>
@@ -80,7 +83,7 @@
     <div id="sb-sip" class="sb" hidden><div class="card" id="cmp-sip"><p class="cap" id="cs-t"></p><div class="tw"><table id="cs-tab"><thead><tr><th>Item</th><th class="n">Painel</th><th class="n">SipamHidro</th><th class="n">Dif.</th></tr></thead><tbody></tbody></table></div><p class="cap" id="cs-n" style="margin:6px 0 0"></p></div>
     </div>
     <div id="sb-all" class="sb" hidden><p class="cap" id="q2-c"></p>
-    <div class="tw"><table class="click" id="q2"><thead><tr><th>Estação</th><th class="hm">Situação</th><th class="n" id="q2-a">Nível (m)</th><th class="n hm">Δ 24 h</th><th class="n">Δ 7 d</th><th class="n hm">cm/d</th><th class="n" id="q2-7">+7 d</th><th class="n" id="q2-15">+15 d</th><th class="n" id="q2-30">+30 d</th><th class="n" id="q2-m"><span class="hm">Mínimo previsto</span><span class="hs">Mín.</span></th></tr></thead><tbody></tbody></table></div>
+    <div class="tw"><table class="click" id="q2"><thead><tr><th>Estação</th><th class="hm">Situação</th><th class="n" id="q2-a">Nível (m)</th><th class="n" title="Desvios-padrão em relação à média do dia">Anom. σ</th><th class="n hm">Δ 24 h</th><th class="n">Δ 7 d</th><th class="n hm">cm/d</th><th class="n" id="q2-7">+7 d</th><th class="n" id="q2-15">+15 d</th><th class="n" id="q2-30">+30 d</th><th class="n" id="q2-m"><span class="hm">Mínimo previsto</span><span class="hs">Mín.</span></th></tr></thead><tbody></tbody></table></div>
     <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p></div>
   </section>
 
@@ -165,7 +168,7 @@
       <li><b>Taxa:</b> regressão linear dos últimos 8 dias (cm/d).</li>
       <li><b>Previsão (100 d):</b> <code>F(h) = L<sub>0</sub> + w·r·h + (1 − w)·C(h)</code>, <code>w = e<sup>−h/7</sup></code>; <code>C(h)</code> é a mediana de <code>L(t+h) − L(t)</code> nos outros anos, na mesma data ±10 d.</li>
       <li><b>Incerteza:</b> retroprevisão deixando um ano de fora. Empírica: quantis 2,5–97,5% e 25–75% do erro. Nominal: ±1,96 × raiz do erro quadrático médio.</li>
-      <li><b>Posição (z):</b> desvio da mesma data em 2020–2025, com as classes do boletim SipamHidro (leve 1–1,5; moderada 1,5–2; severa 2–3; extrema &gt; 3).</li>
+      <li><b>Anomalia (σ):</b> desvio do nível em relação à média do mesmo dia nos anos anteriores (janela de ±5 d), em desvios-padrão, com as classes do boletim SipamHidro (leve 1–1,5; moderada 1,5–2; severa 2–3; extrema &gt; 3; positiva = acima da média, negativa = abaixo). No gráfico, as faixas coloridas mostram essas classes (azul acima, marrom abaixo) e o tracejado é a média do dia; o NR e a previsão continuam sobre as faixas. A base é curta (desde 2020), então as faixas são indicativas; o boletim usa série histórica longa.</li>
     </ol>
     <h2>Validação da previsão</h2>
     <p class="cap">Erro quadrático médio da retroprevisão (m): método (persistência entre parênteses).</p>
