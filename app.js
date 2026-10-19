@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.16';
+const APP_VER = '1.17';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -240,7 +240,7 @@ function grafico() {
   ov.addEventListener('pointermove', mover); ov.addEventListener('pointerdown', mover); ov.addEventListener('pointerleave', () => { tip.style.opacity = 0; cross.setAttribute('opacity', 0); dots.replaceChildren(); });
   svg.append(ov); box.replaceChildren(svg, tip);
   const lg = []; if (st.anos.has(cur)) lg.push(['', 'var(--ink)', 'Observado ' + cur]); if (c.prev) lg.push(['d', 'var(--fc)', 'Previsão']); if (c.tend) lg.push(['t', 'var(--trend)', 'Tendência 7 d']); if (c.sip) lg.push(['s', 'var(--sip)', 'Prev. SipamHidro']);
-  const zl = c.anom ? '<span class="zleg"><b>Anomalia (σ)</b><span class="zb">' + [-4, -3, -2, -1, 0, 1, 2, 3, 4].map((k) => `<i style="background:${zcor(k)}"></i>`).join('') + '</span><em>−3 σ ◂ normal ▸ +3 σ; tracejado = média do dia</em></span>' : '';
+  const zl = c.anom ? '<span class="zleg"><b>Fundo colorido: nível em relação ao normal desta época do ano</b><span class="zb">' + [-4, -3, -2, -1, 0, 1, 2, 3, 4].map((k) => `<i style="background:${zcor(k)}"></i>`).join('') + '</span><span class="zax"><em>Abaixo do normal</em><em>Normal</em><em>Acima do normal</em></span><span class="zn">Quanto mais escura a cor, mais extremo (σ = distância da média do dia). Tracejado cinza: média do dia.</span></span>' : '';
   $('#leg').innerHTML = lg.map(([k, col, t]) => `<span><i class="${k}" style="--c:${col}"></i>${t}</span>`).join('') + zl;
 }
 
