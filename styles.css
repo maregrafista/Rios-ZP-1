@@ -481,3 +481,4 @@ html[data-layout=mobile] #seg-jan{display:flex;width:100%}html[data-layout=mobil
 html[data-layout=mobile] .row .t{display:none}
 html[data-layout=mobile] #chart{min-height:0}html[data-layout=mobile] .sf{min-height:0}
 html[data-layout=mobile] #seg-jan button{padding:0;white-space:nowrap}
+html[data-layout=mobile] #chart{margin-inline:-6px}

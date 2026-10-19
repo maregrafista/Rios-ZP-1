@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.11';
+const APP_VER = '1.12';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -180,10 +180,10 @@ let csvG = '';
 function grafico() {
   const box = $('#chart'), e = E(), P = e.prev, o = off(e), m = e.m, orig = dnum(P.origem), cur = X.cur, HOJE = X.HOJE, c = st.cam;
   let x0, x1; if (st.jan === '365') { x0 = Date.UTC(cur, 0, 1) / DAY; x1 = Date.UTC(cur, 11, 31) / DAY; } else { const h = st.jan === '180' ? 91 : +st.jan / 2; x0 = HOJE - h; x1 = HOJE + h; }
-  const W = Math.max(300, box.clientWidth), Ht = Math.round(Math.min(document.body.classList.contains('ap') ? Math.max(420, innerHeight - 250) : 520, Math.max(W < 520 ? 270 : 340, W * (W < 520 ? 0.75 : 0.55)))), mg = { t: 14, r: W < 520 ? 52 : 54, b: 32, l: W < 520 ? 42 : 52 };
+  const W = Math.max(300, box.clientWidth), Ht = Math.round(document.body.classList.contains('ap') ? Math.max(420, innerHeight - 250) : W < 520 ? Math.max(320, Math.min(innerHeight * 0.64, W * 1.2)) : Math.max(400, Math.min(innerHeight * 0.72, W * 0.62, 700))), mg = { t: 14, r: W < 520 ? 52 : 54, b: 32, l: W < 520 ? 42 : 52 };
   const val = (y, f) => { const d = new Date(f * DAY), mo = d.getUTCMonth(), dd = d.getUTCDate(); if (mo === 1 && dd === 29) return null; const ty = d.getUTCFullYear() - (cur - y), v = m.get(Date.UTC(ty, mo, dd) / DAY); return v === undefined ? null : v - o; };
   const lines = [];
-  for (const y of X.anos) { if (!st.anos.has(y)) continue; const pts = []; for (let f = Math.floor(x0); f <= x1; f++) { if (y === cur) { if (f > orig) continue; const v = m.get(f); pts.push({ f, v: v === undefined ? null : v - o }); } else pts.push({ f, v: val(y, f) }); } lines.push({ y, pts, c: colAno(y), w: y === cur ? (st.hc ? 3.2 : 2.8) : (st.hc ? 2.2 : 1.4) }); }
+  for (const y of X.anos) { if (!st.anos.has(y)) continue; const pts = []; for (let f = Math.floor(x0); f <= x1; f++) { if (y === cur) { if (f > orig) continue; const v = m.get(f); pts.push({ f, v: v === undefined ? null : v - o }); } else pts.push({ f, v: val(y, f) }); } lines.push({ y, pts, c: colAno(y), w: (y === cur ? (st.hc ? 3.2 : 2.8) : (st.hc ? 2.2 : 1.4)) * (W > 900 ? 1.25 : 1) }); }
   const fc = []; for (let h = 0; h <= 100; h++) { const f = orig + h; if (f < x0 || f > x1 || P.f[h] == null) continue; fc.push({ f, h, v: P.f[h] - o }); }
   const r7 = P.taxa_cm_dia / 100, trend = [{ f: orig, v: P.L0 - o }, { f: orig + 7, v: P.L0 + r7 * 7 - o }];
   const sip = []; if (c.sip) for (const r of D.sipam.prog) if (r.estacao === e.nome) { const f = Date.UTC(+r.mes.slice(0, 4), +r.mes.slice(5, 7) - 1, 15) / DAY; if (f >= x0 && f <= x1) { if (r.modelo1_cm != null) sip.push({ f, v: r.modelo1_cm / 100 - o, k: 1 }); if (r.modelo2_cm != null) sip.push({ f, v: r.modelo2_cm / 100 - o, k: 2 }); } }
@@ -215,7 +215,7 @@ function grafico() {
   svg.append(sv('text', { transform: `translate(11 ${(mg.t + xa) / 2}) rotate(-90)`, 'text-anchor': 'middle' }, ref() ? 'Nível acima do NR (m)' : 'Leitura da régua (m)'));
   if (c.ref) { const yr = ref() ? 0 : e.nr; svg.append(sv('line', { x1: mg.l, x2: W - mg.r, y1: yl(yr), y2: yl(yr), stroke: 'var(--bad)', 'stroke-width': 1.4 })); svg.append(sv('text', { x: mg.l + 4, y: yl(yr) - 4, fill: 'var(--bad)', style: 'fill:var(--bad)' }, 'NR' + (ref() ? '' : ' ' + num(e.nr) + ' m'))); }
   for (const l of [...lines].sort((a, b) => (a.y === cur) - (b.y === cur))) { const d = pth(l.pts, xs, yl); if (l.y === cur) svg.append(sv('path', { d, fill: 'none', stroke: 'var(--panel)', 'stroke-width': l.w + 3, opacity: 0.85, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' })); svg.append(sv('path', { d, fill: 'none', stroke: l.c, 'stroke-width': l.w, opacity: l.y === cur ? 1 : 0.92, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' })); }
-  if (c.prev && fc.length > 1) { const d = pth(fc, xs, yl); svg.append(sv('path', { d, fill: 'none', stroke: 'var(--panel)', 'stroke-width': 6, opacity: 0.85 })); svg.append(sv('path', { d, fill: 'none', stroke: 'var(--fc)', 'stroke-width': st.hc ? 3.2 : 2.8, 'stroke-dasharray': '6 3.5' })); }
+  if (c.prev && fc.length > 1) { const d = pth(fc, xs, yl); svg.append(sv('path', { d, fill: 'none', stroke: 'var(--panel)', 'stroke-width': 6, opacity: 0.85 })); svg.append(sv('path', { d, fill: 'none', stroke: 'var(--fc)', 'stroke-width': (st.hc ? 3.2 : 2.8) * (W > 900 ? 1.25 : 1), 'stroke-dasharray': '6 3.5' })); }
   if (c.tend) { svg.append(sv('path', { d: pth(trend, xs, yl), fill: 'none', stroke: 'var(--trend)', 'stroke-width': 2, 'stroke-dasharray': '2 3', 'stroke-linecap': 'round' })); if (orig + 7 <= x1) svg.append(sv('circle', { cx: xs(orig + 7), cy: yl(trend[1].v), r: 3.5, fill: 'var(--trend)' })); }
   for (const p of sip) svg.append(sv('path', { transform: `translate(${xs(p.f)} ${yl(p.v)})`, d: p.k === 1 ? 'M-4.5 0a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0' : 'M0-5.5L5.5 4.5H-5.5Z', fill: 'var(--sip)', stroke: 'var(--panel)', 'stroke-width': 1.4 }));
   if (HOJE >= x0 && HOJE <= x1) { svg.append(sv('line', { x1: xs(HOJE), x2: xs(HOJE), y1: mg.t, y2: xa, stroke: 'var(--ink)', 'stroke-dasharray': '2 3', opacity: 0.7 })); svg.append(sv('text', { class: 'ink', x: xs(HOJE) + 4, y: mg.t + 10 }, 'últ. leitura ' + dm(ISO(HOJE)))); }
