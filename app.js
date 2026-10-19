@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.15';
+const APP_VER = '1.16';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -179,7 +179,7 @@ function controles() {
 function grafico() {
   const box = $('#chart'), e = E(), P = e.prev, o = off(e), m = e.m, orig = dnum(P.origem), cur = X.cur, HOJE = X.HOJE, c = st.cam;
   let x0, x1; if (st.jan === '365') { x0 = Date.UTC(cur, 0, 1) / DAY; x1 = Date.UTC(cur, 11, 31) / DAY; } else { const h = st.jan === '180' ? 91 : +st.jan / 2; x0 = HOJE - h; x1 = HOJE + h; }
-  const W = Math.max(300, box.clientWidth), Ht = Math.round(document.body.classList.contains('ap') ? Math.max(420, innerHeight - 250) : W < 520 ? Math.max(320, Math.min(innerHeight * 0.64, W * 1.2)) : Math.max(400, Math.min(innerHeight * 0.72, W * 0.62, 700))), mg = { t: 14, r: W < 520 ? 52 : 54, b: 32, l: W < 520 ? 42 : 52 };
+  const W = Math.max(300, box.clientWidth), Ht = Math.round(document.body.classList.contains('ap') ? Math.max(420, innerHeight - 250) : W < 520 ? Math.max(260, Math.min(innerHeight * 0.42, W * 0.82)) : Math.max(340, Math.min(innerHeight * 0.58, W * 0.5, 540))), mg = { t: 14, r: W < 520 ? 52 : 54, b: 32, l: W < 520 ? 42 : 52 };
   const val = (y, f) => { const d = new Date(f * DAY), mo = d.getUTCMonth(), dd = d.getUTCDate(); if (mo === 1 && dd === 29) return null; const ty = d.getUTCFullYear() - (cur - y), v = m.get(Date.UTC(ty, mo, dd) / DAY); return v === undefined ? null : v - o; };
   const lines = [];
   for (const y of X.anos) { if (!st.anos.has(y)) continue; const pts = []; for (let f = Math.floor(x0); f <= x1; f++) { if (y === cur) { if (f > orig) continue; const v = m.get(f); pts.push({ f, v: v === undefined ? null : v - o }); } else pts.push({ f, v: val(y, f) }); } lines.push({ y, pts, c: colAno(y), w: (y === cur ? (st.hc ? 3.2 : 2.8) : (st.hc ? 2.2 : 1.4)) * (W > 900 ? 1.25 : 1) }); }
