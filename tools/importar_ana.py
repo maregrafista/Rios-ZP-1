@@ -93,7 +93,7 @@ def main():
         meta[nome] = {"fonte": f"ANA Hidroweb {cod}", "dias": cont["dias"], "pct_consistido": round(100 * cont["n2"] / max(1, cont["dias"]), 1), "pct_bruto": round(100 * cont["n1"] / max(1, cont["dias"]), 1), "descartados_status": cont["status_descartado"] + cont["sem_valor"], "excluido": None}
         ks = sorted(serie)
         rel.append(f"{nome:<16} ANA {cod}: {ks[0]} a {ks[-1]}; {cont['dias']} dias válidos; {cont['sem_valor']} sem valor; {cont['status_descartado']} descartados por status (branco/duvidoso/régua seca)")
-    nomes = {n.lower(): n for n in ["Manaus", "Itacoatiara", "Parintins", "Juruti", "Óbidos", "Santarém", "Oriximiná", "Porto Trombetas"]}
+    nomes = {n.lower(): n for n in ["Manaus", "Itacoatiara", "Parintins", "Juruti", "Óbidos", "Santarém", "Oriximiná", "Porto Trombetas", "Tabatinga", "Novo Airão"]}
     for x in sorted(FONTES.glob("*_regua.xlsx")):
         import openpyxl, unicodedata
         norm = lambda t: "".join(c for c in unicodedata.normalize("NFD", t) if unicodedata.category(c) != "Mn").lower()

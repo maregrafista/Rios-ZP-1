@@ -12,6 +12,7 @@ Manaus           xlsx régua: 2020-01-01 a 2026-10-18; 2442 dias (última leitur
 Óbidos           xlsx régua: 2022-09-24 a 2026-10-18; 1466 dias (última leitura do dia); 0 sobrepõem a ANA
 Oriximiná        xlsx régua: 2010-01-01 a 2026-10-18; 5208 dias (última leitura do dia); 4831 sobrepõem a ANA
 Santarém         xlsx régua: 2010-01-01 a 2026-10-18; 5259 dias (última leitura do dia); 0 sobrepõem a ANA
+Tabatinga        xlsx régua: 2026-01-02 a 2026-10-18; 290 dias (última leitura do dia); 150 sobrepõem a ANA
 Porto Trombetas  xlsx régua: 2010-01-01 a 2026-10-18; 5206 dias (última leitura do dia); 0 sobrepõem a ANA
 Itacoatiara      excluídos 6634 dias até 2008-02-29: outro zero de régua: salto de ~7 m em fev/2008 (1998–2008 em cotas ~7 m mais altas; antes de 1998 ~6 m mais baixas)
 Oriximiná        excluídos 604 dias até 1970-12-31: valores impossíveis em 1968–1970 (de −97 a +86 m e bloco de ~+20 m em ago–dez/1969)
