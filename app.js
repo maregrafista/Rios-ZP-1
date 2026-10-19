@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.14';
+const APP_VER = '1.15';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -176,7 +176,6 @@ function controles() {
   mk('todos', () => { st.anos = new Set(X.anos); redraw(); }); mk('nenhum', () => { st.anos = new Set(); redraw(); }); mk('só ' + X.cur, () => { st.anos = new Set([X.cur]); redraw(); });
   $$('#seg-jan button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.j === st.jan)));
 }
-let csvG = '';
 function grafico() {
   const box = $('#chart'), e = E(), P = e.prev, o = off(e), m = e.m, orig = dnum(P.origem), cur = X.cur, HOJE = X.HOJE, c = st.cam;
   let x0, x1; if (st.jan === '365') { x0 = Date.UTC(cur, 0, 1) / DAY; x1 = Date.UTC(cur, 11, 31) / DAY; } else { const h = st.jan === '180' ? 91 : +st.jan / 2; x0 = HOJE - h; x1 = HOJE + h; }
@@ -243,11 +242,7 @@ function grafico() {
   const lg = []; if (st.anos.has(cur)) lg.push(['', 'var(--ink)', 'Observado ' + cur]); if (c.prev) lg.push(['d', 'var(--fc)', 'Previsão']); if (c.tend) lg.push(['t', 'var(--trend)', 'Tendência 7 d']); if (c.sip) lg.push(['s', 'var(--sip)', 'Prev. SipamHidro']);
   const zl = c.anom ? '<span class="zleg"><b>Anomalia (σ)</b><span class="zb">' + [-4, -3, -2, -1, 0, 1, 2, 3, 4].map((k) => `<i style="background:${zcor(k)}"></i>`).join('') + '</span><em>−3 σ ◂ normal ▸ +3 σ; tracejado = média do dia</em></span>' : '';
   $('#leg').innerHTML = lg.map(([k, col, t]) => `<span><i class="${k}" style="--c:${col}"></i>${t}</span>`).join('') + zl;
-  const head = ['data', ...lines.map((l) => l.y), 'previsao'], csv = [head.join(';')];
-  for (let f = Math.floor(x0); f <= x1; f++) { const q = fcm.get(f); csv.push([ISO(f), ...lines.map((l) => { const p = l.pts.find((z) => z.f === f); return p && p.v != null ? num(p.v) : ''; }), q ? num(q.v) : ''].join(';')); }
-  csvG = '# ' + e.nome + ' · ' + uni() + '\n' + csv.join('\n');
 }
-$('#b-csv-g').addEventListener('click', () => baixar('grafico_' + st.est + '.csv', csvG));
 
 $('#hero').addEventListener('click', (ev) => { const b = ev.target.closest('[data-a]'); if (!b) return; ({ resumo: () => resumoDia(), comp: () => compartilhar(), conv: () => { rfReset(); show('ref'); }, ficha: () => sheetEstacao(st.est) })[b.dataset.a](); });
 
@@ -431,23 +426,12 @@ function refPag() {
 }
 
 // ---------- ciência e dados ----------
-function csvSerie() {
-  const ds = new Set(); X.list.forEach((e) => e.m.forEach((v, f) => ds.add(f))); const dias = [...ds].sort((a, b) => a - b);
-  const h = ['data', ...X.list.flatMap((e) => [e.nome + '_regua_m', e.nome + '_acima_NR_m'])];
-  return [h.join(';'), ...dias.map((f) => [ISO(f), ...X.list.flatMap((e) => { const v = e.m.get(f); return v === undefined ? ['', ''] : [num(v), num(v - e.nr)]; })].join(';'))].join('\n');
-}
-$('#b-csv-s').addEventListener('click', () => baixar('serie_integrada_ZP1.csv', csvSerie()));
 function cie() {
   $('#cie-d').textContent = 'Fontes: leituras de régua (Setor de Hidrografia) e cotas do ANA Hidroweb, no mesmo zero de régua. Sem dado = NaN. Dados até ' + dmy(D.hoje) + '.';
   $('#t-dados tbody').innerHTML = X.list.map((e) => { const ks = [...e.m.keys()], a = Math.min(...ks), b = Math.max(...ks); return `<tr><td>${esc(e.nome)}</td><td>${dmy(ISO(a))}</td><td>${dmy(ISO(b))}</td><td class="n">${ks.length}</td><td class="n hm">${num((ks.length / (b - a + 1)) * 100, 1)}%</td><td class="n hm">${D.qc.filter((q) => q.estacao === e.nome).length}</td><td class="n hm">${e.prev.anos_clim}</td></tr>`; }).join('');
   $('#t-val tbody').innerHTML = X.list.map((e) => { const c = (h) => { const s = e.prev.skill.find((x) => x.h === h); return `<td class="n${h === 15 || h === 60 || h === 90 ? ' hm' : ''}">${s && s.metodo != null ? num(s.metodo) + ' (' + num(s.persistencia) + ')' : '—'}</td>`; }; return `<tr><td>${esc(e.nome)}</td><td class="n hm">${e.prev.n_origens}</td>${c(7)}${c(15)}${c(30)}${c(60)}${c(90)}</tr>`; }).join('');
-  $('#qc-sum').textContent = 'Leituras descartadas pelo controle de qualidade (' + D.qc.length + ')';
-  $('#t-qc tbody').innerHTML = [...D.qc].sort((a, b) => a.estacao.localeCompare(b.estacao) || a.data.localeCompare(b.data)).map((r) => `<tr><td>${esc(r.estacao)}</td><td>${r.data}</td><td class="n">${num(r.regua)}</td><td class="n hm">${num(r.mediana_local)}</td><td class="n hm">${sg(r.desvio_m)}</td><td class="hm">${esc(r.criterio || 'pico local')}</td></tr>`).join('');
-  const ds = $('#dl-est'); if (!ds.options.length) { ds.innerHTML = X.list.map((e) => `<option value="${e.id}">${esc(e.nome)}</option>`).join(''); ds.value = st.est; ds.onchange = leit; $('#dl-det').ontoggle = leit; $('#dl-copy').onclick = () => { const e = X.list.find((z) => z.id === ds.value), ks = [...e.m.keys()].sort((x, y) => x - y); copiar(['data;regua_m;acima_nr_m', ...ks.map((f) => ISO(f) + ';' + e.m.get(f).toFixed(2) + ';' + (e.m.get(f) - e.nr).toFixed(2))].join('\n'), 'Leituras de ' + e.nome + ' copiadas (CSV).'); }; }
-  function leit() { if (!$('#dl-det').open) return; const e = X.list.find((z) => z.id === ds.value), ks = [...e.m.keys()].sort((x, y) => y - x); $('#dl-n').textContent = ks.length + ' dias · ' + dmy(ISO(ks[ks.length - 1])) + ' a ' + dmy(ISO(ks[0])); $('#dl-tab tbody').innerHTML = ks.map((f) => `<tr><td>${dmy(ISO(f))}</td><td class="n">${num(e.m.get(f))}</td><td class="n">${num(e.m.get(f) - e.nr)}</td></tr>`).join(''); }
-  leit();
   
-  if (ART) { $('#b-instalar').hidden = true; $('#b-csv-s').textContent = 'Copiar série integrada (CSV)'; $('#b-csv-g').textContent = 'Copiar dados do gráfico (CSV)'; }
+  if (ART) $('#b-instalar').hidden = true;
   $('#b-app').onclick = () => { if (navigator.share) navigator.share({ title: 'Rios ZP-1', text: TEXTO_APP }).catch(() => {}); else copiar(TEXTO_APP, 'Texto e link copiados.'); }; $('#b-app-c').onclick = () => copiar(TEXTO_APP, 'Texto e link copiados.'); $('#b-app-w').href = 'https://wa.me/?text=' + encodeURIComponent(TEXTO_APP); $('#app-txt').textContent = TEXTO_APP;
   const g = new Date(D.gerado); $('#cie-u').textContent = 'Dados gerados em ' + g.toLocaleString('pt-BR') + '.';
 }
@@ -486,7 +470,7 @@ $('#stl').addEventListener('click', storyPrev); $('#str').addEventListener('clic
 let bItens = [], bSel = 0;
 function abrirBusca() { if (!X) return; const d = $('#dlg-busca'); $('#bq').value = ''; buscaLista(''); d.showModal(); $('#bq').focus(); }
 function buscaLista(q) {
-  const n = norm(q), acoes = [['Stories do dia', 'Ação', () => abrirStory(0)], ['Alternar referencial (NR / régua)', 'Ação', () => { st.ref = ref() ? 'regua' : 'nr'; LS.set('ref', st.ref); redraw(); }], ['Alternar modo escuro', 'Ação', () => $('#b-tema').click()], ['Janela 30 dias', 'Gráfico', () => { st.jan = '30'; LS.set('jan', '30'); show('prev'); }], ['Janela 90 dias', 'Gráfico', () => { st.jan = '90'; LS.set('jan', '90'); show('prev'); }], ['Janela ano todo', 'Gráfico', () => { st.jan = '365'; LS.set('jan', '365'); show('prev'); }], ['Exportar série integrada (CSV)', 'Ação', () => $('#b-csv-s').click()], ['Como instalar o app', 'Ação', () => abrirInstalar()]];
+  const n = norm(q), acoes = [['Stories do dia', 'Ação', () => abrirStory(0)], ['Alternar referencial (NR / régua)', 'Ação', () => { st.ref = ref() ? 'regua' : 'nr'; LS.set('ref', st.ref); redraw(); }], ['Alternar modo escuro', 'Ação', () => $('#b-tema').click()], ['Janela 30 dias', 'Gráfico', () => { st.jan = '30'; LS.set('jan', '30'); show('prev'); }], ['Janela 90 dias', 'Gráfico', () => { st.jan = '90'; LS.set('jan', '90'); show('prev'); }], ['Janela ano todo', 'Gráfico', () => { st.jan = '365'; LS.set('jan', '365'); show('prev'); }], ['Como instalar o app', 'Ação', () => abrirInstalar()]];
   const abas = [['Previsão', 'prev'], ['Diagnóstico', 'diag'], ['Calcular FAQ', 'ref'], ['Info', 'cie']].map(([t, v]) => [t, 'Seção', () => show(v)]);
   const ests = X.list.map((e) => [e.nome + ' · ' + e.rio, 'Estação', () => { st.est = e.id; LS.set('est', e.id); show('prev'); }]);
   bItens = [...ests, ...abas, ...acoes].filter(([t]) => !n || norm(t).includes(n)).slice(0, 14); bSel = 0;
