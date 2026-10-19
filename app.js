@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.13';
+const APP_VER = '1.14';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -113,10 +113,10 @@ addEventListener('resize', () => { ajustaZoom(); });
 $$('#seg-lay button').forEach((b) => b.addEventListener('click', () => { LS.set('layout', b.dataset.l); layout(); redraw(); }));
 matchMedia('(max-width:800px)').addEventListener('change', () => { if (LS.get('layout', 'auto') === 'auto') { layout(); redraw(); } });
 const dark = () => (root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme:dark)').matches));
-function tema() { const d = dark(); $('#aj-tema').textContent = d ? 'Escuro' : 'Claro'; $('#aj-pal').textContent = st.pal === 'amazonia' ? 'Amazônia' : 'Marinho'; $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = st.pal === 'amazonia' ? (d ? '#0a2a21' : '#0c3b2c') : '#0b1f4d'; }
+function tema() { const d = dark(); $('#aj-pal').textContent = st.pal === 'amazonia' ? 'Amazônia' : 'Marinho'; $('#b-tema').innerHTML = d ? '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>'; const tc = $('meta[name=theme-color]'); if (tc) tc.content = st.pal === 'amazonia' ? (d ? '#0a2a21' : '#0c3b2c') : '#0b1f4d'; }
 function paleta() { if (st.pal === 'amazonia') root.dataset.paleta = 'amazonia'; else delete root.dataset.paleta; tema(); }
 $('#b-pal').addEventListener('click', () => { st.pal = st.pal === 'amazonia' ? 'marinho' : 'amazonia'; LS.set('paleta', st.pal); paleta(); redraw(); toast('Cores: ' + (st.pal === 'amazonia' ? 'Amazônia' : 'Marinho') + '.'); });
-$('#b-tema').addEventListener('click', () => { const n = dark() ? 'light' : 'dark'; root.dataset.theme = n; LS.set('tema', n); tema(); redraw(); });
+$('#b-tema').addEventListener('click', () => { const n = dark() ? 'light' : 'dark'; root.dataset.theme = n; tema(); redraw(); });
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change', () => { tema(); redraw(); });
 function show(v) { st.tab = v; LS.set('tab', v); $$('#tabs button,#bnav button').forEach((b) => { if (b.dataset.v === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); $$('.view').forEach((s) => { s.hidden = s.id !== 'v-' + v; }); scrollTo(0, 0); redraw(); }
 $$('#tabs button,#bnav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.v)));
@@ -324,7 +324,7 @@ function anomHtml(r) {
 }
 function prever() {
   const e = E(), r = e.r, c = (v) => num(vv(e, v)), atr = r.atraso;
-  const atras = Math.floor(Date.now() / DAY - dnum(D.hoje)); $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + (atras >= 3 ? ' (há ' + atras + ' d)' : '') + ' · ' + (ref() ? 'm acima do NR' : 'm na régua');
+  const atras = Math.floor(Date.now() / DAY - dnum(D.hoje)); $('#sub').textContent = 'Leituras até ' + dmy(D.hoje) + (atras >= 3 ? ' (há ' + atras + ' d)' : '') + (innerWidth < 480 ? '' : ' · ' + (ref() ? 'm acima do NR' : 'm na régua'));
   $('#hero').innerHTML = `<div class="hh"><div class="nome"><b>${esc(e.nome)}</b> · ${esc(e.rio)} · ${dm(r.data)}${atr ? ' (' + atr + ' d sem leitura)' : ''}</div><button class="btn dt" data-a="ficha" type="button">Detalhes</button></div>
     <div class="hb"><span class="big">${ref() ? sg(vv(e, r.L0)) : num(r.L0)}<small> ${uni()}</small></span><span class="pill ${r.s.c}">${esc(r.s.t)}</span><span class="cap">${ref() ? 'régua ' + num(r.L0) + ' m' : 'NR ' + num(e.nr) + ' m na régua'}</span></div>
     ${anomHtml(r)}
@@ -454,26 +454,39 @@ function cie() {
 $('#b-recarregar').addEventListener('click', async () => { try { const m = await carregar(false); redraw(); toast(m ? 'Dados novos carregados (' + dmy(D.hoje) + ').' : 'Você já está com a versão mais recente (' + dmy(D.hoje) + ').'); if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then((r) => r && r.update()); } catch (e) { toast('Sem conexão: usando os dados guardados.'); } });
 
 // ---------- resumo do dia (histórias) ----------
-function resumoDia() {
-  if (!X) return; const R = X.ativas, u = ref() ? 'm acima do NR' : 'm na régua', c = (e, v) => num(vv(e, v)), raso = [...R].sort((a, b) => (a.r.L0 - a.nr) - (b.r.L0 - b.nr))[0], vaz = [...R].sort((a, b) => a.r.taxa - b.r.taxa)[0];
+let sIdx = 0, sT = null, cards = [];
+function montarCards() {
+  const R = X.ativas, u = ref() ? 'm acima do NR' : 'm na régua', c = (e, v) => num(vv(e, v)), raso = [...R].sort((a, b) => (a.r.L0 - a.nr) - (b.r.L0 - b.nr))[0], vaz = [...R].sort((a, b) => a.r.taxa - b.r.taxa)[0];
   const neg = R.filter((e) => e.r.L0 - e.nr < 0), cruz = R.filter((e) => e.r.cruza).sort((a, b) => a.r.cruza.localeCompare(b.r.cruza)), mm = [...R].sort((a, b) => (a.r.min - a.nr) - (b.r.min - b.nr))[0];
-  const f7 = [...R].sort((a, b) => (a.r.f7 - a.nr) - (b.r.f7 - b.nr)).slice(0, 3).map((e) => esc(e.nome) + ' ' + c(e, e.r.f7)).join('; ');
-  const linhas = [
-    ['Em vazante', R.filter((e) => e.r.taxa < 0).length + ' de ' + R.length + ' estações; taxa média ' + num(mean(R.map((e) => e.r.taxa)), 1) + ' cm/d'],
-    ['Menor coluna', esc(raso.nome) + ', ' + sg(raso.r.L0 - raso.nr) + ' m em relação ao NR' + (neg.length ? '. Abaixo do NR: ' + neg.map((e) => esc(e.nome)).join(', ') : '. Nenhuma abaixo do NR')],
-    ['Maior vazante', esc(vaz.nome) + ', ' + sg(vaz.r.taxa, 1) + ' cm/d (' + sg(vaz.r.d15, 0) + ' cm em 15 d)'],
-    ['Mais rasas em +7 d', f7 + ' (' + u + ')'],
-    ['Cruzam o NR (100 d)', cruz.length ? cruz.slice(0, 5).map((e) => esc(e.nome) + ' ' + dm(e.r.cruza)).join('; ') : 'nenhuma'],
-    ['Mínimo previsto', esc(mm.nome) + ', ' + sg(mm.r.min - mm.nr) + ' m em ' + dm(mm.r.minData)],
+  const lista = (arr, f) => '<ul>' + arr.map((e) => `<li><span>${esc(e.nome)}</span><b>${f(e)}</b></li>`).join('') + '</ul>';
+  return [
+    { k: 'Hoje · ' + dmy(D.hoje), big: R.filter((e) => e.r.taxa < 0).length + '/' + R.length, t: 'estações em vazante', s: 'Taxa média de 7 d: ' + num(mean(R.map((e) => e.r.taxa)), 1) + ' cm/d.' },
+    { k: 'Menor coluna d’água', big: sg(raso.r.L0 - raso.nr) + ' m', t: raso.nome + ', em relação ao NR', s: neg.length ? neg.length + ' abaixo do NR de ' + R.length + ' estações.' : 'Nenhuma estação abaixo do NR.' },
+    { k: 'Maior vazante', big: sg(vaz.r.taxa, 1), t: 'cm/d em ' + vaz.nome, s: sg(vaz.r.d15, 0) + ' cm em 15 dias.' },
+    { k: 'Previsão em ' + dm(R[0].r.dataF[0]), big: '', t: 'Mais rasas em +7 d (' + u + ')', list: lista([...R].sort((a, b) => (a.r.f7 - a.nr) - (b.r.f7 - b.nr)).slice(0, 4), (e) => c(e, e.r.f7) + ' m') },
+    { k: 'Cruzam o NR (100 d)', big: String(cruz.length), t: cruz.length ? 'estações cruzam o NR' : 'nenhuma cruza o NR', list: cruz.length ? lista(cruz.slice(0, 4), (e) => dm(e.r.cruza)) : '' },
+    { k: 'Mínimo previsto', big: sg(mm.r.min - mm.nr) + ' m', t: mm.nome + ' em ' + dm(mm.r.minData), s: 'Em relação ao NR.' },
   ];
-  abrirSheet('Resumo do dia · ' + dmy(D.hoje), `<p class="cap">Estações com leitura recente. Níveis em ${u}.</p><ul class="rs">${linhas.map(([k, v]) => `<li><b>${k}</b><span>${v}</span></li>`).join('')}</ul>`);
 }
+function resumoDia() { abrirStory(0); }
+function abrirStory(i) { if (!X) return; cards = montarCards(); sIdx = i || 0; $('#story').hidden = false; document.body.style.overflow = 'hidden'; storyRender(); }
+function storyRender() {
+  clearTimeout(sT); const c = cards[sIdx], red = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  $('#stbar').innerHTML = cards.map((_, i) => `<i class="${i < sIdx ? 'ok' : i === sIdx && !red ? 'on' : i === sIdx ? 'ok' : ''}"></i>`).join('');
+  $('#stc').innerHTML = `<div class="k">${esc(c.k)}</div>${c.big ? `<div class="big">${esc(c.big)}</div>` : ''}<div class="t">${esc(c.t)}</div>${c.s ? `<div class="s">${esc(c.s)}</div>` : ''}${c.list || ''}`;
+  $('#story').style.setProperty('--dur', '7s'); if (!red) sT = setTimeout(() => storyNext(), 7000);
+}
+const storyNext = () => { if (sIdx < cards.length - 1) { sIdx++; storyRender(); } else fecharStory(); };
+const storyPrev = () => { if (sIdx > 0) { sIdx--; storyRender(); } };
+function fecharStory() { clearTimeout(sT); $('#story').hidden = true; document.body.style.overflow = ''; }
+$('#stl').addEventListener('click', storyPrev); $('#str').addEventListener('click', storyNext); $('#stx').addEventListener('click', fecharStory);
+(() => { const el = $('#story'); el.addEventListener('touchstart', () => { el.classList.add('pause'); clearTimeout(sT); }, { passive: true }); el.addEventListener('touchend', () => { el.classList.remove('pause'); if (!el.hidden) sT = setTimeout(() => storyNext(), 3500); }, { passive: true }); })();
 
 // ---------- busca ----------
 let bItens = [], bSel = 0;
 function abrirBusca() { if (!X) return; const d = $('#dlg-busca'); $('#bq').value = ''; buscaLista(''); d.showModal(); $('#bq').focus(); }
 function buscaLista(q) {
-  const n = norm(q), acoes = [['Resumo do dia', 'Ação', () => resumoDia()], ['Alternar referencial (NR / régua)', 'Ação', () => { st.ref = ref() ? 'regua' : 'nr'; LS.set('ref', st.ref); redraw(); }], ['Alternar modo escuro', 'Ação', () => $('#b-tema').click()], ['Janela 30 dias', 'Gráfico', () => { st.jan = '30'; LS.set('jan', '30'); show('prev'); }], ['Janela 90 dias', 'Gráfico', () => { st.jan = '90'; LS.set('jan', '90'); show('prev'); }], ['Janela ano todo', 'Gráfico', () => { st.jan = '365'; LS.set('jan', '365'); show('prev'); }], ['Exportar série integrada (CSV)', 'Ação', () => $('#b-csv-s').click()], ['Como instalar o app', 'Ação', () => abrirInstalar()]];
+  const n = norm(q), acoes = [['Stories do dia', 'Ação', () => abrirStory(0)], ['Alternar referencial (NR / régua)', 'Ação', () => { st.ref = ref() ? 'regua' : 'nr'; LS.set('ref', st.ref); redraw(); }], ['Alternar modo escuro', 'Ação', () => $('#b-tema').click()], ['Janela 30 dias', 'Gráfico', () => { st.jan = '30'; LS.set('jan', '30'); show('prev'); }], ['Janela 90 dias', 'Gráfico', () => { st.jan = '90'; LS.set('jan', '90'); show('prev'); }], ['Janela ano todo', 'Gráfico', () => { st.jan = '365'; LS.set('jan', '365'); show('prev'); }], ['Exportar série integrada (CSV)', 'Ação', () => $('#b-csv-s').click()], ['Como instalar o app', 'Ação', () => abrirInstalar()]];
   const abas = [['Previsão', 'prev'], ['Diagnóstico', 'diag'], ['Calcular FAQ', 'ref'], ['Info', 'cie']].map(([t, v]) => [t, 'Seção', () => show(v)]);
   const ests = X.list.map((e) => [e.nome + ' · ' + e.rio, 'Estação', () => { st.est = e.id; LS.set('est', e.id); show('prev'); }]);
   bItens = [...ests, ...abas, ...acoes].filter(([t]) => !n || norm(t).includes(n)).slice(0, 14); bSel = 0;
@@ -484,7 +497,7 @@ $('#bq').addEventListener('input', (e) => buscaLista(e.target.value));
 $('#bq').addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); bSel = (bSel + (e.key === 'ArrowDown' ? 1 : -1) + bItens.length) % bItens.length; $$('#bl li').forEach((li, i) => li.setAttribute('aria-selected', String(i === bSel))); } else if (e.key === 'Enter') buscaIr(bSel); });
 $('#bl').addEventListener('click', (e) => { const li = e.target.closest('li[data-i]'); if (li) buscaIr(+li.dataset.i); });
 $('#dlg-busca').addEventListener('click', (e) => { if (e.target.id === 'dlg-busca') e.target.close(); });
-addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); abrirBusca(); } else if (e.key === 'Escape') { if (!$('#ovl').hidden) fecharSheet(); } else if (X && st.tab === 'prev' && !/INPUT|SELECT|TEXTAREA/.test((document.activeElement || {}).tagName || '') && !document.querySelector('dialog[open]') && $('#ovl').hidden) { if (e.key === 'ArrowRight') trocaEst(1); if (e.key === 'ArrowLeft') trocaEst(-1); } });
+addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); abrirBusca(); } else if (e.key === 'Escape') { if (!$('#story').hidden) fecharStory(); else if (!$('#ovl').hidden) fecharSheet(); } else if (!$('#story').hidden) { if (e.key === 'ArrowRight') storyNext(); if (e.key === 'ArrowLeft') storyPrev(); } else if (X && st.tab === 'prev' && !/INPUT|SELECT|TEXTAREA/.test((document.activeElement || {}).tagName || '') && !document.querySelector('dialog[open]') && $('#ovl').hidden) { if (e.key === 'ArrowRight') trocaEst(1); if (e.key === 'ArrowLeft') trocaEst(-1); } });
 let tx0 = null; $('#hero').addEventListener('touchstart', (e) => { tx0 = [e.touches[0].clientX, e.touches[0].clientY]; }, { passive: true }); $('#hero').addEventListener('touchend', (e) => { if (!tx0) return; const dx = e.changedTouches[0].clientX - tx0[0], dy = e.changedTouches[0].clientY - tx0[1]; tx0 = null; if (Math.abs(dx) > 70 && Math.abs(dy) < 40) trocaEst(dx < 0 ? 1 : -1); }, { passive: true });
 
 // ---------- instalação (orientação; o prático confirma no aparelho) ----------
@@ -646,6 +659,7 @@ $('#q-val').addEventListener('input', serQ); $('#q-dir').addEventListener('chang
 async function iniciar() {
   contador();
   $('#rod-v').textContent = 'versão ' + APP_VER + ' · © ' + new Date().getFullYear();
+  root.dataset.theme = 'light';  // sempre abre no modo claro
   layout(); paleta(); banner();
   if ('serviceWorker' in navigator && !window.__ZP1__) { navigator.serviceWorker.register('sw.js').then((r) => { r.addEventListener('updatefound', () => { const w = r.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed' && navigator.serviceWorker.controller) toast('Nova versão do app disponível.', 'Atualizar', () => location.reload()); }); }); }).catch(() => {}); }
   try { await carregar(false); } catch (e) { $('#carga').innerHTML = '<div class="fail">Não foi possível carregar os dados. Verifique a conexão e tente de novo.</div>'; return; }

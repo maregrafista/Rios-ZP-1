@@ -464,7 +464,6 @@ html[data-layout=mobile] .kt{padding:6px 9px}html[data-layout=mobile] .kt b{font
 article.est .jt{width:calc(100% - 24px)}
 
 /* ===== v1.10 · menos rolagem no celular ===== */
-html[data-layout=mobile] .rodape{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:2px 8px;margin:6px auto 0;padding:8px 0}html[data-layout=mobile] .rodape svg{display:none}
 html[data-layout=mobile] .outras{margin-top:2px;gap:4px}html[data-layout=mobile] .outras>span:first-child{flex-basis:auto}
 html[data-layout=mobile] .outras .ot{min-height:26px;padding:2px 7px}
 html[data-layout=mobile] .mleg{gap:0 8px}
@@ -482,3 +481,15 @@ html[data-layout=mobile] .row .t{display:none}
 html[data-layout=mobile] #chart{min-height:0}html[data-layout=mobile] .sf{min-height:0}
 html[data-layout=mobile] #seg-jan button{padding:0;white-space:nowrap}
 html[data-layout=mobile] #chart{margin-inline:-6px}
+
+.story{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:calc(64px + env(safe-area-inset-top)) 22px calc(28px + env(safe-area-inset-bottom));background:#0b1f4d;color:#fff}
+.story[hidden]{display:none}
+.stbar{position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:60px;display:flex;gap:4px}.stbar i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.28);overflow:hidden}.stbar i.ok{background:#fff}
+.stbar i.on::after{content:"";display:block;height:100%;background:#fff;animation:stp var(--dur,7s) linear forwards}@keyframes stp{from{width:0}to{width:100%}}
+.story.pause .stbar i.on::after{animation-play-state:paused}
+.stx{position:absolute;top:calc(14px + env(safe-area-inset-top));right:12px;z-index:3;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:20px;cursor:pointer}
+.stzone{position:absolute;top:60px;bottom:0;z-index:1}.stzone.l{left:0;width:35%}.stzone.r{right:0;width:65%}
+.stc{position:relative;z-index:2;max-width:440px;width:100%;max-height:100%;overflow:hidden;pointer-events:none}.stc .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;font-weight:700}
+.stc .big{font-family:var(--serif);font-size:clamp(40px,13vw,64px);line-height:1;margin:10px 0 6px}.stc .t{font-size:17px;line-height:1.3;margin-bottom:8px}.stc .s{font-size:14px;opacity:.85;line-height:1.45}
+.stc ul{margin:8px 0 0;padding:0;list-style:none;font-size:15px}.stc li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.18)}
+#rod-f{max-width:34rem;line-height:1.35}
