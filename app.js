@@ -20,7 +20,7 @@ const pth = (pts, fx, fy, def = (p) => p.v != null) => { let d = '', pen = false
 const band = (pts, a, b, fx, fy) => { const q = pts.filter((p) => p[a] != null && p[b] != null); if (q.length < 2) return ''; return 'M' + q.map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[b]).toFixed(1)).join('L') + 'L' + [...q].reverse().map((p) => fx(p.f).toFixed(1) + ' ' + fy(p[a]).toFixed(1)).join('L') + 'Z'; };
 const fileOf = (n) => norm(n).replace(/ /g, '_') + '_nr.pdf';
 
-const APP_VER = '1.17';
+const APP_VER = '1.18';
 const APP_URL = 'https://maregrafista.github.io/Rios-ZP-1/', ART = !!window.__ZP1__;
 const TEXTO_APP = `*Rios ZP-1* · nível e previsão dos rios da Zona de Praticagem 1 (Manaus, Itacoatiara, Parintins, Juruti, Óbidos, Santarém, Oriximiná e Porto Trombetas).
 
@@ -123,7 +123,6 @@ $$('#tabs button,#bnav button').forEach((b) => b.addEventListener('click', () =>
 $$('#seg-ref button').forEach((b) => b.addEventListener('click', () => { st.ref = b.dataset.r; LS.set('ref', st.ref); redraw(); }));
 $$('#seg-jan button').forEach((b) => b.addEventListener('click', () => { st.jan = b.dataset.j; LS.set('jan', st.jan); redraw(); }));
 $('#b-aj').addEventListener('click', () => $('#dlg-aj').showModal()); $('#aj-x').addEventListener('click', () => $('#dlg-aj').close()); $('#dlg-aj').addEventListener('click', (e) => { if (e.target.id === 'dlg-aj') e.target.close(); });
-$('#aj-res').addEventListener('click', () => { $('#dlg-aj').close(); resumoDia(); });
 $('#aj-inst').addEventListener('click', () => { $('#dlg-aj').close(); abrirInstalar(); });
 if (window.ResizeObserver) new ResizeObserver(() => root.style.setProperty('--toph', $('.top').offsetHeight + 'px')).observe($('.top'));
 
@@ -244,7 +243,7 @@ function grafico() {
   $('#leg').innerHTML = lg.map(([k, col, t]) => `<span><i class="${k}" style="--c:${col}"></i>${t}</span>`).join('') + zl;
 }
 
-$('#hero').addEventListener('click', (ev) => { const b = ev.target.closest('[data-a]'); if (!b) return; ({ resumo: () => resumoDia(), comp: () => compartilhar(), conv: () => { rfReset(); show('ref'); }, ficha: () => sheetEstacao(st.est) })[b.dataset.a](); });
+$('#hero').addEventListener('click', (ev) => { const b = ev.target.closest('[data-a]'); if (!b) return; ({ comp: () => compartilhar(), conv: () => { rfReset(); show('ref'); }, ficha: () => sheetEstacao(st.est) })[b.dataset.a](); });
 
 // ---------- modo apresentação (telão: tela cheia, rotação automática das estações) ----------
 const AP_S = 15; let apT = null, apN = 0, apPausa = false, apFS = false;
@@ -258,7 +257,7 @@ function apresentar(on) {
   } else { apFS = false; try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {} }
   redraw(); if (on) apBarra();
 }
-$('#b-ap').addEventListener('click', () => apresentar(true)); $('#ap-x').addEventListener('click', () => apresentar(false));
+$('#ap-x').addEventListener('click', () => apresentar(false));
 $('#ap-p').addEventListener('click', () => { apPausa = !apPausa; apBarra(); }); $('#ap-a').addEventListener('click', () => { apN = 0; trocaEst(-1); }); $('#ap-n').addEventListener('click', () => { apN = 0; trocaEst(1); });
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && apFS && document.body.classList.contains('ap')) apresentar(false); });
 addEventListener('keydown', (ev) => { if (!document.body.classList.contains('ap')) return; if (ev.key === 'Escape') apresentar(false); else if (ev.key === ' ') { ev.preventDefault(); apPausa = !apPausa; apBarra(); } else if (ev.key === 'ArrowRight') { apN = 0; trocaEst(1); } else if (ev.key === 'ArrowLeft') { apN = 0; trocaEst(-1); } });
@@ -438,39 +437,12 @@ function cie() {
 $('#b-recarregar').addEventListener('click', async () => { try { const m = await carregar(false); redraw(); toast(m ? 'Dados novos carregados (' + dmy(D.hoje) + ').' : 'Você já está com a versão mais recente (' + dmy(D.hoje) + ').'); if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then((r) => r && r.update()); } catch (e) { toast('Sem conexão: usando os dados guardados.'); } });
 
 // ---------- resumo do dia (histórias) ----------
-let sIdx = 0, sT = null, cards = [];
-function montarCards() {
-  const R = X.ativas, u = ref() ? 'm acima do NR' : 'm na régua', c = (e, v) => num(vv(e, v)), raso = [...R].sort((a, b) => (a.r.L0 - a.nr) - (b.r.L0 - b.nr))[0], vaz = [...R].sort((a, b) => a.r.taxa - b.r.taxa)[0];
-  const neg = R.filter((e) => e.r.L0 - e.nr < 0), cruz = R.filter((e) => e.r.cruza).sort((a, b) => a.r.cruza.localeCompare(b.r.cruza)), mm = [...R].sort((a, b) => (a.r.min - a.nr) - (b.r.min - b.nr))[0];
-  const lista = (arr, f) => '<ul>' + arr.map((e) => `<li><span>${esc(e.nome)}</span><b>${f(e)}</b></li>`).join('') + '</ul>';
-  return [
-    { k: 'Hoje · ' + dmy(D.hoje), big: R.filter((e) => e.r.taxa < 0).length + '/' + R.length, t: 'estações em vazante', s: 'Taxa média de 7 d: ' + num(mean(R.map((e) => e.r.taxa)), 1) + ' cm/d.' },
-    { k: 'Menor coluna d’água', big: sg(raso.r.L0 - raso.nr) + ' m', t: raso.nome + ', em relação ao NR', s: neg.length ? neg.length + ' abaixo do NR de ' + R.length + ' estações.' : 'Nenhuma estação abaixo do NR.' },
-    { k: 'Maior vazante', big: sg(vaz.r.taxa, 1), t: 'cm/d em ' + vaz.nome, s: sg(vaz.r.d15, 0) + ' cm em 15 dias.' },
-    { k: 'Previsão em ' + dm(R[0].r.dataF[0]), big: '', t: 'Mais rasas em +7 d (' + u + ')', list: lista([...R].sort((a, b) => (a.r.f7 - a.nr) - (b.r.f7 - b.nr)).slice(0, 4), (e) => c(e, e.r.f7) + ' m') },
-    { k: 'Cruzam o NR (100 d)', big: String(cruz.length), t: cruz.length ? 'estações cruzam o NR' : 'nenhuma cruza o NR', list: cruz.length ? lista(cruz.slice(0, 4), (e) => dm(e.r.cruza)) : '' },
-    { k: 'Mínimo previsto', big: sg(mm.r.min - mm.nr) + ' m', t: mm.nome + ' em ' + dm(mm.r.minData), s: 'Em relação ao NR.' },
-  ];
-}
-function resumoDia() { abrirStory(0); }
-function abrirStory(i) { if (!X) return; cards = montarCards(); sIdx = i || 0; $('#story').hidden = false; document.body.style.overflow = 'hidden'; storyRender(); }
-function storyRender() {
-  clearTimeout(sT); const c = cards[sIdx], red = matchMedia('(prefers-reduced-motion:reduce)').matches;
-  $('#stbar').innerHTML = cards.map((_, i) => `<i class="${i < sIdx ? 'ok' : i === sIdx && !red ? 'on' : i === sIdx ? 'ok' : ''}"></i>`).join('');
-  $('#stc').innerHTML = `<div class="k">${esc(c.k)}</div>${c.big ? `<div class="big">${esc(c.big)}</div>` : ''}<div class="t">${esc(c.t)}</div>${c.s ? `<div class="s">${esc(c.s)}</div>` : ''}${c.list || ''}`;
-  $('#story').style.setProperty('--dur', '7s'); if (!red) sT = setTimeout(() => storyNext(), 7000);
-}
-const storyNext = () => { if (sIdx < cards.length - 1) { sIdx++; storyRender(); } else fecharStory(); };
-const storyPrev = () => { if (sIdx > 0) { sIdx--; storyRender(); } };
-function fecharStory() { clearTimeout(sT); $('#story').hidden = true; document.body.style.overflow = ''; }
-$('#stl').addEventListener('click', storyPrev); $('#str').addEventListener('click', storyNext); $('#stx').addEventListener('click', fecharStory);
-(() => { const el = $('#story'); el.addEventListener('touchstart', () => { el.classList.add('pause'); clearTimeout(sT); }, { passive: true }); el.addEventListener('touchend', () => { el.classList.remove('pause'); if (!el.hidden) sT = setTimeout(() => storyNext(), 3500); }, { passive: true }); })();
 
 // ---------- busca ----------
 let bItens = [], bSel = 0;
 function abrirBusca() { if (!X) return; const d = $('#dlg-busca'); $('#bq').value = ''; buscaLista(''); d.showModal(); $('#bq').focus(); }
 function buscaLista(q) {
-  const n = norm(q), acoes = [['Stories do dia', 'Ação', () => abrirStory(0)], ['Alternar referencial (NR / régua)', 'Ação', () => { st.ref = ref() ? 'regua' : 'nr'; LS.set('ref', st.ref); redraw(); }], ['Alternar modo escuro', 'Ação', () => $('#b-tema').click()], ['Janela 30 dias', 'Gráfico', () => { st.jan = '30'; LS.set('jan', '30'); show('prev'); }], ['Janela 90 dias', 'Gráfico', () => { st.jan = '90'; LS.set('jan', '90'); show('prev'); }], ['Janela ano todo', 'Gráfico', () => { st.jan = '365'; LS.set('jan', '365'); show('prev'); }], ['Como instalar o app', 'Ação', () => abrirInstalar()]];
+  const n = norm(q), acoes = [['Alternar referencial (NR / régua)', 'Ação', () => { st.ref = ref() ? 'regua' : 'nr'; LS.set('ref', st.ref); redraw(); }], ['Alternar modo escuro', 'Ação', () => $('#b-tema').click()], ['Janela 30 dias', 'Gráfico', () => { st.jan = '30'; LS.set('jan', '30'); show('prev'); }], ['Janela 90 dias', 'Gráfico', () => { st.jan = '90'; LS.set('jan', '90'); show('prev'); }], ['Janela ano todo', 'Gráfico', () => { st.jan = '365'; LS.set('jan', '365'); show('prev'); }], ['Como instalar o app', 'Ação', () => abrirInstalar()]];
   const abas = [['Previsão', 'prev'], ['Diagnóstico', 'diag'], ['Calcular FAQ', 'ref'], ['Info', 'cie']].map(([t, v]) => [t, 'Seção', () => show(v)]);
   const ests = X.list.map((e) => [e.nome + ' · ' + e.rio, 'Estação', () => { st.est = e.id; LS.set('est', e.id); show('prev'); }]);
   bItens = [...ests, ...abas, ...acoes].filter(([t]) => !n || norm(t).includes(n)).slice(0, 14); bSel = 0;
@@ -481,7 +453,7 @@ $('#bq').addEventListener('input', (e) => buscaLista(e.target.value));
 $('#bq').addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); bSel = (bSel + (e.key === 'ArrowDown' ? 1 : -1) + bItens.length) % bItens.length; $$('#bl li').forEach((li, i) => li.setAttribute('aria-selected', String(i === bSel))); } else if (e.key === 'Enter') buscaIr(bSel); });
 $('#bl').addEventListener('click', (e) => { const li = e.target.closest('li[data-i]'); if (li) buscaIr(+li.dataset.i); });
 $('#dlg-busca').addEventListener('click', (e) => { if (e.target.id === 'dlg-busca') e.target.close(); });
-addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); abrirBusca(); } else if (e.key === 'Escape') { if (!$('#story').hidden) fecharStory(); else if (!$('#ovl').hidden) fecharSheet(); } else if (!$('#story').hidden) { if (e.key === 'ArrowRight') storyNext(); if (e.key === 'ArrowLeft') storyPrev(); } else if (X && st.tab === 'prev' && !/INPUT|SELECT|TEXTAREA/.test((document.activeElement || {}).tagName || '') && !document.querySelector('dialog[open]') && $('#ovl').hidden) { if (e.key === 'ArrowRight') trocaEst(1); if (e.key === 'ArrowLeft') trocaEst(-1); } });
+addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); abrirBusca(); } else if (e.key === 'Escape') { if (!$('#ovl').hidden) fecharSheet(); } else if (X && st.tab === 'prev' && !/INPUT|SELECT|TEXTAREA/.test((document.activeElement || {}).tagName || '') && !document.querySelector('dialog[open]') && $('#ovl').hidden) { if (e.key === 'ArrowRight') trocaEst(1); if (e.key === 'ArrowLeft') trocaEst(-1); } });
 let tx0 = null; $('#hero').addEventListener('touchstart', (e) => { tx0 = [e.touches[0].clientX, e.touches[0].clientY]; }, { passive: true }); $('#hero').addEventListener('touchend', (e) => { if (!tx0) return; const dx = e.changedTouches[0].clientX - tx0[0], dy = e.changedTouches[0].clientY - tx0[1]; tx0 = null; if (Math.abs(dx) > 70 && Math.abs(dy) < 40) trocaEst(dx < 0 ? 1 : -1); }, { passive: true });
 
 // ---------- instalação (orientação; o prático confirma no aparelho) ----------
