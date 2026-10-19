@@ -462,3 +462,22 @@ html[data-layout=mobile] #b-csv-g,html[data-layout=mobile] #cap1{display:none}
 html[data-layout=mobile] .kt{padding:6px 9px}html[data-layout=mobile] .kt b{font-size:19px}
 .rodape{margin-top:12px;padding:8px 0}
 article.est .jt{width:calc(100% - 24px)}
+
+/* ===== v1.10 · menos rolagem no celular ===== */
+html[data-layout=mobile] .rodape{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:2px 8px;margin:6px auto 0;padding:8px 0}html[data-layout=mobile] .rodape svg{display:none}
+html[data-layout=mobile] .outras{margin-top:2px;gap:4px}html[data-layout=mobile] .outras>span:first-child{flex-basis:auto}
+html[data-layout=mobile] .outras .ot{min-height:26px;padding:2px 7px}
+html[data-layout=mobile] .mleg{gap:0 8px}
+html[data-layout=mobile] #ser-kts{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+html[data-layout=mobile] #ser-kts .kt{padding:5px 7px}html[data-layout=mobile] #ser-kts .kt b{font-size:17px}
+html[data-layout=mobile] #dg-sint .kts{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}html[data-layout=mobile] #dg-sint .kt small{display:none}html[data-layout=mobile] #dg-sint .kt{padding:5px 7px}html[data-layout=mobile] #dg-sint .kt b{font-size:17px}
+article.est summary .rio-s{color:var(--mut)}
+html[data-layout=mobile] article.est summary{padding:7px 10px;gap:6px}
+html[data-layout=mobile] .ph{margin:0 0 4px}html[data-layout=mobile] .ph .cap{display:none}
+html[data-layout=mobile] #v-ser .cap{margin:2px 0}
+html[data-layout=mobile] .hero{padding:10px 12px;margin-bottom:6px}
+html[data-layout=mobile] .chips{padding:4px 6px 6px}
+html[data-layout=mobile] #seg-jan{display:flex;width:100%}html[data-layout=mobile] #seg-jan button{flex:1 1 0;min-width:0;padding-inline:2px;font-size:12px}
+html[data-layout=mobile] .row .t{display:none}
+html[data-layout=mobile] #chart{min-height:0}html[data-layout=mobile] .sf{min-height:0}
+html[data-layout=mobile] #seg-jan button{padding:0;white-space:nowrap}
