@@ -561,3 +561,10 @@ html[data-layout=mobile] .bnav{-webkit-backdrop-filter:none;backdrop-filter:none
 html[data-layout=mobile] .bnav button,html[data-layout=mobile] .bnav button[aria-current=page]{border-radius:0;margin:0;background:transparent}
 html[data-layout=mobile] .bnav button[aria-current=page]{color:var(--forest)}
 .rodape .carimbo{flex-direction:row;align-items:center;gap:10px}.rodape .carimbo>span{display:flex;flex-direction:column;gap:1px}.rodape .carimbo img{width:34px;height:37px;object-fit:contain;flex:none}
+/* rodapé centralizado (padrão internacional): carimbo, versão, fontes e contadores em coluna central */
+.rodape,html[data-layout=mobile] .rodape{flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:18px 0 10px}
+.rodape>*{margin-inline:auto;text-align:center}
+.rodape .carimbo{order:1;justify-content:center;text-align:left}
+.rodape>span:first-child{order:2}
+#rod-f{order:3;max-width:44rem;flex:none}
+#rod-c{order:4}
