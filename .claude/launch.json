@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {"name": "rios-zp1", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "8765", "--directory", "/Users/cooperativaunipilot/Claude/Rios ZP-1"], "port": 8765}
+  ]
+}

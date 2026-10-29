@@ -13,9 +13,9 @@ def main():
     d = json.load(open(RAIZ / "data.json", encoding="utf-8"))
     e = next(x for x in d["estacoes"] if x["id"] == "manaus")
     W, H = 1200, 630
-    im = Image.new("RGB", (W, H), "#0b1f4d"); dr = ImageDraw.Draw(im)
+    im = Image.new("RGB", (W, H), "#233e56"); dr = ImageDraw.Draw(im)
     for y in range(H):
-        t = y / H; dr.line([(0, y), (W, y)], fill=(int(11 + 19 * t), int(31 + 48 * t), int(77 + 86 * t)))
+        t = y / H; dr.line([(0, y), (W, y)], fill=(int(43 - 15 * t), int(74 - 22 * t), int(104 - 31 * t)))
 
     def font(sz, b=True):
         for p in ["/System/Library/Fonts/Supplemental/Arial Bold.ttf" if b else "/System/Library/Fonts/Supplemental/Arial.ttf", "/System/Library/Fonts/Helvetica.ttc", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]:
@@ -33,7 +33,12 @@ def main():
     X = lambda a: 70 + (a - x0) / (x1 - x0) * (W - 140); Y = lambda b: 590 - (b - lo) / (hi - lo) * 210
     dr.line([(X(a), Y(b)) for a, b in obs], fill="white", width=7, joint="curve")
     pts = [(X(a), Y(b)) for a, b in f]
-    for i in range(0, len(pts) - 1, 2): dr.line([pts[i], pts[i + 1]], fill="#ff9a3c", width=7)
+    for i in range(0, len(pts) - 1, 2): dr.line([pts[i], pts[i + 1]], fill="#e0a63e", width=7)
+    try:  # logotipo do app (mesmo desenho de icon-512.png)
+        ic = Image.open(RAIZ / "icon-512.png").convert("RGBA").resize((220, 220), Image.LANCZOS)
+        im.paste(ic, (W - 290, 60), ic)
+    except OSError:
+        pass
     im.save(RAIZ / "preview.png", optimize=True)
     print("preview.png regerada")
     return 0

@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Rios ZP-1 · Nível e previsão</title>
 <meta name="description" content="Níveis observados e previsão dos rios da ZP-1 em referência ao nível de redução (NR) da carta.">
-<meta name="theme-color" content="#0b1f4d">
+<meta name="theme-color" content="#233e56">
+<meta name="color-scheme" content="light">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Rios ZP-1">
 <meta property="og:title" content="Rios ZP-1 · Nível e previsão dos rios">
@@ -21,18 +22,18 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Rios ZP-1">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script>try{var t=localStorage.getItem('zp1-tema');document.documentElement.dataset.theme='light';var p=localStorage.getItem('zp1-paleta');if(p)document.documentElement.dataset.paleta=JSON.parse(p)}catch(e){}</script>
-<link rel="stylesheet" href="styles.css?v=20261028180326">
-<script defer src="app.js?v=20261028180326"></script>
+<link rel="stylesheet" href="styles.css?v=20261028141449">
+<script defer src="app.js?v=20261028141449"></script>
 </head>
 <body>
 <a class="skip" href="#main">Ir ao conteúdo</a>
 
 <header class="top">
   <div class="brand">
-    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M2 14c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M8 3v6M5.5 6.5 8 9l2.5-2.5M16 9V3M13.5 5.5 16 3l2.5 2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <img src="icon.svg" width="36" height="36" alt="" decoding="async">
     <div><b>Rios ZP-1</b><small id="sub">Carregando…</small></div>
   </div>
   <div class="acts">
@@ -79,12 +80,12 @@
     <div class="seg full" id="seg-sub" role="tablist" aria-label="Tabelas"><button data-s="prev" type="button">Previsão</button><button data-s="sip" type="button">SipamHidro</button><button data-s="all" type="button">Estações</button></div>
     <div id="sb-prev" class="sb"><p class="cap" id="q1-c"></p>
     <div class="tw"><table id="q1"><thead><tr><th>Horizonte</th><th class="hm">Data</th><th class="n" id="q1-n">Nível (m)</th></tr></thead><tbody></tbody></table></div>
-    <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p></div>
+    <p class="fn">* Previsões empíricas. Têm objetivo informativo.</p></div>
     <div id="sb-sip" class="sb" hidden><div class="card" id="cmp-sip"><p class="cap" id="cs-t"></p><div class="tw"><table id="cs-tab"><thead><tr><th>Item</th><th class="n">Painel</th><th class="n">SipamHidro</th><th class="n">Dif.</th></tr></thead><tbody></tbody></table></div><p class="cap" id="cs-n" style="margin:6px 0 0"></p></div>
     </div>
     <div id="sb-all" class="sb" hidden><p class="cap" id="q2-c"></p>
     <div class="tw"><table class="click" id="q2"><thead><tr><th>Estação</th><th class="hm">Situação</th><th class="n" id="q2-a">Nível (m)</th><th class="n" title="Desvios-padrão em relação à média do dia">Anom. σ</th><th class="n hm">Δ 24 h</th><th class="n">Δ 7 d</th><th class="n hm">cm/d</th><th class="n" id="q2-7">+7 d</th><th class="n hm" id="q2-15">+15 d</th><th class="n" id="q2-30">+30 d</th><th class="n hm" id="q2-m">Mínimo previsto</th></tr></thead><tbody></tbody></table></div>
-    <p class="fn">* Previsões empíricas, elaboradas com objetivo informativo.</p></div>
+    <p class="fn">* Previsões empíricas. Têm objetivo informativo.</p></div>
   </section>
 
   <section class="view" id="v-diag" hidden>
@@ -126,7 +127,7 @@
     </details>
     <h3>Consulta rápida</h3>
     <div class="card"><div class="qrow"><span>O nível esteve</span><select id="q-dir"><option value="abaixo">igual ou abaixo de</option><option value="acima">igual ou acima de</option></select><input id="q-val" type="number" step="0.01" inputmode="decimal" aria-label="Nível em metros"><span id="q-u">m</span></div><p class="qres" id="q-res" aria-live="polite"></p></div>
-    <p class="aviso">Leituras diárias e tabelas de dados: acesso pelo Setor de Hidrografia da UNIPILOT.</p>
+    <p class="aviso">Para ver as leituras diárias e as tabelas de dados, fale com o Setor de Hidrografia da UNIPILOT.</p>
     <details class="sec"><summary>Ficha da série</summary><div class="tw"><table class="jt" id="ser-ficha"><tbody></tbody></table></div></details>
   </section>
 
@@ -166,37 +167,37 @@
     <h2 style="margin-top:0">Guia rápido</h2>
     <ul class="lim guia">
       <li><b>Estação:</b> toque no esquema do rio ou use ← →.</li>
-      <li><b>Gráfico:</b> janela, referência (NR ou régua) e camadas; toque para ler os valores.</li>
-      <li><b>Séries:</b> série completa, extremos, permanência, anos análogos e consulta rápida.</li>
-      <li><b>FAQ:</b> folga abaixo da quilha a partir de leitura, sondagem, calado e squat.</li>
+      <li><b>Gráfico:</b> escolha a janela, a referência (NR ou régua) e as camadas. Toque para ler os valores.</li>
+      <li><b>Séries:</b> veja a série completa, os extremos, a permanência, os anos análogos e a consulta rápida.</li>
+      <li><b>FAQ:</b> calcule a folga abaixo da quilha com leitura, sondagem, calado e squat.</li>
     </ul>
     <h2>Dados</h2>
     <p class="cap" id="cie-d"></p>
     <div class="tw"><table id="t-dados"><thead><tr><th>Estação</th><th>Início</th><th>Fim</th><th class="n">Dias</th><th class="n hm">Cobertura</th><th class="n hm">Descartadas</th><th class="n hm">Anos clim.</th></tr></thead><tbody></tbody></table></div>
-    <p class="aviso"><b>Dados de leituras.</b> As leituras diárias e as tabelas de dados não estão disponíveis para download nem consulta no app. Para ter acesso, entre em contato com o Setor de Hidrografia da UNIPILOT.</p>
+    <p class="aviso"><b>Dados de leituras.</b> O app não mostra as leituras diárias nem permite baixá-las. Para ter acesso, fale com o Setor de Hidrografia da UNIPILOT.</p>
     <details class="sec"><summary>Situação (alertas)</summary>
-    <ul class="lim"><li><b>Abaixo do NR:</b> nível atual menor que o NR.</li><li><b>Cruza o NR em N d:</b> a previsão cruza o NR em até 15 dias (≤ 7: vermelho).</li><li><b>Menos de 1 m do NR:</b> coluna menor que 1 m.</li></ul>
+    <ul class="lim"><li><b>Abaixo do NR:</b> o nível atual é menor que o NR.</li><li><b>Cruza o NR em N d:</b> a previsão cruza o NR em até 15 dias (até 7 dias: vermelho).</li><li><b>Menos de 1 m do NR:</b> a coluna acima do NR é menor que 1 m.</li></ul>
     </details>
     <details class="sec"><summary>Métodos</summary>
     <ol class="met">
-      <li><b>Série diária:</b> última leitura do dia; lacunas de até 7 d interpoladas só para o cálculo.</li>
-      <li><b>Qualidade:</b> descarta pico a mais de 0,5 m da mediana de ±5 d e leitura a ≥ 3 σ da série em sequência de até 5 d. Trechos em outro zero de régua viram NaN.</li>
+      <li><b>Série diária:</b> vale a última leitura do dia. Lacunas de até 7 d são interpoladas, só para o cálculo.</li>
+      <li><b>Qualidade:</b> o app descarta o pico a mais de 0,5 m da mediana de ±5 d. Descarta também a leitura a ≥ 3 σ da série, em sequência de até 5 d. Os trechos com outro zero de régua viram NaN.</li>
       <li><b>Redução:</b> <code>h<sub>NR</sub> = leitura − NR</code>.</li>
       <li><b>Taxa:</b> regressão linear dos últimos 8 dias.</li>
-      <li><b>Previsão (100 d):</b> <code>F(h) = L<sub>0</sub> + w·r·h + (1 − w)·C(h)</code>, <code>w = e<sup>−h/7</sup></code>; <code>C(h)</code> é a mediana de <code>L(t+h) − L(t)</code> nos até 20 anos anteriores, na mesma data ±10 d.</li>
-      <li><b>Validação:</b> retroprevisão deixando um ano de fora (tabela abaixo).</li>
-      <li><b>Anomalia (σ):</b> desvio em relação à média do dia (±5 d) nos 30 anos mais recentes com dado, nas classes do SipamHidro: leve 1–1,5; moderada 1,5–2; severa 2–3; extrema &gt; 3.</li>
+      <li><b>Previsão (100 d):</b> <code>F(h) = L<sub>0</sub> + w·r·h + (1 − w)·C(h)</code>, com <code>w = e<sup>−h/7</sup></code>. <code>C(h)</code> é a mediana de <code>L(t+h) − L(t)</code> nos até 20 anos anteriores, na mesma data ±10 d.</li>
+      <li><b>Validação:</b> retroprevisão que deixa um ano de fora (tabela abaixo).</li>
+      <li><b>Anomalia (σ):</b> desvio em relação à média do dia (±5 d) nos 30 anos mais recentes com dado. As classes são as do SipamHidro: leve 1–1,5; moderada 1,5–2; severa 2–3; extrema &gt; 3.</li>
     </ol>
     </details>
     <details class="sec"><summary>Validação da previsão</summary>
-    <p class="cap">Erro quadrático médio da retroprevisão (m); persistência entre parênteses.</p>
+    <p class="cap">Erro quadrático médio da retroprevisão (m). A persistência está entre parênteses.</p>
     <div class="tw"><table id="t-val"><thead><tr><th>Estação</th><th class="n hm">Origens</th><th class="n">+7 d</th><th class="n hm">+15 d</th><th class="n">+30 d</th><th class="n hm">+60 d</th><th class="n hm">+90 d</th></tr></thead><tbody></tbody></table></div>
     </details>
     <details class="sec"><summary>Limitações</summary>
     <ul class="lim">
-      <li>Séries com lacunas (NaN) ou curtas, como Juruti e Porto Trombetas (desde 2020), dão previsão e anomalia menos estáveis.</li>
-      <li>Método local: não usa chuva nem cotas a montante.</li>
-      <li>Complementar: não substitui a carta nem os avisos oficiais.</li>
+      <li>Séries com lacunas (NaN) ou curtas dão previsão e anomalia menos estáveis. Exemplo: Juruti e Porto Trombetas (desde 2020).</li>
+      <li>O método é local. Ele não usa chuva nem cotas a montante.</li>
+      <li>O app é complementar. Ele não substitui a carta náutica nem os avisos oficiais.</li>
     </ul>
     </details>
     <details class="sec"><summary>Compartilhar o app</summary>
@@ -208,7 +209,7 @@
     <div class="row"><button class="btn" id="b-instalar" type="button">Como instalar o app</button><button class="lk" id="b-recarregar" type="button">Verificar atualização agora</button></div>
     
   </section>
-  <footer class="rodape" id="rodape"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 14c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M8 3v6M5.5 6.5 8 9l2.5-2.5M16 9V3M13.5 5.5 16 3l2.5 2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Rios ZP-1</b><span id="rod-v"></span><span>Desenvolvido pelo Setor de Hidrografia da UNIPILOT</span><span id="rod-f">Fontes: leituras de régua (UNIPILOT), fichas F-43 (DHN), ANA Hidroweb, boletim SipamHidro (Censipam)</span><span id="rod-c" hidden></span></footer>
+  <footer class="rodape" id="rodape"><span><img src="icon.svg" width="22" height="22" alt="" loading="lazy"> <b>Rios ZP-1</b> <span id="rod-v"></span></span><span class="carimbo"><small>Desenvolvido pelo</small><strong>Setor de Hidrografia da UNIPILOT</strong></span><span id="rod-f">Fontes: leituras de régua (UNIPILOT), fichas F-43 (DHN), ANA Hidroweb, boletim SipamHidro (Censipam)</span><span id="rod-c" hidden></span></footer>
 </main>
 
 <nav class="bnav" id="bnav" aria-label="Seções">
@@ -236,9 +237,9 @@
 
 <dialog id="dlg-inst" class="dlg">
   <div class="sh-h"><b>Instalar Rios ZP-1</b><button class="icon" id="inst-x" type="button" aria-label="Fechar">×</button></div>
-  <p class="cap">App web instalável (PWA), não de loja. Você confirma a instalação no seu aparelho.</p>
+  <p class="cap">Este app é web (PWA). Não vem de loja. Você confirma a instalação no seu aparelho.</p>
   <div id="inst-b"></div>
-  <p class="cap" style="margin-top:10px">Instalado, abre em tela cheia, funciona sem internet e se atualiza com dados novos.</p>
+  <p class="cap" style="margin-top:10px">Depois de instalado, o app abre em tela cheia, funciona sem internet e recebe dados novos.</p>
   <div class="row"><button class="btn pri" id="inst-go" type="button" hidden>Instalar neste aparelho</button></div>
 </dialog>
 

@@ -501,3 +501,62 @@ html[data-layout=mobile] #chart{margin-inline:-6px}
 .zleg .zax{display:grid;grid-template-columns:1fr auto 1fr;width:min(100%,360px);font-size:12px}
 .zleg .zax em{font-style:normal;color:var(--mut)}.zleg .zax em:nth-child(2){text-align:center;padding-inline:6px}.zleg .zax em:last-child{text-align:right}
 .zleg .zn{font-size:12px;color:var(--mut);line-height:1.35}
+
+/* v1.19 — layout TideConversor (azul-marinho, abas em índice, tabelas "booktabs", carimbo no rodapé) */
+:root{--forest:#233e56;--deep:#1c3449;--leaf:#315d7e;--sage:#eaf0f5;--bg:#f5f7f9;--panel:#fff;--ink:#243746;--mut:#617181;--line:#d8e0e7;--grid:#e4eaef;--acc:#315d7e;--bar:#233e56;--sel:#233e56;--h1:#1c3449;--h2:#315d7e;--shadow:none;--water:#16818b;--ochre:#9c6d27}
+html,body{background:var(--bg)}
+body{font-size:14px;color:var(--ink)}
+h2,h3,.brand b,.hero .big,.fq-main b{font-family:var(--serif)}
+h2{font-weight:600;letter-spacing:-.015em;font-size:clamp(20px,2.4vw,26px)}
+h3{font-weight:600;font-size:clamp(14px,1.4vw,15.5px)}
+.cap,.sub{font-family:var(--serif)}
+/* cabeçalho claro com logotipo, como no TideConversor */
+.top{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);padding:calc(9px + env(safe-area-inset-top)) 20px 9px}
+.brand,.brand b{color:var(--ink)}.brand small{color:var(--mut);font-size:12px}
+.brand img{width:36px;height:36px;flex:0 0 36px;display:block}
+.brand b{font-size:21px;font-weight:650;letter-spacing:-.02em}
+.top .btn,.top .icon{background:#fff;color:var(--ink);border-color:var(--line)}.top .btn:hover,.top .icon:hover{background:var(--sage)}
+/* abas como índice de revista */
+.tabs{border-bottom:1px solid var(--line);gap:2px;margin:0 auto 14px;padding:0 20px;max-width:1240px}
+.tabs button,.tabs button[aria-current=page]{background:transparent;border:0;border-radius:0;margin:0;padding:10px 14px;font-size:14px;font-weight:500;color:var(--mut);box-shadow:inset 0 -2.5px 0 transparent}
+.tabs button[aria-current=page]{color:var(--ink);font-weight:650;box-shadow:inset 0 -2.5px 0 var(--forest)}
+.tabs button:hover{color:var(--ink)}
+/* cartões e controles sem sombra, cantos de 3 px */
+.card,.hero,.ban,.btn,.icon,.seg,.seg button,.chip,.pill,select,input,.sheet,.dlg,.aviso{border-radius:3px;box-shadow:none}
+.card{border:1px solid var(--line);padding:14px}
+.seg{background:#edf1f5}.seg button[aria-pressed=true],.chip[aria-selected=true]{background:var(--forest);border-color:var(--forest);color:#fff}
+.chip{border-radius:3px;box-shadow:none;border:1px solid var(--line);font-weight:600}
+.chips{position:static}
+.btn.pri{background:var(--forest);border-color:var(--forest);color:#fff}
+.btn{border-color:#b7c5d0}
+.hero{border:1px solid var(--line);border-left:3px solid var(--forest);padding:14px 16px}
+.hero .big{font-weight:600;letter-spacing:-.02em}
+.hero .qa .btn,.hero .btn{background:#edf1f5;border-radius:3px}
+.hero .btn:hover{background:var(--sage)}
+/* tabelas "booktabs" */
+table{border-collapse:collapse;font-variant-numeric:tabular-nums lining-nums}
+thead th{border-top:1.5px solid var(--ink);border-bottom:1px solid var(--ink);background:transparent;color:var(--ink);font-weight:600;letter-spacing:0;font-size:12px;padding:8px 8px}
+tbody td{border-bottom:1px solid var(--line)}tbody tr:last-child td{border-bottom:1.5px solid var(--ink)}
+table.click tbody tr:hover td{background:var(--sage)}
+/* avisos e legendas */
+.aviso{border:0;border-left:3px solid #8da3b7;background:#edf2f6;color:#435e73}
+.cap b{font-variant:small-caps;letter-spacing:.04em}
+details.sec{border-top:1px solid var(--line)}details.sec summary{font-family:var(--serif);font-weight:600;color:var(--forest)}
+/* menu inferior (celular) */
+.bnav{background:#fff;border-top:1px solid var(--line)}
+.bnav button{color:var(--mut);border-radius:0}.bnav button[aria-current=page]{color:var(--forest);font-weight:650;box-shadow:inset 0 2.5px 0 var(--forest);background:transparent}
+/* rodapé com carimbo do desenvolvedor */
+.rodape{border-top:1px solid var(--line);flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center;text-align:left;gap:10px 18px;width:100%;margin:22px 0 0;padding:14px 0 8px}
+.rodape>*{margin-inline:0}.rodape img{width:22px;height:22px}
+.rodape b{font-family:var(--serif);font-size:14px}
+.rodape .carimbo{border:1px solid #97aabd;border-radius:3px;padding:6px 10px;display:flex;flex-direction:column;gap:1px;color:#3d566c;font-size:12px}
+.rodape .carimbo small{font-size:12px;letter-spacing:.08em;text-transform:uppercase}.rodape .carimbo strong{font-size:12px;font-weight:650}
+#rod-f{flex:1 1 100%;max-width:none;font-size:12px;order:5}
+html[data-layout=mobile] .rodape{flex-direction:column;align-items:flex-start;text-align:left}
+/* desempenho: pinta só o que aparece; sem animação desnecessária */
+.view>.card,.view .tw,.view details.sec{content-visibility:auto;contain-intrinsic-size:auto 300px}
+.view{animation:none}
+@media print{.top,.tabs,.bnav{display:none}}
+html[data-layout=mobile] .bnav{-webkit-backdrop-filter:none;backdrop-filter:none;background:#fff}
+html[data-layout=mobile] .bnav button,html[data-layout=mobile] .bnav button[aria-current=page]{border-radius:0;margin:0;background:transparent}
+html[data-layout=mobile] .bnav button[aria-current=page]{color:var(--forest)}

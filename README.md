@@ -69,3 +69,10 @@ Também vale escrever uma linha por leitura em `dados/lancamentos.txt` (pode ser
 - Almeirim removida. Fontes de régua em `dados/fontes/<Estação>_regua.xlsx` (formato Estação | Data | Nível, última leitura do dia); `importar_ana.py` lê todas.
 - Reparo de sinal: a planilha perdia o “−” de níveis negativos (Parintins, 2023–24; também Tabatinga/Trombetas em alguns dias). `atualizar.py` usa o valor da ANA do mesmo dia ou, sem ANA, a continuidade da série. Pico local passou para 0,5 m.
 - “Resumo do dia” virou uma folha rolável (sem auto-avanço). Tabelas encolhem no celular (colunas `hm` ocultas); textos de Info e Séries enxugados.
+
+## v1.19 — layout TideConversor e novo logotipo
+- Visual igual ao do TideConversor: cabeçalho claro com logotipo, abas em índice, tabelas "booktabs", cartões sem sombra, carimbo do Setor de Hidrografia no rodapé. Os dados não mudaram.
+- Paleta: azul-marinho `#233e56` (principal), `#315d7e` (apoio), `#16818b` (água), ocre `#e0a63e` (destaque).
+- Logotipo: `python3 tools/gerar_icones.py` gera `icon.svg`, `icon-180/192/512.png` e `icon-maskable.png` do mesmo desenho. Cabeçalho, rodapé, manifesto, ícone do iOS, prévia (`preview.png`) e artefato usam esses arquivos.
+- Desempenho: sem desfoque no menu, sem animação de troca de tela, `content-visibility` nos blocos longos, cache do ícone extra no `sw.js`.
+- Textos em frases curtas, voz ativa e termos fixos (estilo ASD-STE100, em português).

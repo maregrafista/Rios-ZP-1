@@ -14,6 +14,8 @@ h = re.sub(r'<link rel="stylesheet" href="styles.css[^"]*">', lambda m: "<style>
 boot = "<script>window.__ZP1__={url:'https://maregrafista.github.io/Rios-ZP-1/data.json',dados:" + dados.replace("</", "<\\/") + "};</script>\n<script>" + js + "</script>"
 h = re.sub(r'<script defer src="app.js[^"]*"></script>', "", h)
 h = h.replace("</body>", boot + "\n</body>")
+import base64
+h = h.replace('src="icon.svg"', 'src="data:image/svg+xml;base64,' + base64.b64encode((R / "icon.svg").read_bytes()).decode() + '"')  # logotipo embutido
 h = h.replace("files/", "https://maregrafista.github.io/Rios-ZP-1/files/")
 # o Artifact já embrulha a página: manter só título, <style> e corpo
 h = re.sub(r"<title>.*?</title>", "<title>Rios ZP-1</title>", h, flags=re.S)
