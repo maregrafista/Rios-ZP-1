@@ -560,3 +560,4 @@ html[data-layout=mobile] .rodape{flex-direction:column;align-items:flex-start;te
 html[data-layout=mobile] .bnav{-webkit-backdrop-filter:none;backdrop-filter:none;background:#fff}
 html[data-layout=mobile] .bnav button,html[data-layout=mobile] .bnav button[aria-current=page]{border-radius:0;margin:0;background:transparent}
 html[data-layout=mobile] .bnav button[aria-current=page]{color:var(--forest)}
+.rodape .carimbo{flex-direction:row;align-items:center;gap:10px}.rodape .carimbo>span{display:flex;flex-direction:column;gap:1px}.rodape .carimbo img{width:34px;height:37px;object-fit:contain;flex:none}

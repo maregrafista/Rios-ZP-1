@@ -1,7 +1,7 @@
 // Service worker do Rios ZP-1. VERSAO é reescrita por tools/atualizar.py a cada atualização de dados.
-const VERSAO='2026-10-28-141509';
+const VERSAO='2026-10-28-142258';
 const CACHE='rios-zp1-'+VERSAO;
-const CORE=['./','index.html','styles.css','app.js','manifest.webmanifest','icon.svg','icon-180.png','icon-192.png','icon-512.png','icon-maskable.png'];
+const CORE=['./','index.html','styles.css','app.js','manifest.webmanifest','icon.svg','icon-180.png','icon-192.png','icon-512.png','icon-maskable.png','unipilot-logo.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('rios-zp1-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 // Rede primeiro (dados sempre frescos); o cache serve de reserva quando não há internet.
