@@ -568,3 +568,26 @@ html[data-layout=mobile] .bnav button[aria-current=page]{color:var(--forest)}
 .rodape>span:first-child{order:2}
 #rod-f{order:3;max-width:44rem;flex:none}
 #rod-c{order:4}
+/* v1.20 — tipografia e hierarquia do TideConversor */
+:root{--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--serif:Charter,"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif}
+body{font:14px/1.5 var(--font)}
+.brand b{font:650 21px/1.2 var(--font);letter-spacing:-.02em}
+.brand small{font:400 12px/1.3 var(--font)}
+h2{font:600 clamp(22px,2.6vw,28px)/1.2 var(--serif);letter-spacing:-.015em}
+h3{font:600 clamp(14px,1.4vw,15.5px)/1.35 var(--serif)}
+.sub,.ph .cap{font:italic 400 13px/1.5 var(--serif)}
+.cap,.fn{font:400 clamp(12.5px,1.2vw,13.5px)/1.5 var(--serif)}
+.hero .big,.fq-main b,.qres{font-family:var(--serif);font-weight:600;letter-spacing:-.02em}
+.hero .nome,.hero .kv2 span,.kts span,.fq-s span{font:400 12px/1.4 var(--font)}
+.hero .kv2 b,.kts b,.fq-s b{font:600 15px/1.3 var(--font)}
+thead th{font:600 12px/1.35 var(--font);letter-spacing:.01em}
+tbody td{font:400 13px/1.4 var(--font)}
+.tabs button{font:500 14px/1.3 var(--font)}.tabs button[aria-current=page]{font-weight:650}
+.chip,.seg button,.btn{font:600 13px/1.2 var(--font)}
+details.sec summary{font:600 14px/1.4 var(--serif)}
+.rodape{font:400 12px/1.5 var(--font);color:var(--mut)}
+.rodape b{font:650 13px var(--font);color:var(--ink)}
+.rodape .carimbo small{font:400 12px/1.3 var(--font);letter-spacing:.08em;text-transform:uppercase;color:#3d566c}
+.rodape .carimbo strong{font:650 12.5px/1.3 var(--font);color:#3d566c}
+#rod-f,#rod-c,#rod-v{font:400 12px/1.5 var(--font);color:var(--mut)}
+.bnav button{font:500 12px/1.2 var(--font)}
