@@ -64,7 +64,6 @@ def entender(linha, estacoes, hoje=None):
     nome = re.sub(r"\s+", " ", nome).strip()
     if not nome:
         raise ValueError("não achei a estação")
-    nome = {"almerim": "almeirim"}.get(nome, nome)  # grafia usada nas colagens
     cand = [e for e in estacoes if norm(e["estacao"]) == nome] or [e for e in estacoes if norm(e["estacao"]).startswith(nome)] or [e for e in estacoes if nome in norm(e["estacao"])]
     if len(cand) != 1:
         raise ValueError(f"estação '{nome}' " + ("não encontrada" if not cand else "ambígua: " + ", ".join(e["estacao"] for e in cand)) + ". Válidas: " + ", ".join(e["estacao"] for e in estacoes))
