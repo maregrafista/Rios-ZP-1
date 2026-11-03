@@ -78,5 +78,13 @@
   "pct_bruto": null,
   "descartados_status": 0,
   "excluido": null
+ },
+ "Almeirim": {
+  "fonte": "ANA Hidroweb 18390000",
+  "dias": 3867,
+  "pct_consistido": 85.0,
+  "pct_bruto": 15.0,
+  "descartados_status": 271,
+  "excluido": null
  }
 }
