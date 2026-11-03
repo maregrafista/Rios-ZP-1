@@ -17,7 +17,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 BASE_URL = "https://www.ana.gov.br/hidrowebservice/EstacoesTelemetricas"
 CODIGOS = {"Manaus": "14990000", "Itacoatiara": "16030000", "Parintins": "16350002", "Óbidos": "17050001", "Santarém": "17900000",
-           "Oriximiná": "16900000", "Tabatinga": "10100000", "Novo Airão": "14900050"}
+           "Oriximiná": "16900000", "Almeirim": "18390000", "Tabatinga": "10100000", "Novo Airão": "14900050"}
 RANGE = {1: "HORA_24", 2: "DIAS_2", 7: "DIAS_7", 14: "DIAS_14", 21: "DIAS_21", 30: "DIAS_30"}
 
 
