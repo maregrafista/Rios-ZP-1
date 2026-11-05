@@ -1,3 +1,4 @@
 .ana.env
 __pycache__/
 .ana_cache.json
+.ana_cache/

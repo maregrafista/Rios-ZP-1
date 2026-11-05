@@ -42,18 +42,18 @@ def credenciais():
 def get(caminho, params=None, cab=None):
     url = f"{BASE_URL}/{caminho}" + ("?" + urllib.parse.urlencode(params) if params else "")
     req = urllib.request.Request(url, headers={"accept": "*/*", **(cab or {})})
-    for tentativa in range(5):  # a ANA às vezes responde 502/503/504 ou demora: tenta de novo com espera crescente
+    for tentativa in range(8):  # a ANA às vezes responde 502/503/504 ou demora: tenta de novo com espera crescente
         try:
             with urllib.request.urlopen(req, timeout=90) as r:
                 return json.load(r)
         except urllib.error.HTTPError as e:
-            if e.code < 500 or tentativa == 4:
+            if e.code < 500 or tentativa == 7:
                 corpo = e.read().decode("utf-8", "ignore")[:300]
                 sys.exit(f"A ANA respondeu HTTP {e.code} em {caminho}. {corpo}")
         except (TimeoutError, urllib.error.URLError, ConnectionError) as e:
-            if tentativa == 4:
+            if tentativa == 7:
                 sys.exit(f"Sem resposta da ANA em {caminho}: {e}")
-        time.sleep(5 * (tentativa + 1))
+        time.sleep(10 * (tentativa + 1))
 
 
 def token():
@@ -116,18 +116,18 @@ def main():
     tk = token()
     print("Autenticação OK.")
     if modo == "--refazer":
-        cache = RAIZ / ".ana_cache.json"
-        if cache.exists() and time.time() - cache.stat().st_mtime < 6 * 3600:
-            print("Usando medições já baixadas (.ana_cache.json, menos de 6 h).")
-            return lancar(json.loads(cache.read_text()), int(dias * 365) + 31, simular)
+        pasta = RAIZ / ".ana_cache"  # uma janela por estação e data; as já baixadas há menos de 6 h não são pedidas de novo
+        pasta.mkdir(exist_ok=True)
         itens, fim = [], dt.date.today()
-        for k in range(0, int(dias * 365), 30):  # 'dias' = anos
+        for k in range(0, int(dias * 365), 30):
             d = fim - dt.timedelta(days=k)
-            for cod in CODIGOS.values():  # uma estação por chamada: respostas menores e sem estouro de tempo
-                p = {"Codigos_Estacoes": cod, "Tipo Filtro Data": "DATA_LEITURA", "Data de Busca (yyyy-MM-dd)": d.isoformat(), "Range Intervalo de busca": "DIAS_30"}
-                itens += (get("HidroinfoanaSerieTelemetricaAdotada/v2", p, {"Authorization": f"Bearer {tk}"}).get("items") or [])
+            for cod in CODIGOS.values():
+                f = pasta / f"{cod}_{d}.json"
+                if not (f.exists() and time.time() - f.stat().st_mtime < 6 * 3600):
+                    p = {"Codigos_Estacoes": cod, "Tipo Filtro Data": "DATA_LEITURA", "Data de Busca (yyyy-MM-dd)": d.isoformat(), "Range Intervalo de busca": "DIAS_30"}
+                    f.write_text(json.dumps(get("HidroinfoanaSerieTelemetricaAdotada/v2", p, {"Authorization": f"Bearer {tk}"}).get("items") or []))
+                itens += json.loads(f.read_text())
             print(f"  janela até {d}: {len(itens)} medições acumuladas", flush=True)
-        cache.write_text(json.dumps(itens))
         return lancar(itens, int(dias * 365) + 31, simular)
     r = serie(tk, [CODIGOS["Manaus"]] if modo == "--teste" else list(CODIGOS.values())[:10], dias)
     itens = r.get("items") if isinstance(r, dict) else r
