@@ -3,5 +3,5 @@
 export PATH="/Library/Frameworks/Python.framework/Versions/3.13/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 cd "$(dirname "$0")/.." || exit 1
 echo "=== $(date '+%d/%m/%Y %H:%M') ==="
-python3 tools/ana_api.py --lancar || { echo "Falha ao consultar a ANA; nada foi lançado."; exit 1; }
+python3 tools/ana_api.py --lancar 30 || { echo "Falha ao consultar a ANA; nada foi lançado."; exit 1; }
 bash tools/sincronizar.sh

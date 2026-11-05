@@ -18,6 +18,9 @@ RAIZ = Path(__file__).resolve().parent.parent
 BASE_URL = "https://www.ana.gov.br/hidrowebservice/EstacoesTelemetricas"
 CODIGOS = {"Manaus": "14990000", "Itacoatiara": "16030000", "Parintins": "16350002", "Óbidos": "17050001", "Santarém": "17900000",
            "Oriximiná": "16900000", "Almeirim": "18390000", "Tabatinga": "10100000", "Novo Airão": "14900050"}
+# Estações de maré: a última medição do dia varia até 0,7 m com a fase da maré (e o controle de qualidade do app a descartaria).
+# Para elas vale a média diária das medições (como a "Mediadiaria" da ANA), só em dias com pelo menos 80 % das medições.
+TIDAIS = {"Almeirim"}
 RANGE = {1: "HORA_24", 2: "DIAS_2", 7: "DIAS_7", 14: "DIAS_14", 21: "DIAS_21", 30: "DIAS_30"}
 
 
@@ -64,22 +67,30 @@ def serie(tk, codigos, dias):
 def lancar(itens, dias, simular):
     lei = json.loads((RAIZ / "dados" / "base" / "leituras.json").read_text(encoding="utf-8"))
     por_cod = {c: n for n, c in CODIGOS.items()}
-    ultimo = {}  # (estação, dia) -> (datetime, régua_m): última medição do dia
+    ultimo, dia_med = {}, {}  # (estação, dia) -> última medição do dia | lista de medições (estações de maré)
     corte = dt.datetime.now() - dt.timedelta(days=dias)
     for it in itens:
         n, v = por_cod.get(it.get("codigoestacao")), it.get("Cota_Adotada")
         if not n or v in (None, ""):
             continue
         t = dt.datetime.fromisoformat(it["Data_Hora_Medicao"][:19])
-        if t >= corte and ((n, t.date()) not in ultimo or t > ultimo[(n, t.date())][0]):
+        if t < corte:
+            continue
+        if n in TIDAIS:
+            dia_med.setdefault((n, t.date()), []).append(float(v) / 100)
+        elif (n, t.date()) not in ultimo or t > ultimo[(n, t.date())][0]:
             ultimo[(n, t.date())] = (t, float(v) / 100)
+    for (n, dia), vs in dia_med.items():
+        if len(vs) >= 0.8 * 96:
+            ultimo[(n, dia)] = (dt.datetime.combine(dia, dt.time(12, 0)), sum(vs) / len(vs))
     linhas = []
     for (n, dia), (t, v) in sorted(ultimo.items(), key=lambda x: (x[0][0], x[0][1])):
         ant = lei.get(n, {}).get(dia.isoformat())
         t_ant = dt.datetime.fromisoformat(ant[1] if len(ant[1]) > 10 else dia.isoformat() + "T00:00") if ant else None
-        if ant and t <= t_ant and abs(ant[0] - v) < 1e-9:
-            continue
-        if ant and t <= t_ant:
+        if n in TIDAIS:
+            if ant and abs(ant[0] - v) < 0.005:
+                continue
+        elif ant and t <= t_ant:
             continue
         nota = f"  (substitui {ant[0]:.2f})" if ant and abs(ant[0] - v) > 1e-9 else ""
         linhas.append(f"{n}\t{t:%d/%m/%Y %H:%M}\t{v:.2f}".replace(".", ",", 1) if False else f"{n}\t{t:%d/%m/%Y %H:%M}\t{str(f'{v:.2f}').replace('.', ',')}")
