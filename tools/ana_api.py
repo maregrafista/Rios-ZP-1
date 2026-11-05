@@ -42,18 +42,21 @@ def credenciais():
 def get(caminho, params=None, cab=None):
     url = f"{BASE_URL}/{caminho}" + ("?" + urllib.parse.urlencode(params) if params else "")
     req = urllib.request.Request(url, headers={"accept": "*/*", **(cab or {})})
-    for tentativa in range(8):  # a ANA às vezes responde 502/503/504 ou demora: tenta de novo com espera crescente
+    for tentativa in range(8):  # a ANA às vezes responde 429/502/503/504 ou demora: tenta de novo com espera crescente
+        espera = 10 * (tentativa + 1)
         try:
             with urllib.request.urlopen(req, timeout=90) as r:
                 return json.load(r)
         except urllib.error.HTTPError as e:
-            if e.code < 500 or tentativa == 7:
+            if (e.code < 500 and e.code != 429) or tentativa == 7:
                 corpo = e.read().decode("utf-8", "ignore")[:300]
                 sys.exit(f"A ANA respondeu HTTP {e.code} em {caminho}. {corpo}")
+            if e.code == 429:
+                espera *= 6  # limite de pedidos: espera mais
         except (TimeoutError, urllib.error.URLError, ConnectionError) as e:
             if tentativa == 7:
                 sys.exit(f"Sem resposta da ANA em {caminho}: {e}")
-        time.sleep(10 * (tentativa + 1))
+        time.sleep(espera)
 
 
 def token():
