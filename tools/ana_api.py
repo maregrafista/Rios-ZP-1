@@ -125,7 +125,14 @@ def main():
                 f = pasta / f"{cod}_{d}.json"
                 if not (f.exists() and time.time() - f.stat().st_mtime < 6 * 3600):
                     p = {"Codigos_Estacoes": cod, "Tipo Filtro Data": "DATA_LEITURA", "Data de Busca (yyyy-MM-dd)": d.isoformat(), "Range Intervalo de busca": "DIAS_30"}
-                    f.write_text(json.dumps(get("HidroinfoanaSerieTelemetricaAdotada/v2", p, {"Authorization": f"Bearer {tk}"}).get("items") or []))
+                    try:
+                        r = get("HidroinfoanaSerieTelemetricaAdotada/v2", p, {"Authorization": f"Bearer {tk}"})
+                    except SystemExit as e:
+                        if "HTTP 401" not in str(e):
+                            raise
+                        tk = token()  # o token expira em alguns minutos: renova e repete a janela
+                        r = get("HidroinfoanaSerieTelemetricaAdotada/v2", p, {"Authorization": f"Bearer {tk}"})
+                    f.write_text(json.dumps(r.get("items") or []))
                 itens += json.loads(f.read_text())
             print(f"  janela até {d}: {len(itens)} medições acumuladas", flush=True)
         return lancar(itens, int(dias * 365) + 31, simular)
