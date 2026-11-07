@@ -78,6 +78,7 @@ def lancar(itens, dias, simular):
     """Média diária da ANA por estação e dia completo; grava no lancamentos.txt os dias novos ou diferentes (> 0,5 cm)."""
     lei = json.loads((RAIZ / "dados" / "base" / "leituras.json").read_text(encoding="utf-8"))
     por_cod = {c: n for n, c in CODIGOS.items()}
+    tempos = {}
     ultimo, dia_med = {}, {}  # (estação, dia) -> (instante, régua_m) | lista de (hora, régua_m)
     corte = dt.datetime.now() - dt.timedelta(days=dias)
     for it in itens:
@@ -87,15 +88,22 @@ def lancar(itens, dias, simular):
         t = dt.datetime.fromisoformat(it["Data_Hora_Medicao"][:19])
         if t >= corte:
             dia_med.setdefault((n, t.date()), []).append((t.hour, float(v) / 100))
+            tempos.setdefault((n, t.date()), []).append((t, 0))
     tipico = {}  # medições por dia, típico de cada estação (Tabatinga transmite só 2 por dia; as demais, 96)
     for (n, dia), vs in dia_med.items():
         tipico.setdefault((n, dia.year, dia.month), []).append(len(vs))
     tipico = {k: sorted(v)[len(v) // 2] for k, v in tipico.items()}
+    ult_dia = {}
+    for (n, dia) in dia_med:
+        ult_dia[n] = max(dia, ult_dia.get(n, dia))
     for (n, dia), vs in dia_med.items():
         tp = tipico[(n, dia.year, dia.month)]
         completo = len({h for h, _ in vs}) >= 23 if tp >= 12 else len(vs) >= min(2, tp)
         if completo:  # dia completo: medições em pelo menos 23 das 24 horas (estação esparsa: as 2 medições do dia)
             ultimo[(n, dia)] = (dt.datetime.combine(dia, dt.time(12, 0)), sum(v for _, v in vs) / len(vs))
+        elif dia == ult_dia[n] and dia >= dt.date.today() - dt.timedelta(days=1) and tp >= 12 and len({h for h, _ in vs}) >= 4:
+            # dia em andamento: valor provisório (média até a última medição), trocado pela média do dia inteiro quando fechar
+            ultimo[(n, dia)] = (max(t for t, _ in tempos[(n, dia)]), sum(v for _, v in vs) / len(vs))
     linhas = []
     for (n, dia), (t, v) in sorted(ultimo.items(), key=lambda x: (x[0][0], x[0][1])):
         ant = lei.get(n, {}).get(dia.isoformat())
