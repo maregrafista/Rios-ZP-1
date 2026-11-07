@@ -93,8 +93,8 @@ def lancar(itens, dias, simular):
     tipico = {k: sorted(v)[len(v) // 2] for k, v in tipico.items()}
     for (n, dia), vs in dia_med.items():
         tp = tipico[(n, dia.year, dia.month)]
-        completo = len({h for h, _ in vs}) >= 20 if tp >= 12 else len(vs) >= min(2, tp)
-        if completo:  # dia completo: medições em pelo menos 20 das 24 horas (estação esparsa: as 2 medições do dia)
+        completo = len({h for h, _ in vs}) >= 23 if tp >= 12 else len(vs) >= min(2, tp)
+        if completo:  # dia completo: medições em pelo menos 23 das 24 horas (estação esparsa: as 2 medições do dia)
             ultimo[(n, dia)] = (dt.datetime.combine(dia, dt.time(12, 0)), sum(v for _, v in vs) / len(vs))
     linhas = []
     for (n, dia), (t, v) in sorted(ultimo.items(), key=lambda x: (x[0][0], x[0][1])):
